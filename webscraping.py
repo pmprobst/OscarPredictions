@@ -1,33 +1,28 @@
 from playwright.sync_api import sync_playwright
 import argparse
 import csv
-import json
 import re
-import time
-
-# region agent log
-_CAST_DEBUG_LOG = "/Users/pprobst/Repos/OscarPredictions/.cursor/debug-bed965.log"
-
-
-def _cast_debug(hypothesis_id, message, data=None, run_id="pre-fix"):
-    payload = {
-        "sessionId": "bed965",
-        "runId": run_id,
-        "hypothesisId": hypothesis_id,
-        "location": "webscraping.py:extract_film_actor_rows",
-        "message": message,
-        "data": data or {},
-        "timestamp": int(time.time() * 1000),
-    }
-    with open(_CAST_DEBUG_LOG, "a", encoding="utf-8") as df:
-        df.write(json.dumps(payload) + "\n")
-
-
-# endregion
 
 CSV_FILE = "movies.csv"
 CAST_CSV_FILE = "film_actors.csv"
-CAST_FIELDNAMES = ["year", "film_title", "actor_name"]
+CAST_FIELDNAMES = ["year", "film_title", "actor_name", "actor_imdb_url"]
+
+
+def _normalize_actor_name(name: str) -> str:
+    """Strip IMDb accessibility prefix from link visible text."""
+    s = re.sub(r"\s+", " ", (name or "").strip())
+    return re.sub(r"^go to\s+", "", s, flags=re.IGNORECASE).strip()
+
+
+def _imdb_name_abs_url(href: str) -> str:
+    if not href:
+        return ""
+    path = href.split("?")[0]
+    if path.startswith("http"):
+        return path
+    if path.startswith("/"):
+        return "https://www.imdb.com" + path
+    return "https://www.imdb.com/" + path
 # Appending to an existing movies.csv that was created with fewer columns will misalign rows;
 # use a new file or migrate headers before adding new fields.
 
@@ -370,147 +365,237 @@ def _pairs_from_name_links(links):
         if nm in seen_nm:
             continue
         seen_nm.add(nm)
-        name = re.sub(r"\s+", " ", a.inner_text()).strip()
+        name = _normalize_actor_name(a.inner_text())
         if not name or len(name) > 200:
             continue
-        pairs.append({"nm": nm, "name": name})
+        pairs.append(
+            {"nm": nm, "name": name, "url": _imdb_name_abs_url(href)}
+        )
     return pairs
+
+
+def _pull_cast_pairs_from_fullcredits_dom(page):
+    """
+    Parse only the Cast block on /fullcredits/. Match the section titled \"Cast\" (not
+    \"Full cast & crew\" page chrome); cast may be div-based (no tables in main). Sibling
+    walk after the Cast heading collects nm links until the next department heading.
+    """
+    return page.evaluate(
+        r"""() => {
+          const seen = new Set();
+          const rows = [];
+          function normName(s) {
+            return (s || "").replace(/\s+/g, " ").trim();
+          }
+          function stripGoTo(s) {
+            return normName(s).replace(/^go to\s+/i, "");
+          }
+          function absImdbNameUrl(href) {
+            const path = (href || "").split("?")[0];
+            if (!path) return "";
+            if (/^https?:\/\//i.test(path)) return path;
+            const p = path.startsWith("/") ? path : "/" + path;
+            return "https://www.imdb.com" + p;
+          }
+          function addFromRoot(root) {
+            if (!root) return;
+            root.querySelectorAll('a[href*="/name/nm"]').forEach((a) => {
+              const href = a.getAttribute("href") || "";
+              const m = href.match(/\/name\/(nm\d+)/);
+              if (!m) return;
+              const nm = m[1];
+              if (seen.has(nm)) return;
+              let name = stripGoTo(a.innerText || a.textContent);
+              if (!name) {
+                const t = a.getAttribute("title") || a.getAttribute("aria-label");
+                name = stripGoTo(t);
+              }
+              if (!name || name.length > 200) return;
+              seen.add(nm);
+              rows.push({
+                nm: nm,
+                name: name,
+                url: absImdbNameUrl(href),
+              });
+            });
+          }
+          function headingIsCast(el) {
+            const t = normName(el && el.textContent);
+            if (!t || /^casting\b/i.test(t)) return false;
+            if (/full cast/i.test(t)) return false;
+            return /^cast\b/i.test(t);
+          }
+          function isCastSubOrNoise(el) {
+            const t = normName(el && el.textContent);
+            if (!t) return true;
+            if (/credits order|verified as complete|^in$/i.test(t)) return true;
+            if (/uncredited|rest of cast|alphabetical/i.test(t)) return true;
+            return false;
+          }
+          function isNewDepartmentHeading(el) {
+            if (!el || !el.matches) return false;
+            if (!el.matches("h1, h2, h3, h4, h5, h6")) return false;
+            if (headingIsCast(el)) return false;
+            if (isCastSubOrNoise(el)) return false;
+            const t = normName(el.textContent);
+            if (t.length < 2 || t.length >= 120) return false;
+            if (/^writer/i.test(t)) return true;
+            if (/produced by|directed by|music|sound|camera|editorial|casting/i.test(t))
+              return true;
+            return true;
+          }
+          function addCastBlockAfterHeading(hCast) {
+            let el = hCast.nextElementSibling;
+            let steps = 0;
+            while (el && steps++ < 100) {
+              if (isNewDepartmentHeading(el)) break;
+              if (el.tagName === "TABLE") {
+                addFromRoot(el);
+              } else {
+                const tbls = el.querySelectorAll && el.querySelectorAll("table");
+                if (tbls && tbls.length) {
+                  tbls.forEach((t) => addFromRoot(t));
+                } else {
+                  addFromRoot(el);
+                }
+              }
+              el = el.nextElementSibling;
+            }
+          }
+          let table = document.querySelector("table.cast_list");
+          if (table) {
+            addFromRoot(table);
+            if (rows.length) return rows;
+          }
+          const main = document.querySelector("main");
+          if (!main) return rows;
+          const sectionEls = main.querySelectorAll(
+            "section, div.ipc-page-section, div[class*='PageSection']"
+          );
+          for (const sec of sectionEls) {
+            const hx = sec.querySelector(
+              "h1, h2, h3, h4, h5, h6, .ipc-title__text, [class*='TitleText']"
+            );
+            if (!hx || !headingIsCast(hx)) continue;
+            addFromRoot(sec);
+            if (rows.length) return rows;
+          }
+          const heads = Array.from(
+            main.querySelectorAll("h1, h2, h3, h4, h5, h6")
+          );
+          const hCast = heads.find(headingIsCast);
+          if (hCast) {
+            addCastBlockAfterHeading(hCast);
+            if (rows.length) return rows;
+          }
+          const castSection = main.querySelector('[data-testid*="cast"]');
+          if (castSection) {
+            const hh = castSection.querySelector("h1, h2, h3, h4, h5, h6");
+            if (hh && headingIsCast(hh)) addCastBlockAfterHeading(hh);
+            else addFromRoot(castSection);
+            if (rows.length) return rows;
+          }
+          return rows;
+        }"""
+    )
 
 
 def extract_film_actor_rows(browser, movie_url, year, film_title):
     """
-    One row per unique /name/nm from the Top Cast flow: click the header that looks like
-    "Top Cast 99+" (see section[data-testid="title-cast"] → a.ipc-title-link-wrapper → fullcredits),
-    then "Cast" if present, and read cast name links. The Top Cast link often navigates to fullcredits;
-    in that case table.cast_list is used. Uses href*=\"/name/nm\" (IMDb uses absolute URLs too).
+    Film–actor pairs from IMDb full credits: `goto .../fullcredits/` and parse the Cast table
+    in-page. Fallback: open title page, click Top Cast → fullcredits, parse again.
     """
     page = browser.new_page()
     try:
         base = movie_url.split("?")[0].rstrip("/")
-        page.goto(base, timeout=90000, wait_until="load")
+        if re.search(r"/fullcredits/?$", base, re.I):
+            fullcredits_url = base + "/" if not base.endswith("/") else base
+        else:
+            fullcredits_url = base + "/fullcredits/"
+
+        page.goto(fullcredits_url, timeout=90000, wait_until="load")
         try:
             page.wait_for_function(
-                "() => document.querySelectorAll('[data-testid]').length > 0",
+                "() => document.querySelectorAll('a[href*=\"/name/nm\"]').length > 0",
                 timeout=45000,
             )
         except Exception:
             pass
 
-        sample_href = page.evaluate(
-            """() => {
-              const a = document.querySelector('a[href*="/name/nm"]');
-              return a ? (a.getAttribute('href') || '').slice(0, 80) : null;
-            }"""
-        )
-        _cast_debug(
-            "H5",
-            "sample_name_href_after_load",
-            {"film_title": film_title, "sample_href": sample_href},
-        )
+        pairs = _pull_cast_pairs_from_fullcredits_dom(page)
 
-        # Accessible name is e.g. "Top Cast 99+" (digits + optional +), not only "Top Cast 58".
-        top_name_re = re.compile(r"(?i)top cast\s+\d+\+?")
-        top_link_n = page.get_by_role("link", name=top_name_re).count()
-        top_btn_n = page.get_by_role("button", name=top_name_re).count()
-        top_css_n = page.locator(
-            'section[data-testid="title-cast"] a.ipc-title-link-wrapper[href*="fullcredits"]'
-        ).count()
-        _cast_debug(
-            "H1",
-            "top_cast_controls",
-            {
-                "top_link_count": top_link_n,
-                "top_button_count": top_btn_n,
-                "title_cast_fullcredits_a_count": top_css_n,
-            },
-        )
-
-        pairs = []
-        try:
+        if not pairs:
+            page.goto(base, timeout=90000, wait_until="load")
+            try:
+                page.wait_for_function(
+                    "() => document.querySelectorAll('[data-testid]').length > 0",
+                    timeout=45000,
+                )
+            except Exception:
+                pass
+            top_name_re = re.compile(r"top cast\s+\d+\+?", re.IGNORECASE)
             top_hdr = page.locator(
                 'section[data-testid="title-cast"] a.ipc-title-link-wrapper[href*="fullcredits"]'
             )
-            if top_hdr.count() > 0:
-                top_hdr.first.wait_for(state="visible", timeout=20000)
-                top_hdr.first.click()
-                try:
-                    page.wait_for_load_state("load", timeout=90000)
-                except Exception:
-                    pass
-                _cast_debug("H1", "top_cast_clicked", {"via": "css_title_cast_fullcredits"})
-            else:
-                top_cast = page.get_by_role("link", name=top_name_re)
-                if top_cast.count() == 0:
-                    top_cast = page.get_by_role("button", name=top_name_re)
-                if top_cast.count() > 0:
-                    top_cast.first.wait_for(state="visible", timeout=20000)
-                    top_cast.first.click()
+            try:
+                if top_hdr.count() > 0:
+                    top_hdr.first.wait_for(state="visible", timeout=20000)
+                    top_hdr.first.click()
                     try:
                         page.wait_for_load_state("load", timeout=90000)
                     except Exception:
                         pass
-                    _cast_debug("H1", "top_cast_clicked", {"via": "role_regex"})
-        except Exception as e:
-            _cast_debug("H1", "top_cast_click_failed", {"error": str(e)})
+                else:
+                    top_cast = page.get_by_role("link", name=top_name_re)
+                    if top_cast.count() == 0:
+                        top_cast = page.get_by_role("button", name=top_name_re)
+                    if top_cast.count() > 0:
+                        top_cast.first.click()
+                        try:
+                            page.wait_for_load_state("load", timeout=90000)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
 
-        try:
-            cast_tab = page.get_by_role("link", name="Cast", exact=True)
-            if cast_tab.count() == 0:
-                cast_tab = page.get_by_role("tab", name="Cast", exact=True)
-            if cast_tab.count() == 0:
-                cast_tab = page.get_by_role("button", name="Cast", exact=True)
-            if cast_tab.count() > 0:
-                cast_tab.first.wait_for(state="visible", timeout=20000)
-                cast_tab.first.click()
-        except Exception as e:
-            _cast_debug("H3", "cast_tab_click_failed", {"error": str(e)})
+            try:
+                cast_tab = page.get_by_role("link", name="Cast", exact=True)
+                if cast_tab.count() == 0:
+                    cast_tab = page.get_by_role("tab", name="Cast", exact=True)
+                if cast_tab.count() == 0:
+                    cast_tab = page.get_by_role("button", name="Cast", exact=True)
+                if cast_tab.count() > 0:
+                    cast_tab.first.click()
+            except Exception:
+                pass
 
-        try:
-            page.locator('[data-testid="title-cast-item"]').first.wait_for(
-                state="visible", timeout=25000
-            )
-        except Exception:
-            pass
+            try:
+                page.wait_for_function(
+                    "() => document.querySelectorAll('a[href*=\"/name/nm\"]').length > 0",
+                    timeout=25000,
+                )
+            except Exception:
+                pass
 
-        links = page.locator('[data-testid="title-cast-item"] a[href*="/name/nm"]')
-        c1 = links.count()
-        if c1 == 0:
-            tabpanels = page.get_by_role("tabpanel")
-            if tabpanels.count() > 0:
-                links = tabpanels.last.locator('a[href*="/name/nm"]')
-        c2 = links.count()
-        if c2 == 0:
-            links = page.locator('[data-testid="title-cast"] a[href*="/name/nm"]')
-        c3 = links.count()
-        _cast_debug(
-            "H4",
-            "link_counts_by_strategy",
-            {"c_title_cast_item": c1, "c_after_tabpanel": c2, "c_title_cast": c3},
-        )
+            pairs = _pull_cast_pairs_from_fullcredits_dom(page)
 
-        pairs = _pairs_from_name_links(links)
+        if not pairs and "fullcredits" not in (page.url or ""):
+            links = page.locator('[data-testid="title-cast-item"] a[href*="/name/nm"]')
+            if links.count() == 0:
+                links = page.locator('[data-testid="title-cast"] a[href*="/name/nm"]')
+            pairs = _pairs_from_name_links(links)
 
-        if not pairs:
-            clinks = page.locator('table.cast_list a[href*="/name/nm"]')
-            if clinks.count() > 0:
-                pairs = _pairs_from_name_links(clinks)
-                _cast_debug("H4", "pairs_from_cast_list_table", {"count": len(pairs)})
-
-        if not pairs:
-            section = page.locator("section.ipc-page-section").filter(
-                has_text=re.compile(r"top\s+cast", re.I)
-            )
-            if section.count() > 0:
-                links = section.first.locator('a[href*="/name/nm"]')
-                pairs = _pairs_from_name_links(links)
-
-        _cast_debug("H4", "extract_result", {"pair_count": len(pairs)})
         return [
-            {"year": year, "film_title": film_title, "actor_name": p["name"]}
+            {
+                "year": year,
+                "film_title": film_title,
+                "actor_name": _normalize_actor_name(p["name"]),
+                "actor_imdb_url": p.get("url")
+                or f"https://www.imdb.com/name/{p['nm']}/",
+            }
             for p in pairs
         ]
-    except Exception as e:
-        _cast_debug("H5", "extract_exception", {"error": str(e), "type": type(e).__name__})
+    except Exception:
         return []
     finally:
         page.close()
