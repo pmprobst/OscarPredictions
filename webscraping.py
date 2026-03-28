@@ -1,10 +1,33 @@
 from playwright.sync_api import sync_playwright
 import argparse
 import csv
-import os
+import json
 import re
+import time
+
+# region agent log
+_CAST_DEBUG_LOG = "/Users/pprobst/Repos/OscarPredictions/.cursor/debug-bed965.log"
+
+
+def _cast_debug(hypothesis_id, message, data=None, run_id="pre-fix"):
+    payload = {
+        "sessionId": "bed965",
+        "runId": run_id,
+        "hypothesisId": hypothesis_id,
+        "location": "webscraping.py:extract_film_actor_rows",
+        "message": message,
+        "data": data or {},
+        "timestamp": int(time.time() * 1000),
+    }
+    with open(_CAST_DEBUG_LOG, "a", encoding="utf-8") as df:
+        df.write(json.dumps(payload) + "\n")
+
+
+# endregion
 
 CSV_FILE = "movies.csv"
+CAST_CSV_FILE = "film_actors.csv"
+CAST_FIELDNAMES = ["year", "film_title", "actor_name"]
 # Appending to an existing movies.csv that was created with fewer columns will misalign rows;
 # use a new file or migrate headers before adding new fields.
 
@@ -334,7 +357,166 @@ def get_director_award_counts(browser, movie_url, oscar_year):
         page.close()
 
 
-def get_movies_for_year(browser, year, writer):
+def _pairs_from_name_links(links):
+    seen_nm = set()
+    pairs = []
+    for i in range(links.count()):
+        a = links.nth(i)
+        href = a.get_attribute("href") or ""
+        m = re.search(r"/name/(nm\d+)", href)
+        if not m:
+            continue
+        nm = m.group(1)
+        if nm in seen_nm:
+            continue
+        seen_nm.add(nm)
+        name = re.sub(r"\s+", " ", a.inner_text()).strip()
+        if not name or len(name) > 200:
+            continue
+        pairs.append({"nm": nm, "name": name})
+    return pairs
+
+
+def extract_film_actor_rows(browser, movie_url, year, film_title):
+    """
+    One row per unique /name/nm from the Top Cast flow: click the header that looks like
+    "Top Cast 99+" (see section[data-testid="title-cast"] → a.ipc-title-link-wrapper → fullcredits),
+    then "Cast" if present, and read cast name links. The Top Cast link often navigates to fullcredits;
+    in that case table.cast_list is used. Uses href*=\"/name/nm\" (IMDb uses absolute URLs too).
+    """
+    page = browser.new_page()
+    try:
+        base = movie_url.split("?")[0].rstrip("/")
+        page.goto(base, timeout=90000, wait_until="load")
+        try:
+            page.wait_for_function(
+                "() => document.querySelectorAll('[data-testid]').length > 0",
+                timeout=45000,
+            )
+        except Exception:
+            pass
+
+        sample_href = page.evaluate(
+            """() => {
+              const a = document.querySelector('a[href*="/name/nm"]');
+              return a ? (a.getAttribute('href') || '').slice(0, 80) : null;
+            }"""
+        )
+        _cast_debug(
+            "H5",
+            "sample_name_href_after_load",
+            {"film_title": film_title, "sample_href": sample_href},
+        )
+
+        # Accessible name is e.g. "Top Cast 99+" (digits + optional +), not only "Top Cast 58".
+        top_name_re = re.compile(r"(?i)top cast\s+\d+\+?")
+        top_link_n = page.get_by_role("link", name=top_name_re).count()
+        top_btn_n = page.get_by_role("button", name=top_name_re).count()
+        top_css_n = page.locator(
+            'section[data-testid="title-cast"] a.ipc-title-link-wrapper[href*="fullcredits"]'
+        ).count()
+        _cast_debug(
+            "H1",
+            "top_cast_controls",
+            {
+                "top_link_count": top_link_n,
+                "top_button_count": top_btn_n,
+                "title_cast_fullcredits_a_count": top_css_n,
+            },
+        )
+
+        pairs = []
+        try:
+            top_hdr = page.locator(
+                'section[data-testid="title-cast"] a.ipc-title-link-wrapper[href*="fullcredits"]'
+            )
+            if top_hdr.count() > 0:
+                top_hdr.first.wait_for(state="visible", timeout=20000)
+                top_hdr.first.click()
+                try:
+                    page.wait_for_load_state("load", timeout=90000)
+                except Exception:
+                    pass
+                _cast_debug("H1", "top_cast_clicked", {"via": "css_title_cast_fullcredits"})
+            else:
+                top_cast = page.get_by_role("link", name=top_name_re)
+                if top_cast.count() == 0:
+                    top_cast = page.get_by_role("button", name=top_name_re)
+                if top_cast.count() > 0:
+                    top_cast.first.wait_for(state="visible", timeout=20000)
+                    top_cast.first.click()
+                    try:
+                        page.wait_for_load_state("load", timeout=90000)
+                    except Exception:
+                        pass
+                    _cast_debug("H1", "top_cast_clicked", {"via": "role_regex"})
+        except Exception as e:
+            _cast_debug("H1", "top_cast_click_failed", {"error": str(e)})
+
+        try:
+            cast_tab = page.get_by_role("link", name="Cast", exact=True)
+            if cast_tab.count() == 0:
+                cast_tab = page.get_by_role("tab", name="Cast", exact=True)
+            if cast_tab.count() == 0:
+                cast_tab = page.get_by_role("button", name="Cast", exact=True)
+            if cast_tab.count() > 0:
+                cast_tab.first.wait_for(state="visible", timeout=20000)
+                cast_tab.first.click()
+        except Exception as e:
+            _cast_debug("H3", "cast_tab_click_failed", {"error": str(e)})
+
+        try:
+            page.locator('[data-testid="title-cast-item"]').first.wait_for(
+                state="visible", timeout=25000
+            )
+        except Exception:
+            pass
+
+        links = page.locator('[data-testid="title-cast-item"] a[href*="/name/nm"]')
+        c1 = links.count()
+        if c1 == 0:
+            tabpanels = page.get_by_role("tabpanel")
+            if tabpanels.count() > 0:
+                links = tabpanels.last.locator('a[href*="/name/nm"]')
+        c2 = links.count()
+        if c2 == 0:
+            links = page.locator('[data-testid="title-cast"] a[href*="/name/nm"]')
+        c3 = links.count()
+        _cast_debug(
+            "H4",
+            "link_counts_by_strategy",
+            {"c_title_cast_item": c1, "c_after_tabpanel": c2, "c_title_cast": c3},
+        )
+
+        pairs = _pairs_from_name_links(links)
+
+        if not pairs:
+            clinks = page.locator('table.cast_list a[href*="/name/nm"]')
+            if clinks.count() > 0:
+                pairs = _pairs_from_name_links(clinks)
+                _cast_debug("H4", "pairs_from_cast_list_table", {"count": len(pairs)})
+
+        if not pairs:
+            section = page.locator("section.ipc-page-section").filter(
+                has_text=re.compile(r"top\s+cast", re.I)
+            )
+            if section.count() > 0:
+                links = section.first.locator('a[href*="/name/nm"]')
+                pairs = _pairs_from_name_links(links)
+
+        _cast_debug("H4", "extract_result", {"pair_count": len(pairs)})
+        return [
+            {"year": year, "film_title": film_title, "actor_name": p["name"]}
+            for p in pairs
+        ]
+    except Exception as e:
+        _cast_debug("H5", "extract_exception", {"error": str(e), "type": type(e).__name__})
+        return []
+    finally:
+        page.close()
+
+
+def get_movies_for_year(browser, year, writer, cast_writer=None, max_movies=None):
     # Oscar ceremony list page (IMDb uses /oscars/event/ for newer UX; /event/ still used in places)
     urls = (
         f"https://www.imdb.com/oscars/event/ev0000003/{year}/1/",
@@ -389,6 +571,7 @@ def get_movies_for_year(browser, year, writer):
 
         links = category.locator("a.ipc-title-link-wrapper:has(h3)")
 
+        movies_done = 0
         for i in range(links.count()):
             link = links.nth(i)
             title = link.locator("h3").inner_text()
@@ -397,6 +580,10 @@ def get_movies_for_year(browser, year, writer):
                 continue
             full_url = "https://www.imdb.com" + href
             print(f"Processing {title} ({year})")
+
+            if cast_writer:
+                for cast_row in extract_film_actor_rows(browser, full_url, year, title):
+                    cast_writer.writerow(cast_row)
 
             cc_result = get_critics_choice(browser, full_url)
             print(f"  Critics Choice Nominee: {cc_result['critics_choice_nom']}, Winner: {cc_result['critics_choice_win']}")
@@ -427,6 +614,9 @@ def get_movies_for_year(browser, year, writer):
             movie.update(director_awards)
 
             writer.writerow(movie)
+            movies_done += 1
+            if max_movies is not None and movies_done >= max_movies:
+                break
     finally:
         page.close()
 
@@ -470,6 +660,18 @@ def main():
         default=CSV_FILE,
         help=f"Output CSV path (default: {CSV_FILE}).",
     )
+    parser.add_argument(
+        "--csv-cast",
+        default=CAST_CSV_FILE,
+        help=f"Film–actor pairing CSV path (default: {CAST_CSV_FILE}).",
+    )
+    parser.add_argument(
+        "--max-movies",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Process at most N Best Picture nominees per year (for testing).",
+    )
     args = parser.parse_args()
 
     if args.year is not None:
@@ -478,19 +680,32 @@ def main():
         years = list(range(2026, 1995, -1))
 
     out_path = args.csv
-    with open(out_path, "a", newline="", encoding="utf-8") as f:
+    cast_path = args.csv_cast
+    with open(out_path, "a", newline="", encoding="utf-8") as f, open(
+        cast_path, "a", newline="", encoding="utf-8"
+    ) as cf:
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+        cast_writer = csv.DictWriter(cf, fieldnames=CAST_FIELDNAMES)
 
         if f.tell() == 0:
             writer.writeheader()
+        if cf.tell() == 0:
+            cast_writer.writeheader()
 
         with sync_playwright() as p:
             browser, context = _imdb_browser_context(p, args.headless)
             try:
                 for year in years:
                     try:
-                        get_movies_for_year(context, year, writer)
+                        get_movies_for_year(
+                            context,
+                            year,
+                            writer,
+                            cast_writer,
+                            max_movies=args.max_movies,
+                        )
                         f.flush()
+                        cf.flush()
                     except Exception as e:
                         print(f"Error processing {year}: {e}")
             finally:
@@ -498,6 +713,7 @@ def main():
                 browser.close()
 
     print(f"Movies written incrementally to {out_path}")
+    print(f"Film–actor pairs written incrementally to {cast_path}")
 
 
 if __name__ == "__main__":
