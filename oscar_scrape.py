@@ -1,6 +1,3 @@
-from playwright.sync_api import sync_playwright
-import argparse
-import csv
 import re
 
 CSV_FILE = "movies.csv"
@@ -601,8 +598,11 @@ def extract_film_actor_rows(browser, movie_url, year, film_title):
         page.close()
 
 
-def get_movies_for_year(browser, year, writer, cast_writer=None, max_movies=None):
-    # Oscar ceremony list page (IMDb uses /oscars/event/ for newer UX; /event/ still used in places)
+def iter_best_picture_nominees(browser, year, max_movies=None):
+    """
+    Yield (title, full_imdb_url, year) for each Best Picture nominee on the ceremony page.
+    browser: Playwright BrowserContext.
+    """
     urls = (
         f"https://www.imdb.com/oscars/event/ev0000003/{year}/1/",
         f"https://www.imdb.com/event/ev0000003/{year}/1/",
@@ -655,7 +655,6 @@ def get_movies_for_year(browser, year, writer, cast_writer=None, max_movies=None
             return
 
         links = category.locator("a.ipc-title-link-wrapper:has(h3)")
-
         movies_done = 0
         for i in range(links.count()):
             link = links.nth(i)
@@ -664,46 +663,52 @@ def get_movies_for_year(browser, year, writer, cast_writer=None, max_movies=None
             if not href or "/title/" not in href:
                 continue
             full_url = "https://www.imdb.com" + href
-            print(f"Processing {title} ({year})")
-
-            if cast_writer:
-                for cast_row in extract_film_actor_rows(browser, full_url, year, title):
-                    cast_writer.writerow(cast_row)
-
-            cc_result = get_critics_choice(browser, full_url)
-            print(f"  Critics Choice Nominee: {cc_result['critics_choice_nom']}, Winner: {cc_result['critics_choice_win']}")
-
-            bafta_result = get_bafta(browser, full_url)
-            print(f"  BAFTA Nominee: {bafta_result['bafta_nom']}, Winner: {bafta_result['bafta_win']}")
-
-            gg_result = get_golden_globes(browser, full_url)
-            print(f"  Golden Globes Nominee: {gg_result['golden_globes_nom']}, Winner: {gg_result['golden_globes_win']}")
-
-            pga_result = get_pga(browser, full_url)
-            print(f"  PGA Nominee: {pga_result['pga_nom']}, Winner: {pga_result['pga_win']}")
-
-            sag_result = get_sag(browser, full_url)
-            print(f"  SAG Nominee: {sag_result['sag_nom']}, Winner: {sag_result['sag_win']}")
-
-            director_awards = get_director_award_counts(browser, full_url, year)
-            print(
-                f"  Director awards (through {year}): noms={director_awards['director_award_noms']}, wins={director_awards['director_award_wins']}"
-            )
-
-            movie = {"title": title, "url": full_url, "year": year}
-            movie.update(cc_result)
-            movie.update(bafta_result)
-            movie.update(gg_result)
-            movie.update(pga_result)
-            movie.update(sag_result)
-            movie.update(director_awards)
-
-            writer.writerow(movie)
+            yield title, full_url, year
             movies_done += 1
             if max_movies is not None and movies_done >= max_movies:
                 break
     finally:
         page.close()
+
+
+def get_movies_for_year(browser, year, writer, cast_writer=None, max_movies=None):
+    """Scrape awards + director counts per nominee; optionally write cast CSV rows."""
+    for title, full_url, y in iter_best_picture_nominees(browser, year, max_movies):
+        print(f"Processing {title} ({y})")
+
+        if cast_writer:
+            for cast_row in extract_film_actor_rows(browser, full_url, y, title):
+                cast_writer.writerow(cast_row)
+
+        cc_result = get_critics_choice(browser, full_url)
+        print(f"  Critics Choice Nominee: {cc_result['critics_choice_nom']}, Winner: {cc_result['critics_choice_win']}")
+
+        bafta_result = get_bafta(browser, full_url)
+        print(f"  BAFTA Nominee: {bafta_result['bafta_nom']}, Winner: {bafta_result['bafta_win']}")
+
+        gg_result = get_golden_globes(browser, full_url)
+        print(f"  Golden Globes Nominee: {gg_result['golden_globes_nom']}, Winner: {gg_result['golden_globes_win']}")
+
+        pga_result = get_pga(browser, full_url)
+        print(f"  PGA Nominee: {pga_result['pga_nom']}, Winner: {pga_result['pga_win']}")
+
+        sag_result = get_sag(browser, full_url)
+        print(f"  SAG Nominee: {sag_result['sag_nom']}, Winner: {sag_result['sag_win']}")
+
+        director_awards = get_director_award_counts(browser, full_url, y)
+        print(
+            f"  Director awards (through {y}): noms={director_awards['director_award_noms']}, wins={director_awards['director_award_wins']}"
+        )
+
+        movie = {"title": title, "url": full_url, "year": y}
+        movie.update(cc_result)
+        movie.update(bafta_result)
+        movie.update(gg_result)
+        movie.update(pga_result)
+        movie.update(sag_result)
+        movie.update(director_awards)
+
+        writer.writerow(movie)
 
 
 FIELDNAMES = [
@@ -723,83 +728,3 @@ FIELDNAMES = [
     "director_award_noms",
     "director_award_wins",
 ]
-
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="Scrape IMDb Best Picture nominees and precursor / director award fields."
-    )
-    parser.add_argument(
-        "--year",
-        type=int,
-        metavar="Y",
-        help="Single Oscar ceremony year to scrape (for a quick test). Default: 2026 through 1996.",
-    )
-    parser.add_argument(
-        "--headless",
-        action="store_true",
-        help="Run Chromium without opening a window.",
-    )
-    parser.add_argument(
-        "--csv",
-        default=CSV_FILE,
-        help=f"Output CSV path (default: {CSV_FILE}).",
-    )
-    parser.add_argument(
-        "--csv-cast",
-        default=CAST_CSV_FILE,
-        help=f"Film–actor pairing CSV path (default: {CAST_CSV_FILE}).",
-    )
-    parser.add_argument(
-        "--max-movies",
-        type=int,
-        default=None,
-        metavar="N",
-        help="Process at most N Best Picture nominees per year (for testing).",
-    )
-    args = parser.parse_args()
-
-    if args.year is not None:
-        years = [args.year]
-    else:
-        years = list(range(2026, 1995, -1))
-
-    out_path = args.csv
-    cast_path = args.csv_cast
-    with open(out_path, "a", newline="", encoding="utf-8") as f, open(
-        cast_path, "a", newline="", encoding="utf-8"
-    ) as cf:
-        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
-        cast_writer = csv.DictWriter(cf, fieldnames=CAST_FIELDNAMES)
-
-        if f.tell() == 0:
-            writer.writeheader()
-        if cf.tell() == 0:
-            cast_writer.writeheader()
-
-        with sync_playwright() as p:
-            browser, context = _imdb_browser_context(p, args.headless)
-            try:
-                for year in years:
-                    try:
-                        get_movies_for_year(
-                            context,
-                            year,
-                            writer,
-                            cast_writer,
-                            max_movies=args.max_movies,
-                        )
-                        f.flush()
-                        cf.flush()
-                    except Exception as e:
-                        print(f"Error processing {year}: {e}")
-            finally:
-                context.close()
-                browser.close()
-
-    print(f"Movies written incrementally to {out_path}")
-    print(f"Film–actor pairs written incrementally to {cast_path}")
-
-
-if __name__ == "__main__":
-    main()
