@@ -3,6 +3,8 @@ import re
 CSV_FILE = "movies.csv"
 CAST_CSV_FILE = "film_actors.csv"
 CAST_FIELDNAMES = ["year", "film_title", "actor_name", "actor_imdb_url"]
+ACTOR_AWARDS_CSV_FILE = "actor_awards.csv"
+ACTOR_AWARD_FIELDNAMES = ["actor_name", "actor_imdb_url", "award", "year", "outcome"]
 
 
 def _normalize_actor_name(name: str) -> str:
@@ -345,6 +347,85 @@ def get_director_award_counts(browser, movie_url, oscar_year):
         return {"director_award_noms": noms, "director_award_wins": wins}
     except Exception:
         return {"director_award_noms": 0, "director_award_wins": 0}
+    finally:
+        page.close()
+
+
+def nm_id_from_profile_url(url: str) -> str | None:
+    """IMDb person id (nm……) from a profile or /name/nm…… URL."""
+    m = re.search(r"/name/(nm\d+)", (url or "").split("?")[0], re.I)
+    return m.group(1) if m else None
+
+
+def extract_person_award_rows(browser, actor_imdb_url: str, actor_name: str) -> list[dict]:
+    """
+    Scrape all nomination/win lines from a person's IMDb awards page (/name/nm…/awards/).
+
+    Navigates directly to the awards URL (same end state as the Awards tab). Each row uses
+    the maximum 4-digit year found in the line as ``year`` (ceremony / credit-year heuristic
+    when multiple years appear). ``outcome`` is ``won`` or ``nominated``.
+    """
+    nm = nm_id_from_profile_url(actor_imdb_url)
+    if not nm:
+        return []
+    canonical_url = f"https://www.imdb.com/name/{nm}/"
+    page = browser.new_page()
+    try:
+        awards_url = f"https://www.imdb.com/name/{nm}/awards/"
+        page.goto(awards_url, timeout=90000, wait_until="load")
+        page.wait_for_selector("body", timeout=60000)
+        try:
+            page.wait_for_function(
+                "() => document.querySelector('main') && document.querySelectorAll('main li').length > 0",
+                timeout=25000,
+            )
+        except Exception:
+            pass
+
+        items = page.locator("main li")
+        if items.count() == 0:
+            items = page.locator("li")
+
+        rows_out: list[dict] = []
+        for i in range(items.count()):
+            item = items.nth(i)
+            text = item.inner_text()
+            if "Nominee" not in text and "Winner" not in text:
+                continue
+            years = [int(y) for y in re.findall(r"\b((?:19|20)\d{2})\b", text)]
+            if not years:
+                continue
+            year = max(years)
+            outcome = "won" if "Winner" in text else "nominated"
+            try:
+                award = item.evaluate(
+                    """(el) => {
+                      let prefix = '';
+                      const section = el.closest('section');
+                      if (section) {
+                        const h = section.querySelector('h1, h2, h3, h4, .ipc-title__text');
+                        if (h) {
+                          const t = (h.textContent || '').replace(/\\s+/g, ' ').trim();
+                          if (t) prefix = t + ' — ';
+                        }
+                      }
+                      return prefix + (el.innerText || '').replace(/\\s+/g, ' ').trim();
+                    }"""
+                )
+            except Exception:
+                award = re.sub(r"\s+", " ", text).strip()
+            rows_out.append(
+                {
+                    "actor_name": actor_name,
+                    "actor_imdb_url": canonical_url,
+                    "award": award,
+                    "year": year,
+                    "outcome": outcome,
+                }
+            )
+        return rows_out
+    except Exception:
+        return []
     finally:
         page.close()
 
