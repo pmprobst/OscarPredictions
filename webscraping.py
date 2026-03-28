@@ -1,8 +1,11 @@
 from playwright.sync_api import sync_playwright
 import csv
 import os
+import re
 
 CSV_FILE = "movies.csv"
+# Appending to an existing movies.csv that was created with fewer columns will misalign rows;
+# use a new file or migrate headers before adding new fields.
 
 def get_critics_choice(browser, movie_url):
     page = browser.new_page()
@@ -241,6 +244,66 @@ def get_sag(browser, movie_url):
     finally:
         page.close()
 
+
+def _director_nm_id_from_title_page(page):
+    """First billed director link on the title page (/name/nm…)."""
+    rows = page.locator('[data-testid="title-pc-principal-credit"]').filter(has_text="Director")
+    if rows.count() == 0:
+        return None
+    link = rows.first.locator('a[href^="/name/nm"]').first
+    if link.count() == 0:
+        return None
+    href = link.get_attribute("href") or ""
+    m = re.search(r"/name/(nm\d+)", href)
+    return m.group(1) if m else None
+
+
+def get_director_award_counts(browser, movie_url, oscar_year):
+    """
+    Count director award rows on IMDb through oscar_year (inclusive).
+    Wins also count toward nominations (Option A).
+    """
+    page = browser.new_page()
+    try:
+        base = movie_url.split("?")[0].rstrip("/")
+        page.goto(base, timeout=60000)
+        page.wait_for_selector("body", timeout=60000)
+        nm_id = _director_nm_id_from_title_page(page)
+        if not nm_id:
+            return {"director_award_noms": 0, "director_award_wins": 0}
+
+        awards_url = f"https://www.imdb.com/name/{nm_id}/awards/"
+        page.goto(awards_url, timeout=60000)
+        page.wait_for_selector("body", timeout=60000)
+
+        noms = 0
+        wins = 0
+        items = page.locator("main li")
+        if items.count() == 0:
+            items = page.locator("li")
+        for i in range(items.count()):
+            text = items.nth(i).inner_text()
+            if "Nominee" not in text and "Winner" not in text:
+                continue
+            years = [int(y) for y in re.findall(r"\b((?:19|20)\d{2})\b", text)]
+            if not years:
+                continue
+            award_year = max(years)
+            if award_year > oscar_year:
+                continue
+            if "Winner" in text:
+                wins += 1
+                noms += 1
+            elif "Nominee" in text:
+                noms += 1
+
+        return {"director_award_noms": noms, "director_award_wins": wins}
+    except Exception:
+        return {"director_award_noms": 0, "director_award_wins": 0}
+    finally:
+        page.close()
+
+
 def get_movies_for_year(browser, year, writer):
     # page with all of the oscar nominations for best picture
     url = f"https://www.imdb.com/event/ev0000003/{year}/1/"
@@ -299,6 +362,11 @@ def get_movies_for_year(browser, year, writer):
         sag_result = get_sag(browser, full_url)
         print(f"  SAG Nominee: {sag_result['sag_nom']}, Winner: {sag_result['sag_win']}")
 
+        director_awards = get_director_award_counts(browser, full_url, year)
+        print(
+            f"  Director awards (through {year}): noms={director_awards['director_award_noms']}, wins={director_awards['director_award_wins']}"
+        )
+
         # add data to dictionary
         movie = {"title": title, "url": full_url, "year": year}
         movie.update(cc_result)
@@ -306,6 +374,7 @@ def get_movies_for_year(browser, year, writer):
         movie.update(gg_result)
         movie.update(pga_result)
         movie.update(sag_result)
+        movie.update(director_awards)
 
         # Write each movie immediately to csv
         writer.writerow(movie)
@@ -317,8 +386,26 @@ file_exists = os.path.exists(CSV_FILE)
 
 # write all data to the csv
 with open(CSV_FILE, "a", newline="", encoding="utf-8") as f:
-    writer = csv.DictWriter(f, fieldnames=["title","url","year","critics_choice_nom","critics_choice_win", "bafta_nom", "bafta_win",
-                                           "golden_globes_nom", "golden_globes_win", "pga_nom", "pga_win", "sag_nom", "sag_win"])
+    writer = csv.DictWriter(
+        f,
+        fieldnames=[
+            "title",
+            "url",
+            "year",
+            "critics_choice_nom",
+            "critics_choice_win",
+            "bafta_nom",
+            "bafta_win",
+            "golden_globes_nom",
+            "golden_globes_win",
+            "pga_nom",
+            "pga_win",
+            "sag_nom",
+            "sag_win",
+            "director_award_noms",
+            "director_award_wins",
+        ],
+    )
     
     if f.tell() == 0:
         writer.writeheader()
