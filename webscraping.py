@@ -1,4 +1,5 @@
 from playwright.sync_api import sync_playwright
+import argparse
 import csv
 import os
 import re
@@ -6,6 +7,35 @@ import re
 CSV_FILE = "movies.csv"
 # Appending to an existing movies.csv that was created with fewer columns will misalign rows;
 # use a new file or migrate headers before adding new fields.
+
+
+def _imdb_browser_context(playwright, headless: bool):
+    """Launch Chromium and return (browser, context) to reduce IMDb 403 / empty-shell responses."""
+    browser = playwright.chromium.launch(
+        headless=headless,
+        args=["--disable-blink-features=AutomationControlled"],
+    )
+    context = browser.new_context(
+        user_agent=(
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+        ),
+        viewport={"width": 1920, "height": 1080},
+        locale="en-US",
+        timezone_id="America/Los_Angeles",
+        extra_http_headers={
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                "image/avif,image/webp,image/apng,*/*;q=0.8"
+            ),
+        },
+    )
+    context.add_init_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"
+    )
+    return browser, context
+
 
 def get_critics_choice(browser, movie_url):
     page = browser.new_page()
@@ -305,119 +335,170 @@ def get_director_award_counts(browser, movie_url, oscar_year):
 
 
 def get_movies_for_year(browser, year, writer):
-    # page with all of the oscar nominations for best picture
-    url = f"https://www.imdb.com/event/ev0000003/{year}/1/"
+    # Oscar ceremony list page (IMDb uses /oscars/event/ for newer UX; /event/ still used in places)
+    urls = (
+        f"https://www.imdb.com/oscars/event/ev0000003/{year}/1/",
+        f"https://www.imdb.com/event/ev0000003/{year}/1/",
+    )
     page = browser.new_page()
-    page.goto(url)
-
     try:
-        # look for table of the best picture movies
-        page.wait_for_selector('[data-testid="BestMotionPictureoftheYear"]', timeout=5000)
-        category = page.locator('[data-testid="BestMotionPictureoftheYear"]')
-    except:
-        try:
-            # the selector switches to BestPicture starting in 2004
-            page.wait_for_selector('[data-testid="BestPicture"]', timeout=5000)
-            category = page.locator('[data-testid="BestPicture"]')
-        except:
-            # error handling
+        category = None
+        for url in urls:
+            try:
+                page.goto(url, timeout=90000, wait_until="load")
+            except Exception:
+                continue
+            try:
+                page.wait_for_function(
+                    "() => document.querySelectorAll('[data-testid]').length > 0",
+                    timeout=45000,
+                )
+            except Exception:
+                pass
+            picture_testids = page.evaluate(
+                """() => {
+                  const ids = [];
+                  document.querySelectorAll('[data-testid]').forEach(el => {
+                    const t = el.getAttribute('data-testid');
+                    if (t && /best/i.test(t) && /picture/i.test(t)) ids.push(t);
+                  });
+                  return [...new Set(ids)];
+                }"""
+            )
+            try_order = []
+            for tid in ("BestPicture", "BestMotionPictureoftheYear"):
+                if tid not in try_order:
+                    try_order.append(tid)
+            for tid in picture_testids:
+                if tid not in try_order:
+                    try_order.append(tid)
+            for tid in try_order:
+                loc = page.locator(f'[data-testid="{tid}"]')
+                try:
+                    loc.first.wait_for(state="visible", timeout=25000)
+                except Exception:
+                    continue
+                if loc.count() > 0:
+                    category = loc
+                    break
+            if category is not None:
+                break
+        if category is None:
             print(f"No best picture section found for {year}")
-            page.close()
             return
 
-    # find the links for each movie
-    links = category.locator("a.ipc-title-link-wrapper:has(h3)")
+        links = category.locator("a.ipc-title-link-wrapper:has(h3)")
 
-    for i in range(links.count()):
-        # get the link for the movie
-        link = links.nth(i)
+        for i in range(links.count()):
+            link = links.nth(i)
+            title = link.locator("h3").inner_text()
+            href = link.get_attribute("href")
+            if not href or "/title/" not in href:
+                continue
+            full_url = "https://www.imdb.com" + href
+            print(f"Processing {title} ({year})")
 
-        # movie title
-        title = link.locator("h3").inner_text()
+            cc_result = get_critics_choice(browser, full_url)
+            print(f"  Critics Choice Nominee: {cc_result['critics_choice_nom']}, Winner: {cc_result['critics_choice_win']}")
 
-        # link to go to movie page
-        href = link.get_attribute("href")
-        if not href or "/title/" not in href:
-            continue
-        full_url = "https://www.imdb.com" + href
-        print(f"Processing {title} ({year})")
-        
-        # get critics choice info
-        cc_result = get_critics_choice(browser, full_url)
-        print(f"  Critics Choice Nominee: {cc_result['critics_choice_nom']}, Winner: {cc_result['critics_choice_win']}")
+            bafta_result = get_bafta(browser, full_url)
+            print(f"  BAFTA Nominee: {bafta_result['bafta_nom']}, Winner: {bafta_result['bafta_win']}")
 
-        # get bafta info
-        bafta_result = get_bafta(browser, full_url)
-        print(f"  BAFTA Nominee: {bafta_result['bafta_nom']}, Winner: {bafta_result['bafta_win']}")
+            gg_result = get_golden_globes(browser, full_url)
+            print(f"  Golden Globes Nominee: {gg_result['golden_globes_nom']}, Winner: {gg_result['golden_globes_win']}")
 
-        # get golden globes info
-        gg_result = get_golden_globes(browser, full_url)
-        print(f"  Golden Globes Nominee: {gg_result['golden_globes_nom']}, Winner: {gg_result['golden_globes_win']}")
+            pga_result = get_pga(browser, full_url)
+            print(f"  PGA Nominee: {pga_result['pga_nom']}, Winner: {pga_result['pga_win']}")
 
-        # get pga info
-        pga_result = get_pga(browser, full_url)
-        print(f"  PGA Nominee: {pga_result['pga_nom']}, Winner: {pga_result['pga_win']}")
+            sag_result = get_sag(browser, full_url)
+            print(f"  SAG Nominee: {sag_result['sag_nom']}, Winner: {sag_result['sag_win']}")
 
-        # get sag info
-        sag_result = get_sag(browser, full_url)
-        print(f"  SAG Nominee: {sag_result['sag_nom']}, Winner: {sag_result['sag_win']}")
+            director_awards = get_director_award_counts(browser, full_url, year)
+            print(
+                f"  Director awards (through {year}): noms={director_awards['director_award_noms']}, wins={director_awards['director_award_wins']}"
+            )
 
-        director_awards = get_director_award_counts(browser, full_url, year)
-        print(
-            f"  Director awards (through {year}): noms={director_awards['director_award_noms']}, wins={director_awards['director_award_wins']}"
-        )
+            movie = {"title": title, "url": full_url, "year": year}
+            movie.update(cc_result)
+            movie.update(bafta_result)
+            movie.update(gg_result)
+            movie.update(pga_result)
+            movie.update(sag_result)
+            movie.update(director_awards)
 
-        # add data to dictionary
-        movie = {"title": title, "url": full_url, "year": year}
-        movie.update(cc_result)
-        movie.update(bafta_result)
-        movie.update(gg_result)
-        movie.update(pga_result)
-        movie.update(sag_result)
-        movie.update(director_awards)
+            writer.writerow(movie)
+    finally:
+        page.close()
 
-        # Write each movie immediately to csv
-        writer.writerow(movie)
 
-    page.close()
+FIELDNAMES = [
+    "title",
+    "url",
+    "year",
+    "critics_choice_nom",
+    "critics_choice_win",
+    "bafta_nom",
+    "bafta_win",
+    "golden_globes_nom",
+    "golden_globes_win",
+    "pga_nom",
+    "pga_win",
+    "sag_nom",
+    "sag_win",
+    "director_award_noms",
+    "director_award_wins",
+]
 
-# Main scraping loop
-file_exists = os.path.exists(CSV_FILE)
 
-# write all data to the csv
-with open(CSV_FILE, "a", newline="", encoding="utf-8") as f:
-    writer = csv.DictWriter(
-        f,
-        fieldnames=[
-            "title",
-            "url",
-            "year",
-            "critics_choice_nom",
-            "critics_choice_win",
-            "bafta_nom",
-            "bafta_win",
-            "golden_globes_nom",
-            "golden_globes_win",
-            "pga_nom",
-            "pga_win",
-            "sag_nom",
-            "sag_win",
-            "director_award_noms",
-            "director_award_wins",
-        ],
+def main():
+    parser = argparse.ArgumentParser(
+        description="Scrape IMDb Best Picture nominees and precursor / director award fields."
     )
-    
-    if f.tell() == 0:
-        writer.writeheader()
+    parser.add_argument(
+        "--year",
+        type=int,
+        metavar="Y",
+        help="Single Oscar ceremony year to scrape (for a quick test). Default: 2026 through 1996.",
+    )
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run Chromium without opening a window.",
+    )
+    parser.add_argument(
+        "--csv",
+        default=CSV_FILE,
+        help=f"Output CSV path (default: {CSV_FILE}).",
+    )
+    args = parser.parse_args()
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        for year in range(2026, 1995, -1):
+    if args.year is not None:
+        years = [args.year]
+    else:
+        years = list(range(2026, 1995, -1))
+
+    out_path = args.csv
+    with open(out_path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+
+        if f.tell() == 0:
+            writer.writeheader()
+
+        with sync_playwright() as p:
+            browser, context = _imdb_browser_context(p, args.headless)
             try:
-                get_movies_for_year(browser, year, writer)
-                f.flush()  # ensures each year's movies are written
-            except Exception as e:
-                print(f"Error processing {year}: {e}")
-        browser.close()
+                for year in years:
+                    try:
+                        get_movies_for_year(context, year, writer)
+                        f.flush()
+                    except Exception as e:
+                        print(f"Error processing {year}: {e}")
+            finally:
+                context.close()
+                browser.close()
 
-print(f"Movies written incrementally to {CSV_FILE}")
+    print(f"Movies written incrementally to {out_path}")
+
+
+if __name__ == "__main__":
+    main()
