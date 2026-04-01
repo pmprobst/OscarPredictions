@@ -5,9 +5,7 @@ Major ceremonies are handled separately in actor_year_award_matrix; this classif
 
 from __future__ import annotations
 
-import csv
 import re
-from pathlib import Path
 
 # Stable column order for group_* noms/wins pairs.
 GROUP_KEYS: tuple[str, ...] = (
@@ -25,41 +23,13 @@ GROUP_KEYS: tuple[str, ...] = (
 )
 
 
-def load_group_overrides(path: str | Path) -> dict[str, str]:
-    """Load award_show -> group_key from CSV (skips blank rows and #-comments in award_show)."""
-    p = Path(path)
-    if not p.is_file():
-        return {}
-    out: dict[str, str] = {}
-    with p.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        if not reader.fieldnames or "award_show" not in reader.fieldnames or "group_key" not in reader.fieldnames:
-            return {}
-        for row in reader:
-            k = (row.get("award_show") or "").strip()
-            v = (row.get("group_key") or "").strip()
-            if not k or k.startswith("#") or not v:
-                continue
-            out[k] = v
-    return out
-
-
 def _has_any(hay: str, needles: tuple[str, ...]) -> bool:
     sl = hay.lower()
     return any(n in sl for n in needles)
 
 
-def classify_group(award_show: str, overrides: dict[str, str] | None = None) -> str:
-    """
-    Return group_key for a non-major ceremony. First check overrides; then heuristic rules.
-    """
-    o = overrides or {}
-    if award_show in o:
-        g = o[award_show]
-        if g in GROUP_KEYS:
-            return g
-        return "other"
-
+def classify_group(award_show: str) -> str:
+    """Return group_key for a non-major ceremony. Edit this function to force a specific show into a bucket."""
     s = award_show
     sl = s.lower()
 

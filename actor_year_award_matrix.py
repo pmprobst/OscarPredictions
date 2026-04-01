@@ -13,12 +13,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from award_groups import GROUP_KEYS, classify_group, load_group_overrides, slugify_award_show
+from award_groups import GROUP_KEYS, classify_group, slugify_award_show
 from award_regex import parse_ceremony
 from oscar_scrape import ACTOR_AWARDS_CSV_FILE, ACTOR_AWARD_FIELDNAMES
 
 DEFAULT_MAJOR_LIST = "major_award_shows.txt"
-DEFAULT_GROUP_MAP = "award_show_to_group.csv"
 DEFAULT_UNPARSED = "actor_award_unparsed.csv"
 
 
@@ -71,7 +70,6 @@ def main() -> None:
     parser.add_argument("--input", default=ACTOR_AWARDS_CSV_FILE, help="actor_awards CSV (read-only).")
     parser.add_argument("--output", default="actor_year_award_matrix.csv", help="Output wide CSV.")
     parser.add_argument("--major-list", default=DEFAULT_MAJOR_LIST, help="Text file: one major award_show per line.")
-    parser.add_argument("--group-map", default=DEFAULT_GROUP_MAP, help="Optional CSV award_show -> group_key overrides.")
     parser.add_argument("--unparsed-out", default=DEFAULT_UNPARSED, help="Rows where ceremony regex did not match.")
     parser.add_argument("--max-rows", type=int, default=None, metavar="N", help="Process at most N award rows.")
     args = parser.parse_args()
@@ -81,7 +79,6 @@ def main() -> None:
         raise SystemExit(f"No major award shows loaded from {args.major_list}")
     major_slugs, major_show_to_slug = build_major_slugs(majors)
     major_set = set(majors)
-    overrides = load_group_overrides(args.group_map)
 
     # (actor_imdb_url, actor_name, year) -> counts
     agg: dict[tuple[str, str, str], dict[str, int]] = defaultdict(
@@ -134,7 +131,7 @@ def main() -> None:
                 slug = major_show_to_slug[ceremony]
                 row_increment(bucket, slug, is_win)
             else:
-                g = classify_group(ceremony, overrides)
+                g = classify_group(ceremony)
                 row_increment(bucket, f"grp_{g}", is_win)
 
     # column order
