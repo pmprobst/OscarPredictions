@@ -10,9 +10,10 @@ import csv
 import re
 from collections import Counter
 
+from award_regex import CEREMONY_PATTERN, CEREMONY_RE
 from oscar_scrape import ACTOR_AWARDS_CSV_FILE, ACTOR_AWARD_FIELDNAMES
 
-DEFAULT_CEREMONY_PATTERN = r"^(.+?) — \d{4} (?:Winner|Nominee) "
+DEFAULT_CEREMONY_PATTERN = CEREMONY_PATTERN
 
 COUNTS_FIELDNAMES = ["award_show", "count"]
 UNMATCHED_FIELDNAMES = ACTOR_AWARD_FIELDNAMES
@@ -52,7 +53,7 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        ceremony_re = re.compile(args.pattern)
+        ceremony_re = CEREMONY_RE if args.pattern == DEFAULT_CEREMONY_PATTERN else re.compile(args.pattern)
     except re.error as e:
         raise SystemExit(f"Invalid --pattern: {e}") from e
 
