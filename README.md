@@ -16,6 +16,7 @@ Python tooling to scrape IMDb film and actor data, collect per-actor award histo
 | [`award_groups.py`](award_groups.py) | Maps a ceremony string to a **fixed group key** (e.g. `us_regional_critics`, `television`) for aggregated columns. Edit `classify_group()` to override how a specific show is bucketed. |
 | [`award_show_counts.py`](award_show_counts.py) | Reads `actor_awards.csv` only; counts rows per distinct ceremony; writes [`award_show_counts.csv`](award_show_counts.csv) and [`award_show_unmatched.csv`](award_show_unmatched.csv) for lines that do not match the regex. |
 | [`actor_year_award_matrix.py`](actor_year_award_matrix.py) | Reads `actor_awards.csv` only; builds one row per **(actor, year)** with `maj_*` columns for [major award shows](major_award_shows.txt) and `grp_*` columns for grouped non-major ceremonies (nomination and win **counts**). Writes [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv) and optional unparsed rows to [`actor_award_unparsed.csv`](actor_award_unparsed.csv). |
+| [`film_actors_award_totals.py`](film_actors_award_totals.py) | Reads [`film_actors.csv`](film_actors.csv) and [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv); for each film–cast row with film year **F**, appends cumulative `maj_*` / `grp_*` totals for that actor over all award years **≤ F** (no future-year awards). Writes [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv). |
 
 ---
 
@@ -41,6 +42,7 @@ Large CSVs are **outputs of scrapes** or **derived features**; treat paths as co
 | [`award_show_counts.csv`](award_show_counts.csv) | **Generated.** Distinct ceremony names and how often they appear in `actor_awards.csv`. |
 | [`award_show_unmatched.csv`](award_show_unmatched.csv) | **Generated.** Award rows whose text did not match the ceremony regex (for fixing `award_regex.py`). |
 | [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv) | **Generated.** Wide actor–year table: keys plus `maj_*` / `grp_*` nomination and win counts for modeling or joins to `film_actors.csv`. |
+| [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv) | **Generated.** Same rows as `film_actors.csv` plus cumulative matrix columns through each film’s year (award years ≤ film year). |
 | [`actor_award_unparsed.csv`](actor_award_unparsed.csv) | **Generated.** Rows from `actor_awards.csv` that could not be parsed or had an unexpected `outcome` when building the matrix. |
 
 ---
@@ -52,6 +54,7 @@ Large CSVs are **outputs of scrapes** or **derived features**; treat paths as co
 3. Optionally run **`award_show_counts.py`** to inspect ceremony frequencies and regex gaps.
 4. Adjust **`major_award_shows.txt`** and **`award_groups.py`** as needed.
 5. Run **`actor_year_award_matrix.py`** to produce the bounded-width feature table for joins.
+6. Run **`film_actors_award_totals.py`** to attach cumulative award features to each film–cast row (through that film’s year).
 
 ---
 
