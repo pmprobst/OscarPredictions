@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
 Read actor_awards.csv (read-only), extract the award ceremony name from each award
-string with a regex, aggregate counts per distinct ceremony, and write two CSVs:
-counts and any rows that failed to match (for regex iteration).
+string with a regex, aggregate counts per distinct ceremony, and write award_show_counts.csv.
 """
 
 import argparse
@@ -16,12 +15,11 @@ from oscar_scrape import ACTOR_AWARDS_CSV_FILE, ACTOR_AWARD_FIELDNAMES
 DEFAULT_CEREMONY_PATTERN = CEREMONY_PATTERN
 
 COUNTS_FIELDNAMES = ["award_show", "count"]
-UNMATCHED_FIELDNAMES = ACTOR_AWARD_FIELDNAMES
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Build award_show -> count catalog from actor_awards.csv; log non-matching rows."
+        description="Build award_show -> count catalog from actor_awards.csv."
     )
     parser.add_argument(
         "--input",
@@ -32,11 +30,6 @@ def main() -> None:
         "--counts-out",
         default="award_show_counts.csv",
         help="Output CSV: award_show, count (default: award_show_counts.csv).",
-    )
-    parser.add_argument(
-        "--unmatched-out",
-        default="award_show_unmatched.csv",
-        help="Rows where regex did not match (default: award_show_unmatched.csv).",
     )
     parser.add_argument(
         "--pattern",
@@ -59,6 +52,7 @@ def main() -> None:
 
     counts: Counter[str] = Counter()
     processed = 0
+    unmatched = 0
 
     with open(args.input, newline="", encoding="utf-8") as inf:
         reader = csv.DictReader(inf)
@@ -66,20 +60,16 @@ def main() -> None:
         if missing:
             raise SystemExit(f"Input CSV missing columns: {missing}")
 
-        with open(args.unmatched_out, "w", newline="", encoding="utf-8") as unf:
-            uwriter = csv.DictWriter(unf, fieldnames=UNMATCHED_FIELDNAMES)
-            uwriter.writeheader()
-
-            for row in reader:
-                if args.max_rows is not None and processed >= args.max_rows:
-                    break
-                processed += 1
-                award = (row.get("award") or "").strip()
-                m = ceremony_re.match(award)
-                if m:
-                    counts[m.group(1)] += 1
-                else:
-                    uwriter.writerow({k: row.get(k, "") for k in UNMATCHED_FIELDNAMES})
+        for row in reader:
+            if args.max_rows is not None and processed >= args.max_rows:
+                break
+            processed += 1
+            award = (row.get("award") or "").strip()
+            m = ceremony_re.match(award)
+            if m:
+                counts[m.group(1)] += 1
+            else:
+                unmatched += 1
 
     sorted_rows = sorted(
         counts.items(),
@@ -93,7 +83,7 @@ def main() -> None:
 
     print(
         f"Processed {processed} rows; {len(counts)} distinct award_show; "
-        f"wrote {args.counts_out} and {args.unmatched_out}"
+        f"{unmatched} regex non-matches; wrote {args.counts_out}"
     )
 
 

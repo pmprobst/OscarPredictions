@@ -18,7 +18,6 @@ from award_regex import parse_ceremony
 from oscar_scrape import ACTOR_AWARDS_CSV_FILE, ACTOR_AWARD_FIELDNAMES
 
 DEFAULT_MAJOR_LIST = "major_award_shows.txt"
-DEFAULT_UNPARSED = "actor_award_unparsed.csv"
 
 
 def load_major_award_shows(path: str | Path) -> list[str]:
@@ -70,7 +69,6 @@ def main() -> None:
     parser.add_argument("--input", default=ACTOR_AWARDS_CSV_FILE, help="actor_awards CSV (read-only).")
     parser.add_argument("--output", default="actor_year_award_matrix.csv", help="Output wide CSV.")
     parser.add_argument("--major-list", default=DEFAULT_MAJOR_LIST, help="Text file: one major award_show per line.")
-    parser.add_argument("--unparsed-out", default=DEFAULT_UNPARSED, help="Rows where ceremony regex did not match.")
     parser.add_argument("--max-rows", type=int, default=None, metavar="N", help="Process at most N award rows.")
     args = parser.parse_args()
 
@@ -89,16 +87,11 @@ def main() -> None:
     processed = 0
     unparsed_count = 0
 
-    with open(args.input, newline="", encoding="utf-8") as inf, open(
-        args.unparsed_out, "w", newline="", encoding="utf-8"
-    ) as unf:
+    with open(args.input, newline="", encoding="utf-8") as inf:
         reader = csv.DictReader(inf)
         missing = [c for c in ACTOR_AWARD_FIELDNAMES if c not in (reader.fieldnames or [])]
         if missing:
             raise SystemExit(f"Input missing columns: {missing}")
-
-        uwriter = csv.DictWriter(unf, fieldnames=ACTOR_AWARD_FIELDNAMES)
-        uwriter.writeheader()
 
         for row in reader:
             if args.max_rows is not None and processed >= args.max_rows:
@@ -109,18 +102,16 @@ def main() -> None:
             ceremony = parse_ceremony(award)
             if not ceremony:
                 unparsed_count += 1
-                uwriter.writerow({k: row.get(k, "") for k in ACTOR_AWARD_FIELDNAMES})
                 continue
 
-            matched_rows += 1
             outcome = (row.get("outcome") or "").strip().lower()
             is_win = outcome == "won"
             is_nom = outcome == "nominated"
             if not is_win and not is_nom:
                 unparsed_count += 1
-                uwriter.writerow({k: row.get(k, "") for k in ACTOR_AWARD_FIELDNAMES})
                 continue
 
+            matched_rows += 1
             url = (row.get("actor_imdb_url") or "").strip()
             name = (row.get("actor_name") or "").strip()
             year = (row.get("year") or "").strip()
