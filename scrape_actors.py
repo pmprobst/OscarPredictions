@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Scrape cast lists for Best Picture nominees only (no award pages)."""
+"""Scrape IMDb full-credits cast for rows in movies.csv (Best Picture list from scrape_movies)."""
 
 from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
 from oscar_scrape import (
     CAST_CSV_FILE,
+    CSV_FILE,
     CAST_FIELDNAMES,
     _imdb_browser_context,
     extract_film_actor_rows,
-    iter_best_picture_nominees,
 )
 
 
@@ -40,15 +41,35 @@ def _load_existing_film_keys(path: str) -> set[tuple[str, str]]:
     return out
 
 
-def main():
+def _load_movies_rows(movies_path: Path) -> list[dict[str, str]]:
+    with movies_path.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        if not reader.fieldnames:
+            raise SystemExit(f"No header row in {movies_path}")
+        required = {"title", "url", "year"}
+        missing = required - {c.strip() for c in reader.fieldnames}
+        if missing:
+            raise SystemExit(f"{movies_path} missing columns: {sorted(missing)}")
+        return list(reader)
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Scrape IMDb full-credits cast for Best Picture nominees (skips precursor awards)."
+        description=(
+            "Scrape IMDb full credits for each film in movies.csv (title, url, year); "
+            "append cast rows to film_actors.csv unless that year/title is already present."
+        )
+    )
+    parser.add_argument(
+        "--movies",
+        default=CSV_FILE,
+        help=f"Input CSV from scrape_movies.py (default: {CSV_FILE}).",
     )
     parser.add_argument(
         "--year",
         type=int,
         metavar="Y",
-        help="Single Oscar ceremony year. Default: 2026 through 1996.",
+        help="Only process movies.csv rows with this ceremony year (optional).",
     )
     parser.add_argument(
         "--headed",
@@ -65,14 +86,18 @@ def main():
         type=int,
         default=None,
         metavar="N",
-        help="Process at most N Best Picture nominees per year (for testing).",
+        help="Scrape at most N films not already in film_actors (after --year filter).",
     )
     args = parser.parse_args()
 
-    if args.year is not None:
-        years = [args.year]
-    else:
-        years = list(range(2026, 1995, -1))
+    movies_path = Path(args.movies)
+    if not movies_path.is_file():
+        raise SystemExit(f"Movies file not found: {movies_path}")
+
+    try:
+        rows = _load_movies_rows(movies_path)
+    except OSError as e:
+        raise SystemExit(f"Cannot read {movies_path}: {e}") from e
 
     cast_path = args.csv_cast
     existing_films = _load_existing_film_keys(cast_path)
@@ -85,27 +110,46 @@ def main():
         with sync_playwright() as p:
             browser, context = _imdb_browser_context(p, headless=not args.headed)
             try:
-                for year in years:
+                scrape_attempts = 0
+                for row in rows:
+                    raw_title = (row.get("title") or "").strip()
+                    url = (row.get("url") or "").strip()
+                    raw_y = (row.get("year") or "").strip()
                     try:
-                        for title, full_url, y in iter_best_picture_nominees(
-                            context, year, max_movies=args.max_movies
+                        y = int(raw_y)
+                    except ValueError:
+                        print(f"Skip (invalid year): {raw_title!r} year={raw_y!r}", file=sys.stderr)
+                        continue
+
+                    if args.year is not None and y != args.year:
+                        continue
+
+                    if not url:
+                        print(f"Skip (empty url): {raw_title} ({y})", file=sys.stderr)
+                        continue
+
+                    key = (str(y), raw_title)
+                    if key in existing_films:
+                        print(f"Skip (already in cast CSV): {raw_title} ({y})")
+                        continue
+
+                    if args.max_movies is not None and scrape_attempts >= args.max_movies:
+                        break
+
+                    scrape_attempts += 1
+                    try:
+                        print(f"Cast: {raw_title} ({y})")
+                        rows_written = 0
+                        for cast_row in extract_film_actor_rows(
+                            context, url, y, raw_title
                         ):
-                            key = (str(int(y)), (title or "").strip())
-                            if key in existing_films:
-                                print(f"Skip (already in cast CSV): {title} ({y})")
-                                continue
-                            print(f"Cast: {title} ({y})")
-                            rows_written = 0
-                            for cast_row in extract_film_actor_rows(
-                                context, full_url, y, title
-                            ):
-                                cast_writer.writerow(cast_row)
-                                rows_written += 1
-                            cf.flush()
-                            if rows_written:
-                                existing_films.add(key)
+                            cast_writer.writerow(cast_row)
+                            rows_written += 1
+                        cf.flush()
+                        if rows_written:
+                            existing_films.add(key)
                     except Exception as e:
-                        print(f"Error processing {year}: {e}")
+                        print(f"Error scraping {raw_title} ({y}): {e}", file=sys.stderr)
             finally:
                 context.close()
                 browser.close()
