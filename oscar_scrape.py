@@ -1,5 +1,7 @@
+import csv
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 CSV_FILE = "movies.csv"
 CAST_CSV_FILE = "film_actors.csv"
@@ -367,6 +369,37 @@ def nm_id_from_profile_url(url: str) -> str | None:
     """IMDb person id (nm……) from a profile or /name/nm…… URL."""
     m = re.search(r"/name/(nm\d+)", (url or "").split("?")[0], re.I)
     return m.group(1) if m else None
+
+
+def remove_nm_ids_from_no_award_csv(path: str, nm_ids: set[str]) -> int:
+    """
+    Remove rows whose IMDb nm id is in ``nm_ids`` from a no-award registry CSV
+    (schema ``NO_AWARD_ACTORS_FIELDNAMES``). Rewrites the file when at least one row is removed.
+    Returns the number of rows removed.
+    """
+    if not nm_ids:
+        return 0
+    p = Path(path)
+    if not p.is_file():
+        return 0
+    kept: list[dict[str, str]] = []
+    removed = 0
+    with p.open(newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            url = (row.get("actor_imdb_url") or "").strip()
+            nm = nm_id_from_profile_url(url)
+            if nm and nm in nm_ids:
+                removed += 1
+            else:
+                kept.append(row)
+    if removed == 0:
+        return 0
+    with p.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=NO_AWARD_ACTORS_FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(kept)
+    return removed
 
 
 def extract_person_award_rows(

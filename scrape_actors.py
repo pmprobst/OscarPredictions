@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Scrape IMDb full-credits cast for rows in movies.csv (Best Picture list from scrape_movies)."""
+"""Scrape IMDb full-credits cast for rows in movies.csv (Best Picture list from scrape_movies).
+
+For each newly scraped film, removes that cast's nm ids from no_award_actors.csv (unless
+--skip-no-award-prune) so scrape_actor_awards.py can recheck them for new IMDb award lines.
+"""
 
 from __future__ import annotations
 
@@ -14,8 +18,11 @@ from oscar_scrape import (
     CAST_CSV_FILE,
     CSV_FILE,
     CAST_FIELDNAMES,
+    NO_AWARD_ACTORS_CSV_FILE,
     _imdb_browser_context,
     extract_film_actor_rows,
+    nm_id_from_profile_url,
+    remove_nm_ids_from_no_award_csv,
 )
 
 
@@ -88,6 +95,20 @@ def main() -> None:
         metavar="N",
         help="Scrape at most N films not already in film_actors (after --year filter).",
     )
+    parser.add_argument(
+        "--no-award-csv",
+        default=NO_AWARD_ACTORS_CSV_FILE,
+        dest="no_award_csv",
+        help=(
+            f"No-award registry CSV (default: {NO_AWARD_ACTORS_CSV_FILE}). "
+            "Cast nm ids from newly scraped films are removed so scrape_actor_awards can recheck."
+        ),
+    )
+    parser.add_argument(
+        "--skip-no-award-prune",
+        action="store_true",
+        help="Do not remove cast nm ids from the no-award CSV after scraping new films.",
+    )
     args = parser.parse_args()
 
     movies_path = Path(args.movies)
@@ -140,14 +161,29 @@ def main() -> None:
                     try:
                         print(f"Cast: {raw_title} ({y})")
                         rows_written = 0
+                        nms_this_film: set[str] = set()
                         for cast_row in extract_film_actor_rows(
                             context, url, y, raw_title
                         ):
                             cast_writer.writerow(cast_row)
                             rows_written += 1
+                            nm = nm_id_from_profile_url(
+                                (cast_row.get("actor_imdb_url") or "").strip()
+                            )
+                            if nm:
+                                nms_this_film.add(nm)
                         cf.flush()
                         if rows_written:
                             existing_films.add(key)
+                            if not args.skip_no_award_prune:
+                                removed = remove_nm_ids_from_no_award_csv(
+                                    args.no_award_csv, nms_this_film
+                                )
+                                if removed:
+                                    print(
+                                        f"Removed {removed} row(s) from {args.no_award_csv} "
+                                        "(recheck awards for cast of new film)."
+                                    )
                     except Exception as e:
                         print(f"Error scraping {raw_title} ({y}): {e}", file=sys.stderr)
             finally:
