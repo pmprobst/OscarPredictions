@@ -80,9 +80,9 @@ def main() -> None:
         help="Scrape every unique cast actor even if already present in --output (may duplicate rows).",
     )
     parser.add_argument(
-        "--headless",
+        "--headed",
         action="store_true",
-        help="Run Chromium without opening a window.",
+        help="Open a visible Chromium window (default: headless, no window).",
     )
     parser.add_argument(
         "--max-actors",
@@ -122,7 +122,7 @@ def main() -> None:
             writer.writeheader()
 
         with sync_playwright() as p:
-            browser, context = _imdb_browser_context(p, args.headless)
+            browser, context = _imdb_browser_context(p, headless=not args.headed)
             try:
                 for idx, (name, url) in enumerate(actors, start=1):
                     print(f"[{idx}/{len(actors)}] {name}")
