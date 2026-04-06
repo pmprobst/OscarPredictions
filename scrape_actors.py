@@ -51,9 +51,9 @@ def main():
         help="Single Oscar ceremony year. Default: 2026 through 1996.",
     )
     parser.add_argument(
-        "--headless",
+        "--headed",
         action="store_true",
-        help="Run Chromium without opening a window.",
+        help="Open a visible Chromium window (default: headless, no window).",
     )
     parser.add_argument(
         "--csv-cast",
@@ -83,7 +83,7 @@ def main():
             cast_writer.writeheader()
 
         with sync_playwright() as p:
-            browser, context = _imdb_browser_context(p, args.headless)
+            browser, context = _imdb_browser_context(p, headless=not args.headed)
             try:
                 for year in years:
                     try:

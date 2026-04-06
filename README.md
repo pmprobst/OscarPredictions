@@ -10,7 +10,7 @@ Python tooling to scrape IMDb film and actor data, collect per-actor award histo
 |------|-----------|
 | [`oscar_scrape.py`](oscar_scrape.py) | Shared library: Playwright browser setup, IMDb parsing helpers, constants (`CSV_FILE`, `ACTOR_AWARDS_CSV_FILE`, field names), and core scraping routines used by the scrape scripts. |
 | [`scrape_movies.py`](scrape_movies.py) | Scrapes movie listings into `movies.csv` (default path from `oscar_scrape`; schema in that module). |
-| [`scrape_actors.py`](scrape_actors.py) | Scrapes cast / actor links into [`film_actors.csv`](film_actors.csv). Skips Best Picture nominees whose **year** and **film title** already appear in that file (append-only; avoids duplicate cast rows on reruns). |
+| [`scrape_actors.py`](scrape_actors.py) | Scrapes cast / actor links into [`film_actors.csv`](film_actors.csv). Skips Best Picture nominees whose **year** and **film title** already appear in that file (append-only; avoids duplicate cast rows on reruns). Runs **headless** by default; pass `--headed` to show the browser. |
 | [`scrape_actor_awards.py`](scrape_actor_awards.py) | For each unique actor in `film_actors.csv`, opens IMDb award pages and **appends** rows to [`actor_awards.csv`](actor_awards.csv) (nominations and wins). Uses Playwright. |
 | [`award_regex.py`](award_regex.py) | Single definition of the IMDb award-line regex and `parse_ceremony()` to extract the **ceremony name** from the full `award` text. Shared by counting and matrix scripts. |
 | [`award_groups.py`](award_groups.py) | Maps a ceremony string to a **fixed group key** (e.g. `us_regional_critics`, `television`) for aggregated columns. Edit `classify_group()` to override how a specific show is bucketed. |
