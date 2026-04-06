@@ -1,10 +1,22 @@
 import re
+from dataclasses import dataclass
 
 CSV_FILE = "movies.csv"
 CAST_CSV_FILE = "film_actors.csv"
 CAST_FIELDNAMES = ["year", "film_title", "actor_name", "actor_imdb_url"]
 ACTOR_AWARDS_CSV_FILE = "actor_awards.csv"
 ACTOR_AWARD_FIELDNAMES = ["actor_name", "actor_imdb_url", "award", "year", "outcome"]
+NO_AWARD_ACTORS_CSV_FILE = "no_award_actors.csv"
+NO_AWARD_ACTORS_FIELDNAMES = ["actor_name", "actor_imdb_url"]
+
+
+@dataclass(frozen=True)
+class AwardScrapeResult:
+    """Result of scraping one person's IMDb awards page."""
+
+    rows: list[dict]
+    ok: bool
+    """True if the page was loaded and parsed; False on missing nm id or scrape errors."""
 
 
 def _normalize_actor_name(name: str) -> str:
@@ -357,20 +369,26 @@ def nm_id_from_profile_url(url: str) -> str | None:
     return m.group(1) if m else None
 
 
-def extract_person_award_rows(browser, actor_imdb_url: str, actor_name: str) -> list[dict]:
+def extract_person_award_rows(
+    browser, actor_imdb_url: str, actor_name: str
+) -> AwardScrapeResult:
     """
     Scrape all nomination/win lines from a person's IMDb awards page (/name/nm…/awards/).
 
     Navigates directly to the awards URL (same end state as the Awards tab). Each row uses
     the maximum 4-digit year found in the line as ``year`` (ceremony / credit-year heuristic
     when multiple years appear). ``outcome`` is ``won`` or ``nominated``.
+
+    On success (including zero matching award lines), ``ok`` is True. On missing nm id or
+    navigation/parsing failure, ``ok`` is False and ``rows`` is empty.
     """
     nm = nm_id_from_profile_url(actor_imdb_url)
     if not nm:
-        return []
+        return AwardScrapeResult([], False)
     canonical_url = f"https://www.imdb.com/name/{nm}/"
-    page = browser.new_page()
+    page = None
     try:
+        page = browser.new_page()
         awards_url = f"https://www.imdb.com/name/{nm}/awards/"
         page.goto(awards_url, timeout=90000, wait_until="load")
         page.wait_for_selector("body", timeout=60000)
@@ -423,11 +441,12 @@ def extract_person_award_rows(browser, actor_imdb_url: str, actor_name: str) -> 
                     "outcome": outcome,
                 }
             )
-        return rows_out
+        return AwardScrapeResult(rows_out, True)
     except Exception:
-        return []
+        return AwardScrapeResult([], False)
     finally:
-        page.close()
+        if page is not None:
+            page.close()
 
 
 def _pairs_from_name_links(links):
