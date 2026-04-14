@@ -2,6 +2,8 @@
 
 Python tooling to scrape IMDb film and actor data, collect per-actor award history, and build **actor–year** feature tables for modeling (e.g. predicting film outcomes from cast award exposure).
 
+For a full module-by-module reference (every script’s inputs, outputs, CLI, and internal functions), see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
 ---
 
 ## Python modules
