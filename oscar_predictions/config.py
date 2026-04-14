@@ -41,3 +41,21 @@ class SyncConfig:
 
     def state_file_path(self) -> Path:
         return Path(self.paths.state_file)
+
+
+def sync_paths_from_workspace(workspace_root: str | Path) -> SyncPaths:
+    from oscar_predictions.workspace import DataWorkspace
+
+    ws = DataWorkspace.from_path(workspace_root)
+    return SyncPaths(
+        movies=str(ws.movies),
+        cast=str(ws.cast),
+        actor_awards=str(ws.actor_awards),
+        no_award_actors=str(ws.no_award_actors),
+        actor_year_matrix=str(ws.actor_year_matrix),
+        film_actor_totals=str(ws.film_actor_totals),
+        movie_totals=str(ws.movie_totals),
+        award_show_counts=str(ws.award_show_counts),
+        major_list=str(ws.major_list),
+        state_file=str(ws.state_file),
+    )

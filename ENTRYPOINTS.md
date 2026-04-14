@@ -1,30 +1,23 @@
 # Entrypoints
 
-Supported entrypoint:
+Preferred installed entrypoint:
 
-- `python3 -m oscar_predictions sync`
+- `oscar`
 
-## Examples
+Module form (without installation):
+
+- `python3 -m oscar_predictions`
+
+## Commands
 
 ```bash
-python3 -m oscar_predictions sync
-python3 -m oscar_predictions sync --year 2026
-python3 -m oscar_predictions sync --dry-run
-python3 -m oscar_predictions sync --rebuild-derived
-python3 -m oscar_predictions sync --continue-on-error
-python3 -m oscar_predictions sync --include-counts
+oscar init-data --workspace-dir ./data
+oscar build-features --workspace-dir ./data
+oscar check-updates --workspace-dir ./data --headless
+oscar model --workspace-dir ./data
+oscar sync --workspace-dir ./data
 ```
 
-## Removed entrypoints (hard break)
+## Legacy status
 
-The following legacy patterns are no longer supported:
-
-- `python3 scrape_movies.py`
-- `python3 scrape_actors.py`
-- `python3 scrape_actor_awards.py`
-- `python3 award_show_counts.py`
-- `python3 actor_year_award_matrix.py`
-- `python3 film_actors_award_totals.py`
-- `python3 join_movie_to_actor.py`
-
-Legacy top-level import shims were also removed. Import from `oscar_predictions.*` directly.
+Old root scripts (`scrape_movies.py`, etc.) and top-level shim imports remain unsupported.

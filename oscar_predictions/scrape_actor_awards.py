@@ -96,6 +96,7 @@ def run_scrape_actor_awards(
     output_path: str = ACTOR_AWARDS_CSV_FILE,
     no_award_output: str = NO_AWARD_ACTORS_CSV_FILE,
     force_rescrape: bool = False,
+    force_recheck_nm_ids: set[str] | None = None,
     headless: bool = True,
     max_actors: int | None = None,
 ) -> dict[str, int | str]:
@@ -105,6 +106,7 @@ def run_scrape_actor_awards(
     if force_rescrape:
         print(f"Force rescrape: processing up to {total_unique} unique actors from cast list.")
     else:
+        forced_nm_ids = force_recheck_nm_ids or set()
         existing_award_nm = load_nm_ids_from_actor_url_column(output_path)
         existing_no_award_nm = load_nm_ids_from_actor_url_column(no_award_output)
         cast_actors = actors
@@ -122,7 +124,10 @@ def run_scrape_actor_awards(
             (n, u)
             for n, u in cast_actors
             if nm_id_from_profile_url(u) not in existing_award_nm
-            and nm_id_from_profile_url(u) not in existing_no_award_nm
+            and (
+                nm_id_from_profile_url(u) not in existing_no_award_nm
+                or nm_id_from_profile_url(u) in forced_nm_ids
+            )
         ]
         skipped = before - len(actors)
         print(

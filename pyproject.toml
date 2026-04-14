@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oscar-predictions"
+version = "0.2.0"
+description = "Oscar nominees scraping, feature engineering, updates, and modeling."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "playwright>=1.49,<2",
+  "pandas>=2.0",
+  "scikit-learn>=1.4",
+]
+
+[project.scripts]
+oscar = "oscar_predictions.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["oscar_predictions*"]
+
+[tool.setuptools.package-data]
+oscar_predictions = [
+  "data/base/*.csv",
+  "data/config/*.txt",
+]

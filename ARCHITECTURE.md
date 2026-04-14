@@ -1,80 +1,64 @@
 # Architecture
 
-This project is centered on a single orchestrated command: `python3 -m oscar_predictions sync`.
+OscarPredictions is packaged as an installable CLI app with bundled base data.
 
-## High-level flow
+## Command surface
+
+Primary user commands:
+
+- `oscar init-data`
+- `oscar build-features`
+- `oscar check-updates`
+- `oscar model`
+- `oscar sync` (legacy orchestration still available)
+
+## Data flow
 
 ```mermaid
 flowchart LR
-  cli["python -m oscar_predictions sync"] --> planner["sync planner"]
-  planner --> stageMovies["scrape_movies"]
-  planner --> stageCast["scrape_actors"]
-  planner --> stageAwards["scrape_actor_awards"]
-  stageAwards --> stageMatrix["actor_year_award_matrix"]
-  stageMatrix --> stageTotals["film_actors_award_totals"]
-  stageTotals --> stageJoin["join_movie_to_actor"]
-  stageJoin --> outputs["CSV outputs + sync report"]
+  initData["oscar init-data"] --> baseData["workspace base CSVs (<=2023)"]
+  buildFeat["oscar build-features"] --> matrix["actor_year_award_matrix.csv"]
+  buildFeat --> totals["film_actors_awards_sums_up_to_that_point.csv"]
+  buildFeat --> joined["movies_with_cast_award_totals.csv"]
+  checkUpdates["oscar check-updates"] --> scrapeNew["scrape new years + recheck nominees actors"]
+  scrapeNew --> clearDerived["delete derived files"]
+  clearDerived --> rebuild["build-features chain"]
+  rebuild --> modelReady["model-ready dataset"]
+  modelCmd["oscar model"] --> modelPipeline["clean modeling module"]
 ```
 
 ## Core modules
 
-- `oscar_predictions/cli.py`
-  - Defines CLI contract and `sync` arguments.
-  - Converts args to a unified `SyncConfig`.
-- `oscar_predictions/config.py`
-  - `SyncPaths` and `SyncConfig` dataclasses.
-  - One resolved source of runtime and path settings.
-- `oscar_predictions/sync.py`
-  - Planner + orchestration.
-  - Dry-run, fail-fast/continue behavior, checkpoint state.
-- `oscar_predictions/models.py`
-  - `StageSummary` and `SyncReport` used by orchestrator.
+- `oscar_predictions/cli.py` - CLI contract and command dispatch
+- `oscar_predictions/workspace.py` - workspace path management, init-data copy, derived-file cleanup
+- `oscar_predictions/bundled_data.py` - package resource access for bundled data
+- `oscar_predictions/features.py` - post-cleaning feature generation chain
+- `oscar_predictions/updates.py` - new-year detection and refresh behavior
+- `oscar_predictions/modeling.py` - production modeling pipeline
+- `oscar_predictions/config.py` - sync config and workspace-to-sync path translation
+- `oscar_predictions/sync.py` - orchestration/reporting for sync command
 
-## Stage modules
+## Bundled package data
 
-Each stage module has:
+Included in wheel/sdist under `oscar_predictions/data/`:
 
-- `parse_args(argv=None)` for direct stage invocation,
-- `run_*` for programmatic orchestration,
-- `main(argv=None)` adapter.
+- `data/base/movies.csv`
+- `data/base/film_actors.csv`
+- `data/base/actor_awards.csv`
+- `data/base/no_award_actors.csv`
+- `data/config/major_award_shows.txt`
 
-Current stages:
+## Workspace contracts
 
-- `oscar_predictions/scrape_movies.py`
-- `oscar_predictions/scrape_actors.py`
-- `oscar_predictions/scrape_actor_awards.py`
-- `oscar_predictions/actor_year_award_matrix.py`
-- `oscar_predictions/film_actors_award_totals.py`
-- `oscar_predictions/join_movie_to_actor.py`
-- `oscar_predictions/award_show_counts.py`
+Workspace contains:
 
-## Data contracts
+- Base files: `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`
+- Derived files: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, optional `award_show_counts.csv`
+- State: `.oscar_sync_state.json`
 
-Defaults:
+Behavior:
 
-- `movies.csv`
-- `film_actors.csv`
-- `actor_awards.csv`
-- `no_award_actors.csv`
-- `actor_year_award_matrix.csv`
-- `film_actors_awards_sums_up_to_that_point.csv`
-- `movies_with_cast_award_totals.csv`
-- `award_show_counts.csv`
-
-Behavior constraints:
-
-- Scrape stages append.
+- Base scraping stages append.
 - Derived stages overwrite.
-- Join and grouping semantics remain unchanged from the pre-refactor pipeline logic.
-
-## Checkpointing
-
-- State file default: `.oscar_sync_state.json`
-- Tracks completed stages for resumable runs.
-- State is keyed by core input settings (year + key file paths) to avoid stale carryover.
-
-## Public entrypoints
-
-- Primary: `python3 -m oscar_predictions sync`
-
-No legacy root script entrypoints or top-level shim imports are supported.
+- `check-updates` deletes all derived files before rebuilding when new years are found.
+- `check-updates` rechecks actors from newly nominated films even if they are in `no_award_actors.csv`.

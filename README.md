@@ -1,85 +1,81 @@
 # OscarPredictions
 
-OscarPredictions is now organized around one supported workflow:
+Installable package for Oscar data initialization, update checks, feature generation, and modeling.
 
-- **Single command:** `python3 -m oscar_predictions sync`
-- **Single implementation surface:** `oscar_predictions/`
-- **Hard break from legacy root scripts/import shims**
-
-## Quick start
-
-1. Install dependencies:
+## Install
 
 ```bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install .
 playwright install chromium
 ```
 
-2. Run the end-to-end incremental pipeline:
+After install, use the `oscar` CLI.
+
+## Commands
+
+### 1) Initialize bundled base data (through 2023)
 
 ```bash
-python3 -m oscar_predictions sync
+oscar init-data --workspace-dir ./data
 ```
 
-3. Typical variants:
-
-```bash
-python3 -m oscar_predictions sync --year 2026
-python3 -m oscar_predictions sync --dry-run
-python3 -m oscar_predictions sync --rebuild-derived
-python3 -m oscar_predictions sync --continue-on-error
-```
-
-## What `sync` does
-
-`sync` orchestrates the full pipeline in order:
-
-1. Movie discovery/update
-2. Cast update
-3. Actor awards update
-4. Actor-year matrix rebuild (when upstream changed or forced)
-5. Film-actor cumulative totals rebuild
-6. Movie-level join rebuild
-7. Optional award-show counts (`--include-counts`)
-
-Checkpoint state is written to `.oscar_sync_state.json` by default.
-
-## CLI reference
-
-Run help:
-
-```bash
-python3 -m oscar_predictions sync --help
-```
-
-## Core files
-
-- CLI and command dispatch: `oscar_predictions/cli.py`
-- Orchestrator/planner: `oscar_predictions/sync.py`
-- Unified config model: `oscar_predictions/config.py`
-- Stage summaries/report types: `oscar_predictions/models.py`
-- Pipeline stage modules: `oscar_predictions/*.py`
-
-## Output files
-
-Defaults remain:
+This copies bundled package data into the workspace:
 
 - `movies.csv`
 - `film_actors.csv`
 - `actor_awards.csv`
 - `no_award_actors.csv`
+- `major_award_shows.txt`
+
+### 2) Build post-cleaning features
+
+```bash
+oscar build-features --workspace-dir ./data
+```
+
+Produces:
+
 - `actor_year_award_matrix.csv`
 - `film_actors_awards_sums_up_to_that_point.csv`
 - `movies_with_cast_award_totals.csv`
-- `award_show_counts.csv`
 
-## Tests
+### 3) Check for new nominations and refresh
+
+```bash
+oscar check-updates --workspace-dir ./data --headless
+```
+
+Behavior:
+
+- finds unsynced new years,
+- deletes post-cleaning outputs,
+- scrapes new years,
+- rechecks actors from newly nominated films even if they were in `no_award_actors.csv`,
+- rebuilds post-cleaning outputs.
+
+### 4) Run modeling
+
+```bash
+oscar model --workspace-dir ./data --seed 42 --test-size 0.25
+```
+
+Optional outputs:
+
+```bash
+oscar model --workspace-dir ./data --report-json report.json --predictions-csv preds.csv
+```
+
+## Development/testing
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
 
-## Migration note (hard break)
+## Package structure
 
-The old direct script entrypoints (`python3 scrape_movies.py`, etc.) and top-level import shims were removed.
-Use `python3 -m oscar_predictions sync` going forward.
+- `oscar_predictions/cli.py` - command surface
+- `oscar_predictions/workspace.py` - workspace paths and file lifecycle
+- `oscar_predictions/features.py` - feature build chain
+- `oscar_predictions/updates.py` - update detection + refresh flow
+- `oscar_predictions/modeling.py` - production modeling pipeline
+- `oscar_predictions/data/` - bundled base data/config assets
