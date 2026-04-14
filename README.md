@@ -27,7 +27,23 @@ This copies bundled package data into the workspace:
 - `no_award_actors.csv`
 - `major_award_shows.txt`
 
-### 2) Build post-cleaning features
+### 2) Reset workspace to a cutoff year (e.g. re-test updates locally)
+
+```bash
+oscar reset --workspace-dir ./data
+```
+
+This rewrites **base** CSVs so only rows with `year` ≤ `--cutoff-year` (default **2023**) remain in `movies.csv`, `film_actors.csv`, and `actor_awards.csv`; prunes `no_award_actors.csv` to actors still present in those trimmed files; deletes post-cleaning outputs (`actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, `award_show_counts.csv`); and removes `.oscar_sync_state.json`.
+
+Preview without changing files:
+
+```bash
+oscar reset --workspace-dir ./data --dry-run
+```
+
+To restore the **exact** files shipped in the package instead of trimming in place, use `oscar init-data --workspace-dir ./data --overwrite`. Optional modeling outputs (`--report-json`, `--predictions-csv`) are not removed; delete those paths manually if needed.
+
+### 3) Build post-cleaning features
 
 ```bash
 oscar build-features --workspace-dir ./data
@@ -39,7 +55,7 @@ Produces:
 - `film_actors_awards_sums_up_to_that_point.csv`
 - `movies_with_cast_award_totals.csv`
 
-### 3) Check for new nominations and refresh
+### 4) Check for new nominations and refresh
 
 ```bash
 oscar check-updates --workspace-dir ./data --headless
@@ -53,7 +69,7 @@ Behavior:
 - rechecks actors from newly nominated films even if they were in `no_award_actors.csv`,
 - rebuilds post-cleaning outputs.
 
-### 4) Run modeling
+### 5) Run modeling
 
 ```bash
 oscar model --workspace-dir ./data --seed 42 --test-size 0.25
@@ -78,4 +94,5 @@ python3 -m unittest discover -s tests -v
 - `oscar_predictions/features.py` - feature build chain
 - `oscar_predictions/updates.py` - update detection + refresh flow
 - `oscar_predictions/modeling.py` - production modeling pipeline
+- `oscar_predictions/reset_workspace.py` - trim base CSVs to a year cutoff and clear derived outputs
 - `oscar_predictions/data/` - bundled base data/config assets

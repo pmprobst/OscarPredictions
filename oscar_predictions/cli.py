@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from oscar_predictions.cliutil import add_browser_args, resolve_headless
 from oscar_predictions.config import SyncConfig, SyncPaths, sync_paths_from_workspace
 from oscar_predictions.features import run_build_features
+from oscar_predictions.reset_workspace import run_reset_workspace
 from oscar_predictions.sync import run_sync
 from oscar_predictions.updates import run_check_updates
 from oscar_predictions.workspace import DataWorkspace
@@ -84,6 +85,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--workspace-dir",
         default=".",
         help="Workspace directory containing base CSV files (default: current dir).",
+    )
+
+    reset_ws = sub.add_parser(
+        "reset",
+        help="Trim base CSVs to cutoff year, prune no_award actors, delete derived outputs and sync state.",
+    )
+    reset_ws.add_argument("--workspace-dir", default=".", help="Workspace directory (default: current dir).")
+    reset_ws.add_argument(
+        "--cutoff-year",
+        type=int,
+        default=2023,
+        help="Keep rows with year <= this value in movies, film_actors, and actor_awards (default: 2023).",
+    )
+    reset_ws.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print planned changes without modifying files.",
     )
 
     check_updates = sub.add_parser("check-updates", help="Detect and ingest new nominee years, then rebuild.")
@@ -166,6 +184,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "build-features":
         ws = DataWorkspace.from_path(args.workspace_dir)
         result = run_build_features(ws)
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+    if args.command == "reset":
+        ws = DataWorkspace.from_path(args.workspace_dir)
+        result = run_reset_workspace(ws, cutoff_year=args.cutoff_year, dry_run=args.dry_run)
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
     if args.command == "check-updates":

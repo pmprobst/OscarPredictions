@@ -12,6 +12,7 @@ Module form (without installation):
 
 ```bash
 oscar init-data --workspace-dir ./data
+oscar reset --workspace-dir ./data
 oscar build-features --workspace-dir ./data
 oscar check-updates --workspace-dir ./data --headless
 oscar model --workspace-dir ./data
