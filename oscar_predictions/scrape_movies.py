@@ -7,12 +7,11 @@ import argparse
 import csv
 from typing import Sequence
 
-from playwright.sync_api import sync_playwright
-
 from oscar_predictions.cliutil import (
     add_browser_args_movies_style,
     resolve_headless_movies_style,
 )
+from oscar_predictions.csvutil import count_csv_data_rows
 from oscar_predictions.oscar_scrape import (
     CAST_CSV_FILE,
     CAST_FIELDNAMES,
@@ -67,7 +66,7 @@ def run_scrape_movies(
     csv_cast: str = CAST_CSV_FILE,
     no_cast: bool = False,
     max_movies: int | None = None,
-) -> None:
+) -> dict[str, int | str | bool]:
     if year is not None:
         years = [year]
     else:
@@ -75,8 +74,12 @@ def run_scrape_movies(
 
     out_path = csv_path
     cast_path = csv_cast
+    movies_before = count_csv_data_rows(out_path)
+    cast_before = count_csv_data_rows(cast_path) if not no_cast else 0
 
     if no_cast:
+        from playwright.sync_api import sync_playwright
+
         with open(out_path, "a", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
             if f.tell() == 0:
@@ -95,12 +98,23 @@ def run_scrape_movies(
                 finally:
                     context.close()
                     browser.close()
+        movies_after = count_csv_data_rows(out_path)
+        rows_added = max(0, movies_after - movies_before)
         print(f"Movies written incrementally to {out_path}")
-        return
+        return {
+            "rows_added": rows_added,
+            "movies_rows_added": rows_added,
+            "cast_rows_added": 0,
+            "output_movies": out_path,
+            "output_cast": cast_path,
+            "no_cast": True,
+        }
 
     with open(out_path, "a", newline="", encoding="utf-8") as f, open(
         cast_path, "a", newline="", encoding="utf-8"
     ) as cf:
+        from playwright.sync_api import sync_playwright
+
         writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         cast_writer = csv.DictWriter(cf, fieldnames=CAST_FIELDNAMES)
 
@@ -131,6 +145,18 @@ def run_scrape_movies(
 
     print(f"Movies written incrementally to {out_path}")
     print(f"Film–actor pairs written incrementally to {cast_path}")
+    movies_after = count_csv_data_rows(out_path)
+    cast_after = count_csv_data_rows(cast_path)
+    movies_added = max(0, movies_after - movies_before)
+    cast_added = max(0, cast_after - cast_before)
+    return {
+        "rows_added": movies_added + cast_added,
+        "movies_rows_added": movies_added,
+        "cast_rows_added": cast_added,
+        "output_movies": out_path,
+        "output_cast": cast_path,
+        "no_cast": False,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

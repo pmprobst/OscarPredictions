@@ -1,41 +1,30 @@
-# How to run the pipeline
+# Entrypoints
 
-## Canonical (recommended during transition)
+Supported entrypoint:
 
-Run the **root wrapper scripts** from the repository root (same as before the package layout):
+- `python3 -m oscar_predictions sync`
 
-```bash
-python3 scrape_movies.py --help
-python3 scrape_actors.py --help
-python3 scrape_actor_awards.py --help
-python3 award_show_counts.py --help
-python3 actor_year_award_matrix.py --help
-python3 film_actors_award_totals.py --help
-python3 join_movie_to_actor.py --help
-```
-
-## Module execution (secondary)
-
-With the repo root on `PYTHONPATH` (default when your shell cwd is the repo root):
+## Examples
 
 ```bash
-python3 -m oscar_predictions.scrape_movies --help
-python3 -m oscar_predictions.scrape_actors --help
-python3 -m oscar_predictions.scrape_actor_awards --help
-python3 -m oscar_predictions.award_show_counts --help
-python3 -m oscar_predictions.actor_year_award_matrix --help
-python3 -m oscar_predictions.film_actors_award_totals --help
-python3 -m oscar_predictions.join_movie_to_actor --help
+python3 -m oscar_predictions sync
+python3 -m oscar_predictions sync --year 2026
+python3 -m oscar_predictions sync --dry-run
+python3 -m oscar_predictions sync --rebuild-derived
+python3 -m oscar_predictions sync --continue-on-error
+python3 -m oscar_predictions sync --include-counts
 ```
 
-## Import compatibility
+## Removed entrypoints (hard break)
 
-Legacy top-level module names still resolve to the package implementation:
+The following legacy patterns are no longer supported:
 
-- `import oscar_scrape` → `oscar_predictions.oscar_scrape`
-- `import award_regex` → `oscar_predictions.award_regex`
-- `import award_groups` → `oscar_predictions.award_groups`
+- `python3 scrape_movies.py`
+- `python3 scrape_actors.py`
+- `python3 scrape_actor_awards.py`
+- `python3 award_show_counts.py`
+- `python3 actor_year_award_matrix.py`
+- `python3 film_actors_award_totals.py`
+- `python3 join_movie_to_actor.py`
 
-## Programmatic use
-
-Each pipeline module exposes `parse_args(argv=None)` and `run_*` functions; `main(argv=None)` wires argparse to `run_*`. Import from `oscar_predictions.<module>`.
+Legacy top-level import shims were also removed. Import from `oscar_predictions.*` directly.

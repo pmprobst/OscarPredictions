@@ -1,32 +1,27 @@
-# Phase 1 parity contract
+# Parity Contract (Post-Aggressive Refactor)
 
-Refactors under this contract must **not** change user-visible behavior of the pipeline unless explicitly versioned and documented.
+This project intentionally changed interface shape (hard break), but preserves core data semantics.
 
-## CSV outputs
+## Interface changes (intentional)
 
-- **Column names and order** for every writer must match pre-refactor behavior (see `oscar_predictions.oscar_scrape` constants and each script’s `DictWriter` field lists).
-- **Default output paths** stay relative to the process working directory and keep the same basenames (`movies.csv`, `film_actors.csv`, etc.).
+- Single workflow command: `python3 -m oscar_predictions sync`.
+- Legacy root scripts and top-level shim imports removed.
 
-## Append vs overwrite
+## Semantic invariants (must remain true)
 
-- **Append:** `scrape_movies`, `scrape_actors`, `scrape_actor_awards` (and their `run_*` equivalents).
-- **Overwrite:** `award_show_counts`, `actor_year_award_matrix`, `film_actors_award_totals`, `join_movie_to_actor`.
+1. CSV output schemas preserve expected column names/order for each stage output.
+2. Scrape stages append; derived stages overwrite.
+3. Join/grouping logic remains unchanged:
+   - award parsing via `award_regex`
+   - non-major classification via `award_groups`
+   - movie/cast key matching logic stays equivalent
+4. Default output basenames remain consistent unless overridden by CLI flags.
 
-## Semantics
+## Validation
 
-- Award line parsing: `oscar_predictions.award_regex` (`CEREMONY_PATTERN`, `parse_ceremony`).
-- Non-major ceremony bucketing: `oscar_predictions.award_groups.classify_group` and `GROUP_KEYS` order.
-- Join keys: `movies.csv` `title` + `year` match `film_actors` / sums `film_title` + `year` (strip rules unchanged).
+- Unit and integration tests in `tests/`.
+- Command:
 
-## CLI
-
-- Root scripts remain supported: `python3 scrape_movies.py`, etc. (see [ENTRYPOINTS.md](ENTRYPOINTS.md)).
-- Secondary: `python3 -m oscar_predictions.<module>`.
-- Browser visibility:
-  - `scrape_movies`: default windowed; `--headless` runs headless; `--headed` is an explicit alias for windowed (mutually exclusive with `--headless`).
-  - `scrape_actors` / `scrape_actor_awards`: default headless; `--headed` shows window; `--headless` is an explicit alias for headless (mutually exclusive with `--headed`).
-
-## Verification
-
-- Run `python3 -m unittest discover -s tests -v` from the repo root (non-network).
-- After edits, spot-check `--help` for each entrypoint and one full offline pipeline run on fixture data if possible.
+```bash
+python3 -m unittest discover -s tests -v
+```

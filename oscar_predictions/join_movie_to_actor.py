@@ -108,7 +108,7 @@ def run_join_movie_to_actor(
     output: str = DEFAULT_OUTPUT,
     inner: bool = False,
     no_cast_count: bool = False,
-) -> None:
+) -> dict[str, int | str | bool]:
     feature_cols, aggregates = load_sums_aggregates(film_actors_sums)
     nfeat = len(feature_cols)
     zeros = [0] * nfeat
@@ -165,6 +165,13 @@ def run_join_movie_to_actor(
                 written += 1
 
     print(f"Wrote {written} rows to {output}")
+    return {
+        "rows_added": written,
+        "written_rows": written,
+        "inner_join": inner,
+        "include_cast_count": not no_cast_count,
+        "output_movies_with_totals": output,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

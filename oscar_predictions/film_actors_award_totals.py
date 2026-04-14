@@ -114,7 +114,7 @@ def run_film_actors_award_totals(
     matrix: str = DEFAULT_MATRIX,
     output: str = DEFAULT_OUTPUT,
     max_rows: int | None = None,
-) -> None:
+) -> dict[str, int | str]:
     feature_cols, prefixes = load_matrix_prefixes(matrix)
     nfeat = len(feature_cols)
     out_fieldnames = list(CAST_FIELDNAMES) + feature_cols
@@ -156,6 +156,12 @@ def run_film_actors_award_totals(
             written += 1
 
     print(f"Wrote {written} rows to {output} ({nfeat} feature columns).")
+    return {
+        "rows_added": written,
+        "written_rows": written,
+        "feature_count": nfeat,
+        "output_totals": output,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

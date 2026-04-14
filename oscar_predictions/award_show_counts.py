@@ -55,7 +55,7 @@ def run_award_show_counts(
     counts_out: str = "award_show_counts.csv",
     pattern: str = DEFAULT_CEREMONY_PATTERN,
     max_rows: int | None = None,
-) -> None:
+) -> dict[str, int | str]:
     try:
         ceremony_re = CEREMONY_RE if pattern == DEFAULT_CEREMONY_PATTERN else re.compile(pattern)
     except re.error as e:
@@ -96,6 +96,13 @@ def run_award_show_counts(
         f"Processed {processed} rows; {len(counts)} distinct award_show; "
         f"{unmatched} regex non-matches; wrote {counts_out}"
     )
+    return {
+        "rows_added": len(sorted_rows),
+        "processed_rows": processed,
+        "distinct_shows": len(counts),
+        "unmatched_rows": unmatched,
+        "output_counts": counts_out,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

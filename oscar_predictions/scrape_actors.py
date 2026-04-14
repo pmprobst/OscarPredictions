@@ -13,8 +13,6 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from playwright.sync_api import sync_playwright
-
 from oscar_predictions.cliutil import (
     add_browser_args_default_headless,
     resolve_headless_default_headless,
@@ -123,7 +121,7 @@ def run_scrape_actors(
     max_movies: int | None = None,
     no_award_csv: str = NO_AWARD_ACTORS_CSV_FILE,
     skip_no_award_prune: bool = False,
-) -> None:
+) -> dict[str, int | str]:
     movies_path = Path(movies)
     if not movies_path.is_file():
         raise SystemExit(f"Movies file not found: {movies_path}")
@@ -137,7 +135,12 @@ def run_scrape_actors(
     existing_films = _load_existing_film_keys(cast_path)
 
     cf, cast_writer = open_append_csv_writer(cast_path, CAST_FIELDNAMES)
+    rows_added = 0
+    scraped_films = 0
+    removed_no_award_rows = 0
     try:
+        from playwright.sync_api import sync_playwright
+
         with sync_playwright() as p:
             browser, context = _imdb_browser_context(p, headless=headless)
             try:
@@ -185,10 +188,13 @@ def run_scrape_actors(
                         cf.flush()
                         if rows_written:
                             existing_films.add(key)
+                            rows_added += rows_written
+                            scraped_films += 1
                             if not skip_no_award_prune:
                                 removed = remove_nm_ids_from_no_award_csv(
                                     no_award_csv, nms_this_film
                                 )
+                                removed_no_award_rows += removed
                                 if removed:
                                     print(
                                         f"Removed {removed} row(s) from {no_award_csv} "
@@ -203,6 +209,13 @@ def run_scrape_actors(
         cf.close()
 
     print(f"Film–actor pairs written incrementally to {cast_path}")
+    return {
+        "rows_added": rows_added,
+        "cast_rows_added": rows_added,
+        "scraped_films": scraped_films,
+        "no_award_rows_removed": removed_no_award_rows,
+        "output_cast": cast_path,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

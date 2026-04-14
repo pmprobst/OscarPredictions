@@ -80,7 +80,7 @@ def run_actor_year_award_matrix(
     output_path: str = "actor_year_award_matrix.csv",
     major_list: str | Path = DEFAULT_MAJOR_LIST,
     max_rows: int | None = None,
-) -> None:
+) -> dict[str, int | str]:
     majors = load_major_award_shows(major_list)
     if not majors:
         raise SystemExit(f"No major award shows loaded from {major_list}")
@@ -172,6 +172,14 @@ def run_actor_year_award_matrix(
         f"Processed {processed} award rows; {matched_rows} regex-matched; "
         f"{unparsed_count} unparsed or bad outcome; {len(agg)} actor-year rows -> {output_path}"
     )
+    return {
+        "rows_added": len(agg),
+        "actor_year_rows": len(agg),
+        "processed_rows": processed,
+        "matched_rows": matched_rows,
+        "unparsed_rows": unparsed_count,
+        "output_matrix": output_path,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:

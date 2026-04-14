@@ -18,8 +18,6 @@ import argparse
 import csv
 from typing import Sequence
 
-from playwright.sync_api import sync_playwright
-
 from oscar_predictions.cliutil import (
     add_browser_args_default_headless,
     resolve_headless_default_headless,
@@ -100,7 +98,7 @@ def run_scrape_actor_awards(
     force_rescrape: bool = False,
     headless: bool = True,
     max_actors: int | None = None,
-) -> None:
+) -> dict[str, int | str]:
     actors = _load_unique_actors(input_path)
     total_unique = len(actors)
 
@@ -138,13 +136,24 @@ def run_scrape_actor_awards(
 
     if not actors:
         print("No actors to scrape; exiting.")
-        return
+        return {
+            "rows_added": 0,
+            "award_rows_added": 0,
+            "no_award_rows_added": 0,
+            "actors_targeted": 0,
+            "output_awards": output_path,
+            "output_no_award": no_award_output,
+        }
 
     outf, writer = open_append_csv_writer(output_path, ACTOR_AWARD_FIELDNAMES)
     no_award_f, no_award_writer = open_append_csv_writer(
         no_award_output, NO_AWARD_ACTORS_FIELDNAMES
     )
+    award_rows_added = 0
+    no_award_rows_added = 0
     try:
+        from playwright.sync_api import sync_playwright
+
         with sync_playwright() as p:
             browser, context = _imdb_browser_context(p, headless=headless)
             try:
@@ -156,6 +165,7 @@ def run_scrape_actor_awards(
                             if result.rows:
                                 for row in result.rows:
                                     writer.writerow(row)
+                                    award_rows_added += 1
                             else:
                                 nm = nm_id_from_profile_url(url)
                                 canonical = (
@@ -166,6 +176,7 @@ def run_scrape_actor_awards(
                                 no_award_writer.writerow(
                                     {"actor_name": name, "actor_imdb_url": canonical}
                                 )
+                                no_award_rows_added += 1
                                 no_award_f.flush()
                             outf.flush()
                         else:
@@ -182,6 +193,14 @@ def run_scrape_actor_awards(
     print(
         f"Award rows written incrementally to {output_path}; no-award actors appended to {no_award_output}"
     )
+    return {
+        "rows_added": award_rows_added + no_award_rows_added,
+        "award_rows_added": award_rows_added,
+        "no_award_rows_added": no_award_rows_added,
+        "actors_targeted": len(actors),
+        "output_awards": output_path,
+        "output_no_award": no_award_output,
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> None:
