@@ -4,22 +4,24 @@ Python tooling to scrape IMDb film and actor data, collect per-actor award histo
 
 For a full module-by-module reference (every script’s inputs, outputs, CLI, and internal functions), see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
+**Layout:** Implementation lives in the [`oscar_predictions/`](oscar_predictions/) package (`parse_args`, `run_*`, `main`). Repo-root `*.py` files are **thin CLI shims** (same commands as before). Top-level `oscar_scrape.py`, `award_regex.py`, and `award_groups.py` are **import shims** for backward compatibility. See **[ENTRYPOINTS.md](ENTRYPOINTS.md)** and **[PARITY.md](PARITY.md)**.
+
 ---
 
 ## Python modules
 
-| File | Purpose |
+| Location | Purpose |
 |------|-----------|
-| [`oscar_scrape.py`](oscar_scrape.py) | Shared library: Playwright browser setup, IMDb parsing helpers, constants (`CSV_FILE`, `ACTOR_AWARDS_CSV_FILE`, `NO_AWARD_ACTORS_CSV_FILE`, field names), and core scraping routines used by the scrape scripts. |
-| [`scrape_movies.py`](scrape_movies.py) | Scrapes movie listings into `movies.csv` (default path from `oscar_scrape`; schema in that module). |
-| [`scrape_actors.py`](scrape_actors.py) | Scrapes cast into [`film_actors.csv`](film_actors.csv). For each **newly scraped** film, removes those cast members’ `nm` ids from `no_award_actors.csv` (unless `--skip-no-award-prune`) so `scrape_actor_awards.py` can recheck them. |
-| [`scrape_actor_awards.py`](scrape_actor_awards.py) | For each unique actor in `film_actors.csv`, opens IMDb award pages and **appends** rows to [`actor_awards.csv`](actor_awards.csv) (nominations and wins). Uses Playwright. |
-| [`award_regex.py`](award_regex.py) | Single definition of the IMDb award-line regex and `parse_ceremony()` to extract the **ceremony name** from the full `award` text. Shared by counting and matrix scripts. |
-| [`award_groups.py`](award_groups.py) | Maps a ceremony string to a **fixed group key** (e.g. `us_regional_critics`, `television`) for aggregated columns. Edit `classify_group()` to override how a specific show is bucketed. |
-| [`award_show_counts.py`](award_show_counts.py) | Reads `actor_awards.csv` only; counts rows per distinct ceremony; writes [`award_show_counts.csv`](award_show_counts.csv). |
-| [`actor_year_award_matrix.py`](actor_year_award_matrix.py) | Reads `actor_awards.csv` only; builds one row per **(actor, year)** with `maj_*` columns for [major award shows](major_award_shows.txt) and `grp_*` columns for grouped non-major ceremonies (nomination and win **counts**). Writes [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv). |
-| [`film_actors_award_totals.py`](film_actors_award_totals.py) | Reads [`film_actors.csv`](film_actors.csv) and [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv); for each film–cast row with film year **F**, appends cumulative `maj_*` / `grp_*` totals for that actor over all award years **≤ F** (no future-year awards). Writes [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv). |
-| [`join_movie_to_actor.py`](join_movie_to_actor.py) | Joins [`movies.csv`](movies.csv) to [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv) on `year` + title; **sums** every `maj_*` / `grp_*` column across credited cast for one row per nominated film. Writes [`movies_with_cast_award_totals.csv`](movies_with_cast_award_totals.csv) by default. |
+| [`oscar_predictions/oscar_scrape.py`](oscar_predictions/oscar_scrape.py) | Shared library: Playwright browser setup, IMDb parsing helpers, constants (`CSV_FILE`, `ACTOR_AWARDS_CSV_FILE`, `NO_AWARD_ACTORS_CSV_FILE`, field names), and core scraping routines used by the scrape scripts. |
+| [`oscar_predictions/scrape_movies.py`](oscar_predictions/scrape_movies.py) | Scrapes movie listings into `movies.csv` (default path from `oscar_scrape`; schema in that module). |
+| [`oscar_predictions/scrape_actors.py`](oscar_predictions/scrape_actors.py) | Scrapes cast into [`film_actors.csv`](film_actors.csv). For each **newly scraped** film, removes those cast members’ `nm` ids from `no_award_actors.csv` (unless `--skip-no-award-prune`) so `scrape_actor_awards.py` can recheck them. |
+| [`oscar_predictions/scrape_actor_awards.py`](oscar_predictions/scrape_actor_awards.py) | For each unique actor in `film_actors.csv`, opens IMDb award pages and **appends** rows to [`actor_awards.csv`](actor_awards.csv) (nominations and wins). Uses Playwright. |
+| [`oscar_predictions/award_regex.py`](oscar_predictions/award_regex.py) | Single definition of the IMDb award-line regex and `parse_ceremony()` to extract the **ceremony name** from the full `award` text. Shared by counting and matrix scripts. |
+| [`oscar_predictions/award_groups.py`](oscar_predictions/award_groups.py) | Maps a ceremony string to a **fixed group key** (e.g. `us_regional_critics`, `television`) for aggregated columns. Edit `classify_group()` to override how a specific show is bucketed. |
+| [`oscar_predictions/award_show_counts.py`](oscar_predictions/award_show_counts.py) | Reads `actor_awards.csv` only; counts rows per distinct ceremony; writes [`award_show_counts.csv`](award_show_counts.csv). |
+| [`oscar_predictions/actor_year_award_matrix.py`](oscar_predictions/actor_year_award_matrix.py) | Reads `actor_awards.csv` only; builds one row per **(actor, year)** with `maj_*` columns for [major award shows](major_award_shows.txt) and `grp_*` columns for grouped non-major ceremonies (nomination and win **counts**). Writes [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv). |
+| [`oscar_predictions/film_actors_award_totals.py`](oscar_predictions/film_actors_award_totals.py) | Reads [`film_actors.csv`](film_actors.csv) and [`actor_year_award_matrix.csv`](actor_year_award_matrix.csv); for each film–cast row with film year **F**, appends cumulative `maj_*` / `grp_*` totals for that actor over all award years **≤ F** (no future-year awards). Writes [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv). |
+| [`oscar_predictions/join_movie_to_actor.py`](oscar_predictions/join_movie_to_actor.py) | Joins [`movies.csv`](movies.csv) to [`film_actors_awards_sums_up_to_that_point.csv`](film_actors_awards_sums_up_to_that_point.csv) on `year` + title; **sums** every `maj_*` / `grp_*` column across credited cast for one row per nominated film. Writes [`movies_with_cast_award_totals.csv`](movies_with_cast_award_totals.csv) by default. |
 
 ---
 
@@ -27,7 +29,7 @@ For a full module-by-module reference (every script’s inputs, outputs, CLI, an
 
 | File | Purpose |
 |------|-----------|
-| [`major_award_shows.txt`](major_award_shows.txt) | One **exact** IMDb ceremony name per line (as extracted by `award_regex`). Lines starting with `#` are ignored. These shows get dedicated `maj_*` columns in the actor–year matrix; all other ceremonies roll into `grp_*` groups via `award_groups.py`. |
+| [`major_award_shows.txt`](major_award_shows.txt) | One **exact** IMDb ceremony name per line (as extracted by `oscar_predictions.award_regex`). Lines starting with `#` are ignored. These shows get dedicated `maj_*` columns in the actor–year matrix; all other ceremonies roll into `grp_*` groups via `award_groups`. |
 | [`requirements.txt`](requirements.txt) | Python dependencies (Playwright for scraping). |
 | [`.gitignore`](.gitignore) | Ignores virtualenv, bytecode, and local editor paths. |
 
@@ -66,3 +68,11 @@ Large CSVs are **outputs of scrapes** or **derived features**; treat paths as co
 
 - Python 3 with dependencies from `requirements.txt`.
 - Playwright browsers: after install, run `playwright install` (or `playwright install chromium`) for scraping scripts.
+
+## Tests
+
+From the repo root (no network):
+
+```bash
+python3 -m unittest discover -s tests -v
+```

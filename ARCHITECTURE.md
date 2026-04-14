@@ -4,6 +4,10 @@ This document is a detailed companion to [README.md](README.md). It describes ev
 
 **Non-Python assets:** [major_award_shows.txt](major_award_shows.txt) (major ceremony names for matrix columns), [requirements.txt](requirements.txt), notebooks and other files are out of scope here unless a script reads them explicitly.
 
+**Package layout:** All logic lives under [`oscar_predictions/`](oscar_predictions/). Repo-root `scrape_*.py`, `award_show_counts.py`, etc. are CLI shims calling `oscar_predictions.<module>.main()`. Root `oscar_scrape.py`, `award_regex.py`, and `award_groups.py` are import shims (same module object as the package submodule). See [ENTRYPOINTS.md](ENTRYPOINTS.md) and [PARITY.md](PARITY.md).
+
+**Callable API:** Each pipeline module provides `parse_args(argv=None)`, a `run_*` function with explicit parameters (defaults match the CLI), and `main(argv=None)` that parses args and calls `run_*`.
+
 ---
 
 ## End-to-end pipeline
@@ -45,9 +49,11 @@ flowchart LR
   sums --> join
 ```
 
-**Shared library:** [oscar_scrape.py](oscar_scrape.py) is imported by all scrape scripts and defines CSV paths, schemas, and Playwright scraping primitives.
+**Shared library:** [oscar_predictions/oscar_scrape.py](oscar_predictions/oscar_scrape.py) is imported by all scrape scripts and defines CSV paths, schemas, and Playwright scraping primitives.
 
-**Classification helpers:** [award_regex.py](award_regex.py) and [award_groups.py](award_groups.py) are imported by [actor_year_award_matrix.py](actor_year_award_matrix.py) (and `award_show_counts` uses `award_regex` indirectly via its own compiled pattern).
+**Classification helpers:** [oscar_predictions/award_regex.py](oscar_predictions/award_regex.py) and [oscar_predictions/award_groups.py](oscar_predictions/award_groups.py) are imported by [oscar_predictions/actor_year_award_matrix.py](oscar_predictions/actor_year_award_matrix.py) (and `award_show_counts` uses `award_regex` indirectly via its own compiled pattern).
+
+**Shared utilities:** [oscar_predictions/csvutil.py](oscar_predictions/csvutil.py) (CSV validation / append writers / nm-id loading), [oscar_predictions/cliutil.py](oscar_predictions/cliutil.py) (browser visibility flags).
 
 ---
 
@@ -60,11 +66,11 @@ flowchart LR
 | `ACTOR_AWARDS_CSV_FILE` → `actor_awards.csv` | Long-form award lines per actor. |
 | `NO_AWARD_ACTORS_CSV_FILE` → `no_award_actors.csv` | Actors with successful scrape but zero parsed award lines; skip list for `scrape_actor_awards`. |
 
-**Note:** A checked-in `movies.csv` may contain extra columns (e.g. `oscar_win` for modeling labels) that are **not** written by `get_movies_for_year` / `FIELDNAMES` in `oscar_scrape.py`. Scripts that read `movies.csv` should tolerate additional columns.
+**Note:** A checked-in `movies.csv` may contain extra columns (e.g. `oscar_win` for modeling labels) that are **not** written by `get_movies_for_year` / `FIELDNAMES` in `oscar_predictions/oscar_scrape.py`. Scripts that read `movies.csv` should tolerate additional columns.
 
 ---
 
-## [oscar_scrape.py](oscar_scrape.py)
+## [oscar_predictions/oscar_scrape.py](oscar_predictions/oscar_scrape.py)
 
 **Role:** Shared scraping library and canonical filenames/field lists for CSVs used across the project.
 
@@ -148,9 +154,9 @@ For each nominee from `iter_best_picture_nominees`: optionally writes all `extra
 
 ---
 
-## [scrape_movies.py](scrape_movies.py)
+## [oscar_predictions/scrape_movies.py](oscar_predictions/scrape_movies.py)
 
-**Role:** CLI entrypoint to scrape Best Picture nominees and film-level awards for one or many ceremony years.
+**Role:** CLI entrypoint to scrape Best Picture nominees and film-level awards for one or many ceremony years. Root [scrape_movies.py](scrape_movies.py) is a shim.
 
 ### Inputs
 
@@ -166,7 +172,8 @@ For each nominee from `iter_best_picture_nominees`: optionally writes all `extra
 | Argument | Default | Meaning |
 |----------|---------|--------|
 | `--year Y` | None | If set, only that year; else `2026` down to `1996` inclusive. |
-| `--headless` | off | Pass `True` to `_imdb_browser_context` when flag present. |
+| `--headless` | off | Run headless (no window). Mutually exclusive with `--headed`. |
+| `--headed` | off | Open a visible window (explicit alias for default behavior). Mutually exclusive with `--headless`. |
 | `--csv` | `CSV_FILE` | Movies output path. |
 | `--csv-cast` | `CAST_CSV_FILE` | Cast output path. |
 | `--no-cast` | False | Do not open/write cast file; only movies. |
@@ -174,14 +181,17 @@ For each nominee from `iter_best_picture_nominees`: optionally writes all `extra
 
 ### Functions
 
-**`main()`**  
-Parses args, opens output file(s) in append mode, writes headers if empty, runs Playwright loop over years calling `get_movies_for_year`, flushes after each year, prints summary paths.
+**`parse_args(argv=None)`** — Argparse namespace for the flags above.
+
+**`run_scrape_movies(...)`** — Core logic (explicit parameters; defaults match CLI defaults).
+
+**`main(argv=None)`** — `parse_args` + `run_scrape_movies`.
 
 ---
 
-## [scrape_actors.py](scrape_actors.py)
+## [oscar_predictions/scrape_actors.py](oscar_predictions/scrape_actors.py)
 
-**Role:** Fill `film_actors.csv` from `movies.csv` for films not already present (by `year` + `film_title`), and prune `no_award_actors.csv` for newly scraped cast.
+**Role:** Fill `film_actors.csv` from `movies.csv` for films not already present (by `year` + `film_title`), and prune `no_award_actors.csv` for newly scraped cast. Root [scrape_actors.py](scrape_actors.py) is a shim.
 
 ### Inputs
 
@@ -199,7 +209,8 @@ Parses args, opens output file(s) in append mode, writes headers if empty, runs 
 |----------|--------|
 | `--movies` | Input movie list. |
 | `--year` | Restrict to single ceremony year. |
-| `--headed` | Show browser (default headless). |
+| `--headed` | Show browser (default headless). Mutually exclusive with `--headless`. |
+| `--headless` | Run headless (default). Mutually exclusive with `--headed`. |
 | `--csv-cast` | Cast CSV path. |
 | `--max-movies` | Max **new** films to scrape this run. |
 | `--no-award-csv` | No-award registry path. |
@@ -213,14 +224,13 @@ Reads cast CSV; builds set of `(str(year), film_title)` for valid integer years.
 **`_load_movies_rows(movies_path: Path) -> list[dict[str, str]]`**  
 Validates required columns; returns all rows as dicts.
 
-**`main() -> None`**  
-Loads movies and existing keys, appends cast for missing films, tracks `nm` set per film, calls `remove_nm_ids_from_no_award_csv` after successful writes when pruning enabled.
+**`parse_args(argv=None)`**, **`run_scrape_actors(...)`**, **`main(argv=None)`** — Same pattern as `scrape_movies`.
 
 ---
 
-## [scrape_actor_awards.py](scrape_actor_awards.py)
+## [oscar_predictions/scrape_actor_awards.py](oscar_predictions/scrape_actor_awards.py)
 
-**Role:** For each unique actor in the cast CSV, scrape IMDb person awards page; append award rows or no-award registry rows.
+**Role:** For each unique actor in the cast CSV, scrape IMDb person awards page; append award rows or no-award registry rows. Root [scrape_actor_awards.py](scrape_actor_awards.py) is a shim.
 
 ### Inputs
 
@@ -238,7 +248,8 @@ Loads movies and existing keys, appends cast for missing films, tracks `nm` set 
 |----------|--------|
 | `--input`, `--output`, `--no-award-output` | Paths. |
 | `--force-rescrape` | Ignore skip lists (may duplicate award rows). |
-| `--headed` | Visible browser. |
+| `--headed` | Visible browser. Mutually exclusive with `--headless`. |
+| `--headless` | Headless browser (default). Mutually exclusive with `--headed`. |
 | `--max-actors N` | Limit after filtering. |
 
 ### Functions
@@ -246,17 +257,16 @@ Loads movies and existing keys, appends cast for missing films, tracks `nm` set 
 **`_load_unique_actors(input_path: str) -> list[tuple[str, str]]`**  
 Ordered unique actors by `nm`; first occurrence wins; normalizes URL to https if needed.
 
-**`_load_existing_nm_ids(csv_path: str) -> set[str]`**  
-All `nm` ids found in any row’s `actor_imdb_url`.
+Skip lists use **`oscar_predictions.csvutil.load_nm_ids_from_actor_url_column`** on `--output` and `--no-award-output`.
 
-**`main() -> None`**  
+**`parse_args(argv=None)`**, **`run_scrape_actor_awards(...)`**, **`main(argv=None)`**  
 Computes skip lists unless force; opens both CSVs in append mode; Playwright loop: `extract_person_award_rows`; on `ok` and rows, write awards; on `ok` and empty, write no-award row; on `not ok`, print message. Exits early if no actors to process.
 
 ---
 
-## [award_regex.py](award_regex.py)
+## [oscar_predictions/award_regex.py](oscar_predictions/award_regex.py)
 
-**Role:** Single source for parsing ceremony prefix from IMDb-style `award` strings in `actor_awards.csv`.
+**Role:** Single source for parsing ceremony prefix from IMDb-style `award` strings in `actor_awards.csv`. Root [award_regex.py](award_regex.py) is an import shim.
 
 ### Inputs / outputs
 
@@ -276,9 +286,9 @@ Returns capture group 1 (ceremony name) if `award` matches `CEREMONY_RE`, else `
 
 ---
 
-## [award_groups.py](award_groups.py)
+## [oscar_predictions/award_groups.py](oscar_predictions/award_groups.py)
 
-**Role:** Map non-major ceremony strings to stable `grp_*` bucket keys used in the actor-year matrix.
+**Role:** Map non-major ceremony strings to stable `grp_*` bucket keys used in the actor-year matrix. Root [award_groups.py](award_groups.py) is an import shim.
 
 ### Module-level
 
@@ -298,9 +308,9 @@ Lowercase, non-alphanumeric → `_`, trim, max 80 chars, prefix (`maj_` / `grp_`
 
 ---
 
-## [award_show_counts.py](award_show_counts.py)
+## [oscar_predictions/award_show_counts.py](oscar_predictions/award_show_counts.py)
 
-**Role:** Frequency table of parsed ceremony names over all award rows.
+**Role:** Frequency table of parsed ceremony names over all award rows. Root [award_show_counts.py](award_show_counts.py) is a shim.
 
 ### Inputs
 
@@ -319,14 +329,14 @@ Lowercase, non-alphanumeric → `_`, trim, max 80 chars, prefix (`maj_` / `grp_`
 
 ### Functions
 
-**`main() -> None`**  
+**`parse_args(argv=None)`**, **`run_award_show_counts(...)`**, **`main(argv=None)`**  
 Streams input, matches `award` with compiled regex, `Counter` on group 1, writes sorted CSV, prints stats (distinct shows, non-matches).
 
 ---
 
-## [actor_year_award_matrix.py](actor_year_award_matrix.py)
+## [oscar_predictions/actor_year_award_matrix.py](oscar_predictions/actor_year_award_matrix.py)
 
-**Role:** Pivot `actor_awards.csv` into wide `(actor_name, actor_imdb_url, year)` rows with `maj_*_{noms,wins}` and `grp_*_{noms,wins}` integer counts.
+**Role:** Pivot `actor_awards.csv` into wide `(actor_name, actor_imdb_url, year)` rows with `maj_*_{noms,wins}` and `grp_*_{noms,wins}` integer counts. Root [actor_year_award_matrix.py](actor_year_award_matrix.py) is a shim.
 
 ### Inputs
 
@@ -354,14 +364,14 @@ Increments `row[f"{key}_{'wins'|'noms'}"]`.
 **`sum_feature_counts(row: dict[str, int]) -> int`**  
 Sum of all int values in row (verification helper).
 
-**`main() -> None`**  
+**`parse_args(argv=None)`**, **`run_actor_year_award_matrix(...)`**, **`main(argv=None)`**  
 Loads majors, aggregates from award rows using `parse_ceremony` + `classify_group`, sorts keys `(year, name, url)`, writes wide CSV, warns if sum of cells ≠ matched row count.
 
 ---
 
-## [film_actors_award_totals.py](film_actors_award_totals.py)
+## [oscar_predictions/film_actors_award_totals.py](oscar_predictions/film_actors_award_totals.py)
 
-**Role:** For each `film_actors` row with film year `F`, attach cumulative matrix features for that actor over award years ≤ `F`.
+**Role:** For each `film_actors` row with film year `F`, attach cumulative matrix features for that actor over award years ≤ `F`. Root [film_actors_award_totals.py](film_actors_award_totals.py) is a shim.
 
 ### Inputs
 
@@ -383,14 +393,14 @@ Per `actor_imdb_url`, merges duplicate matrix years by summing vectors, sorts ye
 **`cumulative_for_film_year(prefixes, url, film_year, n_features) -> list[int]`**  
 `bisect_right` on sorted award years to get last index ≤ `film_year`; returns that prefix vector or zeros.
 
-**`main() -> None`**  
+**`parse_args(argv=None)`**, **`run_film_actors_award_totals(...)`**, **`main(argv=None)`**  
 Loads prefixes, streams film_actors, writes `CAST_FIELDNAMES` + features; optional `--max-rows`.
 
 ---
 
-## [join_movie_to_actor.py](join_movie_to_actor.py)
+## [oscar_predictions/join_movie_to_actor.py](oscar_predictions/join_movie_to_actor.py)
 
-**Role:** One row per `movies.csv` film with summed cast `maj_*` / `grp_*` from `film_actors_awards_sums_up_to_that_point.csv`.
+**Role:** One row per `movies.csv` film with summed cast `maj_*` / `grp_*` from `film_actors_awards_sums_up_to_that_point.csv`. Root [join_movie_to_actor.py](join_movie_to_actor.py) is a shim.
 
 ### Inputs
 
@@ -416,7 +426,7 @@ Loose int parse: empty → 0.
 **`load_sums_aggregates(sums_path) -> tuple[list[str], dict[tuple[int, str], tuple[list[int], int]]]`**  
 Feature columns = all fields except `year`, `film_title`, `actor_name`, `actor_imdb_url`. Aggregates sums and row counts per `(int year, stripped film_title)`.
 
-**`main() -> None`**  
+**`parse_args(argv=None)`**, **`run_join_movie_to_actor(...)`**, **`main(argv=None)`**  
 Loads aggregates, streams movies, left-joins (zeros if no match unless `--inner`), writes CSV.
 
 ---
