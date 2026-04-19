@@ -4,6 +4,14 @@ Preferred installed entrypoint:
 
 - `oscar`
 
+Install from PyPI or a checkout (scraping + modeling need extras):
+
+```bash
+python3 -m pip install "oscar-predictions[all]"
+# or from repo:
+python3 -m pip install ".[all]"
+```
+
 Module form (without installation):
 
 - `python3 -m oscar_predictions`

@@ -4,10 +4,25 @@ Installable package for Oscar data initialization, update checks, feature genera
 
 ## Install
 
+The package installs with **no required third-party dependencies**. For a typical workflow (scraping + modeling), install the **`all`** extra:
+
 ```bash
-python3 -m pip install .
+python3 -m pip install "oscar-predictions[all]"
 playwright install chromium
 ```
+
+From a git checkout:
+
+```bash
+python3 -m pip install ".[all]"
+playwright install chromium
+```
+
+Optional dependency groups:
+
+- **`[scrape]`** – Playwright only (`sync`, `check-updates`, scrape-related commands).
+- **`[model]`** – pandas and scikit-learn only (`oscar model`).
+- **`[all]`** – both groups (recommended).
 
 After install, use the `oscar` CLI.
 
@@ -84,8 +99,11 @@ oscar model --workspace-dir ./data --report-json report.json --predictions-csv p
 ## Development/testing
 
 ```bash
+python3 -m pip install -e ".[all]"
 python3 -m unittest discover -s tests -v
 ```
+
+The project is licensed under the MIT License; see `LICENSE`.
 
 ## Package structure
 

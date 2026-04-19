@@ -1,4 +1,11 @@
 .venv/
+.venv-build/
+.venv-smoke/
+.DS_Store
+**/.DS_Store
+dist/
+build/
+*.egg-info/
 __pycache__/
 *.py[cod]
 *$py.class
