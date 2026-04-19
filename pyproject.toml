@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oscar-predictions"
+version = "0.2.0"
+description = "Oscar nominees scraping, feature engineering, updates, and modeling."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+  { name = "Paul Probst", email = "github@paul.probst.org" },
+]
+keywords = ["oscar", "imdb", "movies", "awards", "machine-learning"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = []
+
+[project.optional-dependencies]
+scrape = [
+  "playwright>=1.49,<2",
+]
+model = [
+  "pandas>=2.0",
+  "scikit-learn>=1.4",
+]
+all = [
+  "playwright>=1.49,<2",
+  "pandas>=2.0",
+  "scikit-learn>=1.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/pmprobst/OscarPredictions"
+Repository = "https://github.com/pmprobst/OscarPredictions.git"
+Issues = "https://github.com/pmprobst/OscarPredictions/issues"
+
+[project.scripts]
+oscar = "oscar_predictions.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["oscar_predictions*"]
+
+[tool.setuptools.package-data]
+oscar_predictions = [
+  "data/base/*.csv",
+  "data/config/*.txt",
+]
