@@ -164,6 +164,18 @@ def _build_config(args: argparse.Namespace) -> SyncConfig:
     )
 
 
+def _print_build_features_result(result: dict[str, object]) -> None:
+    """Print build-features summary in line-by-line human-readable output."""
+    for section in ("matrix", "totals", "join"):
+        data = result.get(section)
+        if not isinstance(data, dict):
+            continue
+        print(f"{section}:")
+        for key, value in data.items():
+            label = key.replace("_", " ")
+            print(f"  - {label}: {value}")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     if args.command == "sync":
@@ -184,7 +196,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "build-features":
         ws = DataWorkspace.from_path(args.workspace_dir)
         result = run_build_features(ws)
-        print(json.dumps(result, indent=2, sort_keys=True))
+        _print_build_features_result(result)
         return 0
     if args.command == "reset":
         ws = DataWorkspace.from_path(args.workspace_dir)
