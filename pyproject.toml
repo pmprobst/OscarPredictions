@@ -24,18 +24,17 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Information Analysis",
 ]
-dependencies = []
-
-[project.optional-dependencies]
-scrape = [
+dependencies = [
   "playwright>=1.49,<2",
 ]
+
+[project.optional-dependencies]
+scrape = []
 model = [
   "pandas>=2.0",
   "scikit-learn>=1.4",
 ]
 all = [
-  "playwright>=1.49,<2",
   "pandas>=2.0",
   "scikit-learn>=1.4",
 ]
