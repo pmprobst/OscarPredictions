@@ -13,32 +13,34 @@ from oscar_predictions.scrape_movies import run_scrape_movies
 from oscar_predictions.workspace import DataWorkspace
 
 
-def _max_movie_year(movies_csv: str) -> int | None:
+def _existing_movie_years(movies_csv: str) -> set[int]:
     try:
         with open(movies_csv, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            years: list[int] = []
+            years: set[int] = set()
             for row in reader:
                 raw = (row.get("year") or "").strip()
                 try:
-                    years.append(int(raw))
+                    years.add(int(raw))
                 except ValueError:
                     continue
-        return max(years) if years else None
+        return years
     except FileNotFoundError:
-        return None
+        return set()
 
 
-def _discover_new_nominee_years(existing_max_year: int | None, *, headless: bool) -> list[int]:
+def _discover_new_nominee_years(existing_years: set[int], *, headless: bool) -> list[int]:
     from playwright.sync_api import sync_playwright
 
-    start = (existing_max_year + 1) if existing_max_year is not None else 1996
+    start = 1996
     current_year = datetime.now(timezone.utc).year + 1
     discovered: list[int] = []
     with sync_playwright() as p:
         browser, context = _imdb_browser_context(p, headless=headless)
         try:
             for y in range(start, current_year + 1):
+                if y in existing_years:
+                    continue
                 gen = iter_best_picture_nominees(context, y, max_movies=1)
                 first = next(gen, None)
                 if first:
@@ -67,8 +69,8 @@ def _collect_cast_nm_ids_for_year(cast_csv: str, year: int) -> set[str]:
 
 
 def run_check_updates(workspace: DataWorkspace, *, headless: bool, max_movies: int | None, max_actors: int | None) -> dict:
-    existing_max = _max_movie_year(str(workspace.movies))
-    new_years = _discover_new_nominee_years(existing_max, headless=headless)
+    existing_years = _existing_movie_years(str(workspace.movies))
+    new_years = _discover_new_nominee_years(existing_years, headless=headless)
     if not new_years:
         return {"new_years": [], "updated": False, "removed_derived": [], "features": {}}
 
