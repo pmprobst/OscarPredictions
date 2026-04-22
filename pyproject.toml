@@ -9,6 +9,7 @@ description = "Oscar nominees scraping, feature engineering, updates, and modeli
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Paul Probst", email = "github@paul.probst.org" },
 ]
@@ -40,7 +41,6 @@ oscar = "oscar_predictions.cli:main"
 
 [tool.setuptools]
 include-package-data = true
-license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
 where = ["."]

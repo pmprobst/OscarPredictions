@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: oscar-predictions
-Version: 0.2.3
+Version: 0.2.4
 Summary: Oscar nominees scraping, feature engineering, updates, and modeling.
 Author-email: Paul Probst <github@paul.probst.org>
 License-Expression: MIT
@@ -19,11 +19,9 @@ Classifier: Programming Language :: Python :: 3.13
 Classifier: Topic :: Scientific/Engineering :: Information Analysis
 Requires-Python: >=3.10
 Description-Content-Type: text/markdown
-License-File: LICENSE
 Requires-Dist: playwright<2,>=1.49
 Requires-Dist: pandas>=2.0
 Requires-Dist: scikit-learn>=1.4
-Dynamic: license-file
 
 # OscarPredictions
 
