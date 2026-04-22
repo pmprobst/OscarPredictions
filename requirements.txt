@@ -1,2 +1,5 @@
-# Full stack for local development (matches pyproject optional extra "all")
+# Local package install plus Streamlit app dependencies.
 -e .[all]
+streamlit
+matplotlib
+seaborn
