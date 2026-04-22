@@ -1,0 +1,53 @@
+# Publish to PyPI using Trusted Publishing (OIDC).
+# Configure at https://pypi.org/manage/account/publishing/ with:
+#   PyPI project: oscar-predictions
+#   Owner/repo:   pmprobst/OscarPredictions
+#   Workflow:     publish.yml
+#   Environment:  optional — if you set a name on PyPI, add the same
+#                   `environment:` key under the publish job below.
+
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build
+        run: python -m pip install --upgrade pip build
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

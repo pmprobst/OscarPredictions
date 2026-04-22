@@ -1,0 +1,1 @@
+"""Bundled configuration text assets."""

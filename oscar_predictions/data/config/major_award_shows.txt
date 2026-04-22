@@ -1,0 +1,11 @@
+# One IMDb award_show string per line (exact match). Lines starting with # are ignored.
+Academy Awards, USA
+BAFTA Awards
+Golden Globes, USA
+Actor Awards
+Directors Guild of America, USA
+Writers Guild of America, USA
+PGA Awards
+Critics Choice Awards
+Film Independent Spirit Awards
+Satellite Awards
