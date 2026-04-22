@@ -64,8 +64,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sync.add_argument(
         "--workspace-dir",
-        default=".",
-        help="Workspace directory containing input/output CSV files (default: current dir).",
+        default="./data",
+        help="Workspace directory containing input/output CSV files (default: ./data).",
     )
 
     init_data = sub.add_parser("init-data", help="Copy bundled base data (<=2023) into workspace.")
@@ -83,15 +83,15 @@ def build_parser() -> argparse.ArgumentParser:
     build_features = sub.add_parser("build-features", help="Generate post-cleaning feature outputs.")
     build_features.add_argument(
         "--workspace-dir",
-        default=".",
-        help="Workspace directory containing base CSV files (default: current dir).",
+        default="./data",
+        help="Workspace directory containing base CSV files (default: ./data).",
     )
 
     reset_ws = sub.add_parser(
         "reset",
         help="Trim base CSVs to cutoff year, prune no_award actors, delete derived outputs and sync state.",
     )
-    reset_ws.add_argument("--workspace-dir", default=".", help="Workspace directory (default: current dir).")
+    reset_ws.add_argument("--workspace-dir", default="./data", help="Workspace directory (default: ./data).")
     reset_ws.add_argument(
         "--cutoff-year",
         type=int,
@@ -107,15 +107,15 @@ def build_parser() -> argparse.ArgumentParser:
     check_updates = sub.add_parser("check-updates", help="Detect and ingest new nominee years, then rebuild.")
     check_updates.add_argument(
         "--workspace-dir",
-        default=".",
-        help="Workspace directory containing CSV files (default: current dir).",
+        default="./data",
+        help="Workspace directory containing CSV files (default: ./data).",
     )
     add_browser_args(check_updates)
     check_updates.add_argument("--max-movies", type=int, default=None, help="Cap per-year movie scrape attempts.")
     check_updates.add_argument("--max-actors", type=int, default=None, help="Cap actor scrape attempts.")
 
     model = sub.add_parser("model", help="Run production modeling on movies_with_cast_award_totals.csv.")
-    model.add_argument("--workspace-dir", default=".", help="Workspace directory (default: current dir).")
+    model.add_argument("--workspace-dir", default="./data", help="Workspace directory (default: ./data).")
     model.add_argument("--seed", type=int, default=42, help="Random seed for train/test split.")
     model.add_argument("--test-size", type=float, default=0.25, help="Test split fraction.")
     model.add_argument(
@@ -176,6 +176,18 @@ def _print_build_features_result(result: dict[str, object]) -> None:
             print(f"  - {label}: {value}")
 
 
+def _print_init_data_result(result: dict[str, object]) -> None:
+    """Print init-data summary in line-by-line human-readable output."""
+    copied_files = result.get("copied_files")
+    if isinstance(copied_files, list) and copied_files:
+        print("Downloaded files:")
+        for name in copied_files:
+            print(f"  - {name}")
+    else:
+        print("No new files were downloaded.")
+    print("Bundled base data covers ceremony years through 2025.")
+
+
 def _print_model_report(report: dict[str, object]) -> None:
     """Print per-year predicted and actual winners."""
     yearly_results = report.get("yearly_results")
@@ -208,7 +220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ws = DataWorkspace.from_path(args.workspace_dir)
         result = ws.init_base_data(overwrite=args.overwrite)
         print(f"Initialized workspace {ws.root}")
-        print(json.dumps(result, indent=2, sort_keys=True))
+        _print_init_data_result(result)
         return 0
     if args.command == "build-features":
         ws = DataWorkspace.from_path(args.workspace_dir)

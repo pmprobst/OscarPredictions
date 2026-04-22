@@ -10,15 +10,7 @@ Install from TestPyPI:
 python3 -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  oscar-predictions==0.2.3
-python3 -m playwright install chromium
-```
-
-From a git checkout:
-
-```bash
-python3 -m pip install ".[all]"
-playwright install chromium
+  oscar-predictions
 ```
 
 Optional dependency groups:
@@ -30,10 +22,14 @@ After install, use the `oscar` CLI.
 
 ## Commands
 
+Workspace defaults:
+- `init-data` defaults to current directory (`.`)
+- `build-features`, `reset`, `check-updates`, and `model` default to `./data`
+
 ### 1) Initialize bundled base data (through 2023)
 
 ```bash
-oscar init-data --workspace-dir ./data
+oscar init-data
 ```
 
 This copies bundled package data into the workspace:
@@ -63,7 +59,7 @@ To restore the **exact** files shipped in the package instead of trimming in pla
 ### 3) Build post-cleaning features
 
 ```bash
-oscar build-features --workspace-dir ./data
+oscar build-features
 ```
 
 Produces:
@@ -75,7 +71,7 @@ Produces:
 ### 4) Check for new nominations and refresh
 
 ```bash
-oscar check-updates --workspace-dir ./data --headless
+oscar check-updates
 ```
 
 Behavior:
@@ -89,13 +85,13 @@ Behavior:
 ### 5) Run modeling
 
 ```bash
-oscar model --workspace-dir ./data --seed 42 --test-size 0.25
+oscar model --seed 42 --test-size 0.25
 ```
 
 Optional outputs:
 
 ```bash
-oscar model --workspace-dir ./data --report-json report.json --predictions-csv preds.csv
+oscar model --report-json report.json --predictions-csv preds.csv
 ```
 
 ## Development/testing

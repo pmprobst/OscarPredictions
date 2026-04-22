@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,11 +17,25 @@ class TestWorkspaceAndCommands(unittest.TestCase):
             ws = DataWorkspace.from_path(td)
             result = ws.init_base_data(overwrite=False)
             self.assertGreaterEqual(result["copied"], 5)
+            self.assertIn("copied_files", result)
+            self.assertIn("skipped_files", result)
             self.assertTrue(ws.movies.exists())
             self.assertTrue(ws.cast.exists())
             self.assertTrue(ws.actor_awards.exists())
             self.assertTrue(ws.no_award_actors.exists())
             self.assertTrue(ws.major_list.exists())
+
+    def test_init_data_cli_output_is_human_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = main(["init-data", "--workspace-dir", td, "--overwrite"])
+            self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("Initialized workspace", out)
+            self.assertIn("Downloaded files:", out)
+            self.assertIn("movies.csv", out)
+            self.assertIn("Bundled base data covers ceremony years through 2025.", out)
 
     @patch("oscar_predictions.cli.run_build_features")
     def test_build_features_command_dispatch(self, m_build) -> None:

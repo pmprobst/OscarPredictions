@@ -68,26 +68,37 @@ class DataWorkspace:
                 removed.append(str(p))
         return removed
 
-    def init_base_data(self, *, overwrite: bool = False) -> dict[str, int]:
+    def init_base_data(self, *, overwrite: bool = False) -> dict[str, int | list[str]]:
         self.ensure_exists()
         copied = 0
         skipped = 0
+        copied_files: list[str] = []
+        skipped_files: list[str] = []
         for name in BASE_FILENAMES:
             dest = self.root / name
             if dest.exists() and not overwrite:
                 skipped += 1
+                skipped_files.append(name)
                 continue
             src = bundled_base_resource(name)
             with src.open("rb") as fsrc, dest.open("wb") as fdst:
                 shutil.copyfileobj(fsrc, fdst)
             copied += 1
+            copied_files.append(name)
 
         if not self.major_list.exists() or overwrite:
             src_cfg = bundled_config_resource("major_award_shows.txt")
             with src_cfg.open("rb") as fsrc, self.major_list.open("wb") as fdst:
                 shutil.copyfileobj(fsrc, fdst)
             copied += 1
+            copied_files.append("major_award_shows.txt")
         else:
             skipped += 1
+            skipped_files.append("major_award_shows.txt")
 
-        return {"copied": copied, "skipped": skipped}
+        return {
+            "copied": copied,
+            "skipped": skipped,
+            "copied_files": copied_files,
+            "skipped_files": skipped_files,
+        }
