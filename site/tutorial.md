@@ -24,7 +24,7 @@ Everything is driven by a single command-line tool named `oscar`. You tell it wh
 - `oscar build-features`: Transforms the base data into model-ready feature tables.
 - `oscar model`: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.
 - `oscar reset`: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.
-- `oscar check-updates`: Looks for newly announced Oscar years online and pulls them into your workspace.
+- `oscar check-updates`: After the bundled **1996–2025** snapshot, looks online for **2026 or later** ceremony years missing from your workspace and pulls them in.
 - `oscar sync`: Runs the full end-to-end refresh (detect + scrape + rebuild features) in one step.
 
 Think of `init-data` and `build-features` as the setup stages, `model` as the payoff, and `reset`, `check-updates`, and `sync` as maintenance tools for keeping a workspace current over time.
@@ -33,13 +33,17 @@ Think of `init-data` and `build-features` as the setup stages, `model` as the pa
 
 - Python 3.9+ installed
 - Internet access for package installation (and optional update/sync scraping)
-- A shell where you can run CLI commands
+- A terminal: on **macOS or Linux**, use Terminal (bash or zsh). On **Windows**, use **PowerShell** (Windows Terminal is fine). Where steps differ, this tutorial shows both a **bash** block and a **PowerShell** block.
+
+The `oscar …` commands are identical on every platform. Only creating folders, choosing your Python launcher, and listing files change between shells.
 
 ## 1) Set up a practice workspace
 
 A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the `oscar` tool will fill it with data, features, and results.
 
-Create and move into a workspace directory:
+Create and move into a workspace directory.
+
+**macOS / Linux (bash or zsh):**
 
 ```bash
 mkdir -p tutorial_workspace
@@ -47,11 +51,19 @@ cd tutorial_workspace
 pwd
 ```
 
+**Windows (PowerShell):**
+
+```powershell
+New-Item -ItemType Directory -Force tutorial_workspace | Out-Null
+Set-Location tutorial_workspace
+Get-Location
+```
+
 What this does:
 - Creates a new empty folder called `tutorial_workspace` (if it does not already exist) and switches your shell into it.
 
 What you should see:
-- The printed path ends in `/tutorial_workspace`.
+- The printed path ends with `tutorial_workspace` (on Windows you may see a drive letter and backslashes; that is expected).
 
 Checkpoint:
 - Confirm the printed path exists on disk.
@@ -60,12 +72,23 @@ Checkpoint:
 
 OscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells `pip` to look there first and fall back to the real PyPI for any normal dependencies such as `pandas` and `scikit-learn`.
 
-Use the same install command from the README:
+Use the same install command from the README.
+
+**macOS / Linux (bash or zsh):**
 
 ```bash
 python3 -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
+  oscar-predictions
+```
+
+**Windows (PowerShell):** use the same flags; line continuation uses a backtick. If `python3` is not found, try `python` or `py -3` instead of `python3`.
+
+```powershell
+python -m pip install `
+  --index-url https://test.pypi.org/simple/ `
+  --extra-index-url https://pypi.org/simple/ `
   oscar-predictions
 ```
 
@@ -86,10 +109,20 @@ Installing the package registers a small launcher called `oscar` on your system'
 oscar --help
 ```
 
+The same command works in PowerShell: `oscar --help`.
+
 If `oscar` is not found, your environment may not have its scripts directory on PATH. You can always invoke the same tool through Python directly:
+
+**macOS / Linux:**
 
 ```bash
 python3 -m oscar_predictions.cli --help
+```
+
+**Windows (PowerShell):** if `python3` is not on your PATH, use `python` or `py -3`:
+
+```powershell
+python -m oscar_predictions.cli --help
 ```
 
 What this does:
@@ -105,7 +138,7 @@ Checkpoint:
 
 The package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.
 
-From your project root (replace the path if needed), initialize data into your workspace:
+From your project root (replace the path if needed), initialize data into your workspace. Forward slashes in `--workspace-dir` work in PowerShell too; you can also use a Windows path such as `.\tutorial_workspace` or `C:\Users\you\OscarPredictions\tutorial_workspace`.
 
 ```bash
 oscar init-data --workspace-dir ./tutorial_workspace
@@ -116,8 +149,16 @@ What this does:
 
 Check created files:
 
+**macOS / Linux:**
+
 ```bash
 ls -1 ./tutorial_workspace
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Get-ChildItem -Name .\tutorial_workspace
 ```
 
 What you should see:
@@ -145,8 +186,18 @@ What this does:
 
 Confirm expected outputs:
 
+**macOS / Linux:**
+
 ```bash
 ls -1 ./tutorial_workspace | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Get-ChildItem .\tutorial_workspace -Name | Where-Object {
+  $_ -match 'actor_year_award_matrix\.csv|film_actors_awards_sums_up_to_that_point\.csv|movies_with_cast_award_totals\.csv'
+}
 ```
 
 What you should see:
@@ -159,7 +210,9 @@ Practice:
 
 This is the payoff step. The `model` command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.
 
-Run the model and write artifacts:
+Run the model and write artifacts.
+
+**macOS / Linux (line continuation with `\`):**
 
 ```bash
 oscar model \
@@ -168,13 +221,32 @@ oscar model \
   --predictions-csv ./tutorial_workspace/predictions.csv
 ```
 
+**Windows (PowerShell, line continuation with backtick):**
+
+```powershell
+oscar model `
+  --workspace-dir ./tutorial_workspace `
+  --report-json ./tutorial_workspace/report.json `
+  --predictions-csv ./tutorial_workspace/predictions.csv
+```
+
+You can also run the same command as a single line on either platform (no line breaks).
+
 What this does:
 - Trains a logistic regression on `movies_with_cast_award_totals.csv`, prints evaluation metrics, writes the metrics to `report.json`, and writes one predicted probability per film-year to `predictions.csv`.
 
 Confirm artifacts:
 
+**macOS / Linux:**
+
 ```bash
 ls -1 ./tutorial_workspace | sed -n '/report.json/p;/predictions.csv/p'
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Get-ChildItem .\tutorial_workspace -Name | Where-Object { $_ -match '^report\.json$|^predictions\.csv$' }
 ```
 
 What you should see:
@@ -224,7 +296,15 @@ What this does:
 
 ### Check updates (networked scraping)
 
-`oscar check-updates` looks for ceremony years that exist in public sources but not in your workspace, scrapes the new nominees, cast, and awards data, and then rebuilds the feature tables for you. It is how you bring an existing workspace current when a new Oscars happens. The cell below is commented out because running it will make live network requests; remove the `#` to try it for real once you are ready.
+The package bundles historical Oscar Best Picture data from **1996 through 2025**. After `oscar init-data`, your workspace starts from that snapshot. **`oscar check-updates`** compares your workspace to what is available online and, when it finds newer ceremony years (**2026 or later**), downloads and merges that new data: nominees, cast, actor awards, and then rebuilt feature tables.
+
+It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the `#` only when you intend to run a long scrape.
+
+::: {.callout-warning}
+## ⚠️ ⚠️ Warning: long runtimes
+
+**⚠️ `oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as `--max-movies` and `--max-actors` if you only want a partial test run first.
+:::
 
 ```bash
 # oscar check-updates --workspace-dir ./tutorial_workspace
@@ -264,10 +344,11 @@ From here, the practical mental model is:
 
 ## Troubleshooting
 
-- `oscar: command not found`: run `python3 -m oscar_predictions.cli --help` to verify install path, then reinstall in the active environment.
+- `oscar: command not found` (or not recognized in PowerShell): run `python3 -m oscar_predictions.cli --help` on macOS/Linux, or `python -m oscar_predictions.cli --help` / `py -3 -m oscar_predictions.cli --help` on Windows, to verify the install path; then reinstall in the active environment.
 - Install fails on TestPyPI: retry with the exact `--index-url` and `--extra-index-url` flags.
 - Permission/path issues: use a writable workspace path and rerun `init-data`.
 - Slow update/sync runs: start with `--dry-run` or cap work with `--max-movies` and `--max-actors`.
+- **Windows:** if only `py` works, use `py -3 -m pip install …` for installs and `py -3 -m oscar_predictions.cli …` instead of `python3`. Paths can use `\` or `/` in most `oscar` arguments.
 
 ## Next steps
 

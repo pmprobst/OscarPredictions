@@ -230,7 +230,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>oscar build-features</code>: Transforms the base data into model-ready feature tables.</li>
 <li><code>oscar model</code>: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.</li>
 <li><code>oscar reset</code>: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.</li>
-<li><code>oscar check-updates</code>: Looks for newly announced Oscar years online and pulls them into your workspace.</li>
+<li><code>oscar check-updates</code>: After the bundled <strong>1996–2025</strong> snapshot, looks online for <strong>2026 or later</strong> ceremony years missing from your workspace and pulls them in.</li>
 <li><code>oscar sync</code>: Runs the full end-to-end refresh (detect + scrape + rebuild features) in one step.</li>
 </ul>
 <p>Think of <code>init-data</code> and <code>build-features</code> as the setup stages, <code>model</code> as the payoff, and <code>reset</code>, <code>check-updates</code>, and <code>sync</code> as maintenance tools for keeping a workspace current over time.</p>
@@ -240,28 +240,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>Python 3.9+ installed</li>
 <li>Internet access for package installation (and optional update/sync scraping)</li>
-<li>A shell where you can run CLI commands</li>
+<li>A terminal: on <strong>macOS or Linux</strong>, use Terminal (bash or zsh). On <strong>Windows</strong>, use <strong>PowerShell</strong> (Windows Terminal is fine). Where steps differ, this tutorial shows both a <strong>bash</strong> block and a <strong>PowerShell</strong> block.</li>
 </ul>
+<p>The <code>oscar …</code> commands are identical on every platform. Only creating folders, choosing your Python launcher, and listing files change between shells.</p>
 </section>
 <section id="set-up-a-practice-workspace" class="level2">
 <h2 class="anchored" data-anchor-id="set-up-a-practice-workspace">1) Set up a practice workspace</h2>
 <p>A “workspace” in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the <code>oscar</code> tool will fill it with data, features, and results.</p>
-<p>Create and move into a workspace directory:</p>
+<p>Create and move into a workspace directory.</p>
+<p><strong>macOS / Linux (bash or zsh):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">New-Item</span> <span class="op">-</span>ItemType Directory <span class="op">-</span>Force tutorial_workspace <span class="op">|</span> <span class="fu">Out-Null</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Set-Location</span> tutorial_workspace</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-Location</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Creates a new empty folder called <code>tutorial_workspace</code> (if it does not already exist) and switches your shell into it.</p>
-<p>What you should see: - The printed path ends in <code>/tutorial_workspace</code>.</p>
+<p>What you should see: - The printed path ends with <code>tutorial_workspace</code> (on Windows you may see a drive letter and backslashes; that is expected).</p>
 <p>Checkpoint: - Confirm the printed path exists on disk.</p>
 </section>
 <section id="install-the-package-testpypi" class="level2">
 <h2 class="anchored" data-anchor-id="install-the-package-testpypi">2) Install the package (TestPyPI)</h2>
 <p>OscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells <code>pip</code> to look there first and fall back to the real PyPI for any normal dependencies such as <code>pandas</code> and <code>scikit-learn</code>.</p>
-<p>Use the same install command from the README:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Use the same install command from the README.</p>
+<p><strong>macOS / Linux (bash or zsh):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong> use the same flags; line continuation uses a backtick. If <code>python3</code> is not found, try <code>python</code> or <code>py -3</code> instead of <code>python3</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>python <span class="op">-</span>m pip install `</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>index-url https<span class="op">://</span>test<span class="op">.</span><span class="fu">pypi</span><span class="op">.</span><span class="fu">org</span><span class="op">/</span>simple<span class="op">/</span> `</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>extra-index-url https<span class="op">://</span>pypi<span class="op">.</span><span class="fu">org</span><span class="op">/</span>simple<span class="op">/</span> `</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Downloads and installs the <code>oscar-predictions</code> package, plus the scientific libraries it needs to build features and train the model.</p>
 <p>What you should see: - A “Successfully installed” line listing <code>oscar-predictions</code> and its dependencies.</p>
 <p>Practice: - Re-run the command and confirm pip reports it as already installed.</p>
@@ -269,9 +281,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="verify-the-cli-is-available" class="level2">
 <h2 class="anchored" data-anchor-id="verify-the-cli-is-available">3) Verify the CLI is available</h2>
 <p>Installing the package registers a small launcher called <code>oscar</code> on your system’s PATH. This is the only command you will use for the rest of the tutorial, so it is worth confirming that your shell can find it before moving on.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The same command works in PowerShell: <code>oscar --help</code>.</p>
 <p>If <code>oscar</code> is not found, your environment may not have its scripts directory on PATH. You can always invoke the same tool through Python directly:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong> if <code>python3</code> is not on your PATH, use <code>python</code> or <code>py -3</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>python <span class="op">-</span>m oscar_predictions<span class="op">.</span><span class="fu">cli</span> <span class="op">--</span>help</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Prints the top-level help text and lists the available subcommands.</p>
 <p>What you should see: - A help message listing commands including <code>init-data</code>, <code>build-features</code>, <code>check-updates</code>, <code>model</code>, <code>reset</code>, and <code>sync</code>.</p>
 <p>Checkpoint: - You should see commands including <code>init-data</code>, <code>build-features</code>, <code>check-updates</code>, <code>model</code>, <code>reset</code>, and <code>sync</code>.</p>
@@ -279,40 +295,58 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="initialize-bundled-base-data" class="level2">
 <h2 class="anchored" data-anchor-id="initialize-bundled-base-data">4) Initialize bundled base data</h2>
 <p>The package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.</p>
-<p>From your project root (replace the path if needed), initialize data into your workspace:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>From your project root (replace the path if needed), initialize data into your workspace. Forward slashes in <code>--workspace-dir</code> work in PowerShell too; you can also use a Windows path such as <code>.\tutorial_workspace</code> or <code>C:\Users\you\OscarPredictions\tutorial_workspace</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Copies the bundled CSVs (<code>movies.csv</code>, <code>film_actors.csv</code>, <code>actor_awards.csv</code>, <code>no_award_actors.csv</code>) and the <code>major_award_shows.txt</code> config into your workspace.</p>
 <p>Check created files:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-ChildItem</span> <span class="op">-</span>Name <span class="op">.</span>\tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What you should see: - At minimum: <code>movies.csv</code>, <code>film_actors.csv</code>, <code>actor_awards.csv</code>, <code>no_award_actors.csv</code>, and <code>major_award_shows.txt</code>.</p>
 <p>Practice: - Try <code>--overwrite</code> and compare behavior. Without it, <code>init-data</code> will not replace existing files, which is how you protect a workspace you have already customized. With it, the workspace is reset to the exact files that ship with the package.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="build-post-cleaning-features" class="level2">
 <h2 class="anchored" data-anchor-id="build-post-cleaning-features">5) Build post-cleaning features</h2>
 <p>A machine learning model cannot read the raw scraped tables directly; it needs a single tidy table with one row per nominated film and numeric columns describing that film’s precursor awards and its cast’s prior accolades. The <code>build-features</code> command is what turns the raw CSVs into that model-ready table, along with two intermediate tables that make the transformation traceable.</p>
 <p>Generate derived feature tables:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Aggregates awards by actor and year, rolls those totals up to each film’s cast, and then joins them to the film-level records to produce the final modeling table.</p>
 <p>Confirm expected outputs:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-ChildItem</span> <span class="op">.</span>\tutorial_workspace <span class="op">-</span>Name <span class="op">|</span> <span class="fu">Where-Object</span> <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="va">$_</span> <span class="op">-match</span> <span class="st">'actor_year_award_matrix\.csv|film_actors_awards_sums_up_to_that_point\.csv|movies_with_cast_award_totals\.csv'</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What you should see: - Three new files: <code>actor_year_award_matrix.csv</code>, <code>film_actors_awards_sums_up_to_that_point.csv</code>, and <code>movies_with_cast_award_totals.csv</code>. The last one is the table the model will train on.</p>
 <p>Practice: - Open <code>movies_with_cast_award_totals.csv</code> and identify at least three model features.</p>
 </section>
 <section id="run-modeling" class="level2">
 <h2 class="anchored" data-anchor-id="run-modeling">6) Run modeling</h2>
 <p>This is the payoff step. The <code>model</code> command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.</p>
-<p>Run the model and write artifacts:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run the model and write artifacts.</p>
+<p><strong>macOS / Linux (line continuation with <code>\</code>):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell, line continuation with backtick):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>oscar model `</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>workspace-dir <span class="op">./</span>tutorial_workspace `</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>report-json <span class="op">./</span>tutorial_workspace<span class="op">/</span>report<span class="op">.</span><span class="fu">json</span> `</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>predictions-csv <span class="op">./</span>tutorial_workspace<span class="op">/</span>predictions<span class="op">.</span><span class="fu">csv</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>You can also run the same command as a single line on either platform (no line breaks).</p>
 <p>What this does: - Trains a logistic regression on <code>movies_with_cast_award_totals.csv</code>, prints evaluation metrics, writes the metrics to <code>report.json</code>, and writes one predicted probability per film-year to <code>predictions.csv</code>.</p>
 <p>Confirm artifacts:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>macOS / Linux:</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Windows (PowerShell):</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-ChildItem</span> <span class="op">.</span>\tutorial_workspace <span class="op">-</span>Name <span class="op">|</span> <span class="fu">Where-Object</span> <span class="op">{</span> <span class="va">$_</span> <span class="op">-match</span> <span class="st">'^report\.json$|^predictions\.csv$'</span> <span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What you should see: - Both <code>report.json</code> and <code>predictions.csv</code> listed in your workspace.</p>
 <p>Practice: - Re-run with a specific split to see how accuracy changes:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="optional-practice-reset-updates-sync" class="level2">
 <h2 class="anchored" data-anchor-id="optional-practice-reset-updates-sync">7) Optional practice: reset, updates, sync</h2>
@@ -321,28 +355,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="reset-safe-local-practice">Reset (safe local practice)</h3>
 <p><code>oscar reset</code> trims your workspace’s base CSVs so only rows up to a chosen year remain, and removes the derived feature tables. It is the easiest way to simulate “what if I only had data through year X?” without touching the bundled package files. A dry run shows what would change without writing anything, which is the safest way to explore the command for the first time.</p>
 <p>Preview reset:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Prints the rows and files that would be modified or deleted, and then exits without changing anything.</p>
 <p>Run a real reset:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Rewrites <code>movies.csv</code>, <code>film_actors.csv</code>, and <code>actor_awards.csv</code> to drop rows past 2021, prunes <code>no_award_actors.csv</code> to actors that still appear, and deletes the derived feature tables.</p>
 <p>Rebuild features after reset:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Regenerates the feature tables so you can train a model on the earlier data state.</p>
 </section>
 <section id="check-updates-networked-scraping" class="level3">
 <h3 class="anchored" data-anchor-id="check-updates-networked-scraping">Check updates (networked scraping)</h3>
-<p><code>oscar check-updates</code> looks for ceremony years that exist in public sources but not in your workspace, scrapes the new nominees, cast, and awards data, and then rebuilds the feature tables for you. It is how you bring an existing workspace current when a new Oscars happens. The cell below is commented out because running it will make live network requests; remove the <code>#</code> to try it for real once you are ready.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The package bundles historical Oscar Best Picture data from <strong>1996 through 2025</strong>. After <code>oscar init-data</code>, your workspace starts from that snapshot. <strong><code>oscar check-updates</code></strong> compares your workspace to what is available online and, when it finds newer ceremony years (<strong>2026 or later</strong>), downloads and merges that new data: nominees, cast, actor awards, and then rebuilt feature tables.</p>
+<p>It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the <code>#</code> only when you intend to run a long scrape.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>⚠️ ⚠️ Warning: long runtimes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>⚠️ <code>oscar check-updates</code> can take multiple hours per ceremony year</strong> being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <code>--max-movies</code> and <code>--max-actors</code> if you only want a partial test run first.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="end-to-end-sync" class="level3">
 <h3 class="anchored" data-anchor-id="end-to-end-sync">End-to-end sync</h3>
 <p><code>oscar sync</code> is the most complete refresh path. It plans each stage (scrape, derive, optional counts), checkpoints progress as it goes, and can limit per-run work so that a single command does not balloon into a long scrape. Starting with a dry run shows you the plan before any network calls are made.</p>
 <p>Use dry run first:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does: - Prints the stages <code>oscar sync</code> would run, in order, without executing them.</p>
 <p>Optional bounded sync:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What this does (if you uncomment it): - Executes the sync plan but caps how many movies and actors will be scraped this run, so you can test the flow safely.</p>
 </section>
 </section>
@@ -359,10 +407,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="troubleshooting" class="level2">
 <h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
 <ul>
-<li><code>oscar: command not found</code>: run <code>python3 -m oscar_predictions.cli --help</code> to verify install path, then reinstall in the active environment.</li>
+<li><code>oscar: command not found</code> (or not recognized in PowerShell): run <code>python3 -m oscar_predictions.cli --help</code> on macOS/Linux, or <code>python -m oscar_predictions.cli --help</code> / <code>py -3 -m oscar_predictions.cli --help</code> on Windows, to verify the install path; then reinstall in the active environment.</li>
 <li>Install fails on TestPyPI: retry with the exact <code>--index-url</code> and <code>--extra-index-url</code> flags.</li>
 <li>Permission/path issues: use a writable workspace path and rerun <code>init-data</code>.</li>
 <li>Slow update/sync runs: start with <code>--dry-run</code> or cap work with <code>--max-movies</code> and <code>--max-actors</code>.</li>
+<li><strong>Windows:</strong> if only <code>py</code> works, use <code>py -3 -m pip install …</code> for installs and <code>py -3 -m oscar_predictions.cli …</code> instead of <code>python3</code>. Paths can use <code>\</code> or <code>/</code> in most <code>oscar</code> arguments.</li>
 </ul>
 </section>
 <section id="next-steps" class="level2">
@@ -829,281 +878,362 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tutorial"</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>This tutorial is a hands-on walkthrough for a reader who understands the purpose of OscarPredictions but has never used the package before. It is written as a readable article, with copy/paste code cells you can run in your own terminal. The cells are not executed by the site itself.</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">## What you'll build</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>OscarPredictions is a small Python toolkit that turns decades of Best Picture nominee data into a working prediction pipeline. By the end of this tutorial you will have:</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Installed the <span class="in">`oscar-predictions`</span> package and verified its command-line tool.</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Created a "workspace" on your machine where data and model outputs live side by side.</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Loaded bundled historical data, built feature tables from it, and trained a model that estimates each nominee's probability of winning.</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Practiced the optional refresh commands used to add new ceremony years as they happen.</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>You do not need any prior modeling or scraping experience. You only need to follow the steps in order.</span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## How the package is organized</span></span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>Everything is driven by a single command-line tool named <span class="in">`oscar`</span>. You tell it which subcommand to run and which workspace folder to use. The subcommands you will meet in this tutorial are:</span>
-<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar init-data`</span>: Sets up a new workspace by copying the historical base data that ships with the package into a folder you choose.</span>
-<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar build-features`</span>: Transforms the base data into model-ready feature tables.</span>
-<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar model`</span>: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.</span>
-<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar reset`</span>: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.</span>
-<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar check-updates`</span>: Looks for newly announced Oscar years online and pulls them into your workspace.</span>
-<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar sync`</span>: Runs the full end-to-end refresh (detect + scrape + rebuild features) in one step.</span>
-<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>Think of <span class="in">`init-data`</span> and <span class="in">`build-features`</span> as the setup stages, <span class="in">`model`</span> as the payoff, and <span class="in">`reset`</span>, <span class="in">`check-updates`</span>, and <span class="in">`sync`</span> as maintenance tools for keeping a workspace current over time.</span>
-<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## Prerequisites</span></span>
-<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Python 3.9+ installed</span>
-<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Internet access for package installation (and optional update/sync scraping)</span>
-<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A shell where you can run CLI commands</span>
-<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1) Set up a practice workspace</span></span>
-<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the <span class="in">`oscar`</span> tool will fill it with data, features, and results.</span>
-<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>Create and move into a workspace directory:</span>
-<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
-<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
-<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
-<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Creates a new empty folder called <span class="in">`tutorial_workspace`</span> (if it does not already exist) and switches your shell into it.</span>
-<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The printed path ends in <span class="in">`/tutorial_workspace`</span>.</span>
-<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
-<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm the printed path exists on disk.</span>
-<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2) Install the package (TestPyPI)</span></span>
-<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a>OscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells <span class="in">`pip`</span> to look there first and fall back to the real PyPI for any normal dependencies such as <span class="in">`pandas`</span> and <span class="in">`scikit-learn`</span>.</span>
-<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a>Use the same install command from the README:</span>
-<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
-<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
-<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
-<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span>
-<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Downloads and installs the <span class="in">`oscar-predictions`</span> package, plus the scientific libraries it needs to build features and train the model.</span>
-<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A "Successfully installed" line listing <span class="in">`oscar-predictions`</span> and its dependencies.</span>
-<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run the command and confirm pip reports it as already installed.</span>
-<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3) Verify the CLI is available</span></span>
-<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a>Installing the package registers a small launcher called <span class="in">`oscar`</span> on your system's PATH. This is the only command you will use for the rest of the tutorial, so it is worth confirming that your shell can find it before moving on.</span>
-<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span>
-<span id="cb19-87"><a href="#cb19-87" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-88"><a href="#cb19-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-89"><a href="#cb19-89" aria-hidden="true" tabindex="-1"></a>If <span class="in">`oscar`</span> is not found, your environment may not have its scripts directory on PATH. You can always invoke the same tool through Python directly:</span>
-<span id="cb19-90"><a href="#cb19-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-91"><a href="#cb19-91" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-92"><a href="#cb19-92" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span>
-<span id="cb19-93"><a href="#cb19-93" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-94"><a href="#cb19-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-95"><a href="#cb19-95" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the top-level help text and lists the available subcommands.</span>
-<span id="cb19-97"><a href="#cb19-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-98"><a href="#cb19-98" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-99"><a href="#cb19-99" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A help message listing commands including <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
-<span id="cb19-100"><a href="#cb19-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-101"><a href="#cb19-101" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
-<span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>You should see commands including <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
-<span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4) Initialize bundled base data</span></span>
-<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a>The package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.</span>
-<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a>From your project root (replace the path if needed), initialize data into your workspace:</span>
-<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-110"><a href="#cb19-110" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-111"><a href="#cb19-111" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
-<span id="cb19-112"><a href="#cb19-112" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-113"><a href="#cb19-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-114"><a href="#cb19-114" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-115"><a href="#cb19-115" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Copies the bundled CSVs (<span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, <span class="in">`actor_awards.csv`</span>, <span class="in">`no_award_actors.csv`</span>) and the <span class="in">`major_award_shows.txt`</span> config into your workspace.</span>
-<span id="cb19-116"><a href="#cb19-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-117"><a href="#cb19-117" aria-hidden="true" tabindex="-1"></a>Check created files:</span>
-<span id="cb19-118"><a href="#cb19-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-119"><a href="#cb19-119" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-120"><a href="#cb19-120" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span>
-<span id="cb19-121"><a href="#cb19-121" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-122"><a href="#cb19-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-123"><a href="#cb19-123" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-124"><a href="#cb19-124" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At minimum: <span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, <span class="in">`actor_awards.csv`</span>, <span class="in">`no_award_actors.csv`</span>, and <span class="in">`major_award_shows.txt`</span>.</span>
-<span id="cb19-125"><a href="#cb19-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-126"><a href="#cb19-126" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb19-127"><a href="#cb19-127" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Try <span class="in">`--overwrite`</span> and compare behavior. Without it, <span class="in">`init-data`</span> will not replace existing files, which is how you protect a workspace you have already customized. With it, the workspace is reset to the exact files that ship with the package.</span>
-<span id="cb19-128"><a href="#cb19-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-129"><a href="#cb19-129" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-130"><a href="#cb19-130" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span>
-<span id="cb19-131"><a href="#cb19-131" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-132"><a href="#cb19-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-133"><a href="#cb19-133" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5) Build post-cleaning features</span></span>
-<span id="cb19-134"><a href="#cb19-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-135"><a href="#cb19-135" aria-hidden="true" tabindex="-1"></a>A machine learning model cannot read the raw scraped tables directly; it needs a single tidy table with one row per nominated film and numeric columns describing that film's precursor awards and its cast's prior accolades. The <span class="in">`build-features`</span> command is what turns the raw CSVs into that model-ready table, along with two intermediate tables that make the transformation traceable.</span>
-<span id="cb19-136"><a href="#cb19-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-137"><a href="#cb19-137" aria-hidden="true" tabindex="-1"></a>Generate derived feature tables:</span>
-<span id="cb19-138"><a href="#cb19-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-139"><a href="#cb19-139" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-140"><a href="#cb19-140" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
-<span id="cb19-141"><a href="#cb19-141" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-142"><a href="#cb19-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-143"><a href="#cb19-143" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-144"><a href="#cb19-144" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Aggregates awards by actor and year, rolls those totals up to each film's cast, and then joins them to the film-level records to produce the final modeling table.</span>
-<span id="cb19-145"><a href="#cb19-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-146"><a href="#cb19-146" aria-hidden="true" tabindex="-1"></a>Confirm expected outputs:</span>
-<span id="cb19-147"><a href="#cb19-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-148"><a href="#cb19-148" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-149"><a href="#cb19-149" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span>
-<span id="cb19-150"><a href="#cb19-150" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-151"><a href="#cb19-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-152"><a href="#cb19-152" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-153"><a href="#cb19-153" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Three new files: <span class="in">`actor_year_award_matrix.csv`</span>, <span class="in">`film_actors_awards_sums_up_to_that_point.csv`</span>, and <span class="in">`movies_with_cast_award_totals.csv`</span>. The last one is the table the model will train on.</span>
-<span id="cb19-154"><a href="#cb19-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-155"><a href="#cb19-155" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb19-156"><a href="#cb19-156" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Open <span class="in">`movies_with_cast_award_totals.csv`</span> and identify at least three model features.</span>
-<span id="cb19-157"><a href="#cb19-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-158"><a href="#cb19-158" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6) Run modeling</span></span>
-<span id="cb19-159"><a href="#cb19-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-160"><a href="#cb19-160" aria-hidden="true" tabindex="-1"></a>This is the payoff step. The <span class="in">`model`</span> command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.</span>
-<span id="cb19-161"><a href="#cb19-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-162"><a href="#cb19-162" aria-hidden="true" tabindex="-1"></a>Run the model and write artifacts:</span>
-<span id="cb19-163"><a href="#cb19-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-164"><a href="#cb19-164" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-165"><a href="#cb19-165" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
-<span id="cb19-166"><a href="#cb19-166" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
-<span id="cb19-167"><a href="#cb19-167" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
-<span id="cb19-168"><a href="#cb19-168" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span>
-<span id="cb19-169"><a href="#cb19-169" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-170"><a href="#cb19-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-171"><a href="#cb19-171" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-172"><a href="#cb19-172" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Trains a logistic regression on <span class="in">`movies_with_cast_award_totals.csv`</span>, prints evaluation metrics, writes the metrics to <span class="in">`report.json`</span>, and writes one predicted probability per film-year to <span class="in">`predictions.csv`</span>.</span>
-<span id="cb19-173"><a href="#cb19-173" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-174"><a href="#cb19-174" aria-hidden="true" tabindex="-1"></a>Confirm artifacts:</span>
-<span id="cb19-175"><a href="#cb19-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-176"><a href="#cb19-176" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-177"><a href="#cb19-177" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span>
-<span id="cb19-178"><a href="#cb19-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-179"><a href="#cb19-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-180"><a href="#cb19-180" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb19-181"><a href="#cb19-181" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Both <span class="in">`report.json`</span> and <span class="in">`predictions.csv`</span> listed in your workspace.</span>
-<span id="cb19-182"><a href="#cb19-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-183"><a href="#cb19-183" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb19-184"><a href="#cb19-184" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run with a specific split to see how accuracy changes:</span>
-<span id="cb19-185"><a href="#cb19-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-186"><a href="#cb19-186" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-187"><a href="#cb19-187" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span>
-<span id="cb19-188"><a href="#cb19-188" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-189"><a href="#cb19-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-190"><a href="#cb19-190" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7) Optional practice: reset, updates, sync</span></span>
-<span id="cb19-191"><a href="#cb19-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-192"><a href="#cb19-192" aria-hidden="true" tabindex="-1"></a>The remaining commands exist because Oscar data keeps changing: new ceremonies happen each year, and you will sometimes want to rewind your workspace to test an update flow from a clean starting point. These are optional for a first read-through because some of them reach out to the internet and can take longer than the earlier steps.</span>
-<span id="cb19-193"><a href="#cb19-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-194"><a href="#cb19-194" aria-hidden="true" tabindex="-1"></a><span class="fu">### Reset (safe local practice)</span></span>
-<span id="cb19-195"><a href="#cb19-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-196"><a href="#cb19-196" aria-hidden="true" tabindex="-1"></a><span class="in">`oscar reset`</span> trims your workspace's base CSVs so only rows up to a chosen year remain, and removes the derived feature tables. It is the easiest way to simulate "what if I only had data through year X?" without touching the bundled package files. A dry run shows what would change without writing anything, which is the safest way to explore the command for the first time.</span>
-<span id="cb19-197"><a href="#cb19-197" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-198"><a href="#cb19-198" aria-hidden="true" tabindex="-1"></a>Preview reset:</span>
-<span id="cb19-199"><a href="#cb19-199" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-200"><a href="#cb19-200" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-201"><a href="#cb19-201" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
-<span id="cb19-202"><a href="#cb19-202" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-203"><a href="#cb19-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-204"><a href="#cb19-204" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-205"><a href="#cb19-205" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the rows and files that would be modified or deleted, and then exits without changing anything.</span>
-<span id="cb19-206"><a href="#cb19-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-207"><a href="#cb19-207" aria-hidden="true" tabindex="-1"></a>Run a real reset:</span>
-<span id="cb19-208"><a href="#cb19-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-209"><a href="#cb19-209" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-210"><a href="#cb19-210" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span>
-<span id="cb19-211"><a href="#cb19-211" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-212"><a href="#cb19-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-213"><a href="#cb19-213" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-214"><a href="#cb19-214" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Rewrites <span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, and <span class="in">`actor_awards.csv`</span> to drop rows past 2021, prunes <span class="in">`no_award_actors.csv`</span> to actors that still appear, and deletes the derived feature tables.</span>
-<span id="cb19-215"><a href="#cb19-215" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-216"><a href="#cb19-216" aria-hidden="true" tabindex="-1"></a>Rebuild features after reset:</span>
-<span id="cb19-217"><a href="#cb19-217" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-218"><a href="#cb19-218" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-219"><a href="#cb19-219" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
-<span id="cb19-220"><a href="#cb19-220" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-221"><a href="#cb19-221" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-222"><a href="#cb19-222" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-223"><a href="#cb19-223" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Regenerates the feature tables so you can train a model on the earlier data state.</span>
-<span id="cb19-224"><a href="#cb19-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-225"><a href="#cb19-225" aria-hidden="true" tabindex="-1"></a><span class="fu">### Check updates (networked scraping)</span></span>
-<span id="cb19-226"><a href="#cb19-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-227"><a href="#cb19-227" aria-hidden="true" tabindex="-1"></a><span class="in">`oscar check-updates`</span> looks for ceremony years that exist in public sources but not in your workspace, scrapes the new nominees, cast, and awards data, and then rebuilds the feature tables for you. It is how you bring an existing workspace current when a new Oscars happens. The cell below is commented out because running it will make live network requests; remove the <span class="in">`#`</span> to try it for real once you are ready.</span>
-<span id="cb19-228"><a href="#cb19-228" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-229"><a href="#cb19-229" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-230"><a href="#cb19-230" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span>
-<span id="cb19-231"><a href="#cb19-231" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-232"><a href="#cb19-232" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-233"><a href="#cb19-233" aria-hidden="true" tabindex="-1"></a><span class="fu">### End-to-end sync</span></span>
-<span id="cb19-234"><a href="#cb19-234" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-235"><a href="#cb19-235" aria-hidden="true" tabindex="-1"></a><span class="in">`oscar sync`</span> is the most complete refresh path. It plans each stage (scrape, derive, optional counts), checkpoints progress as it goes, and can limit per-run work so that a single command does not balloon into a long scrape. Starting with a dry run shows you the plan before any network calls are made.</span>
-<span id="cb19-236"><a href="#cb19-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-237"><a href="#cb19-237" aria-hidden="true" tabindex="-1"></a>Use dry run first:</span>
-<span id="cb19-238"><a href="#cb19-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-239"><a href="#cb19-239" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-240"><a href="#cb19-240" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
-<span id="cb19-241"><a href="#cb19-241" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-242"><a href="#cb19-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-243"><a href="#cb19-243" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb19-244"><a href="#cb19-244" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the stages <span class="in">`oscar sync`</span> would run, in order, without executing them.</span>
-<span id="cb19-245"><a href="#cb19-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-246"><a href="#cb19-246" aria-hidden="true" tabindex="-1"></a>Optional bounded sync:</span>
-<span id="cb19-247"><a href="#cb19-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-248"><a href="#cb19-248" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb19-249"><a href="#cb19-249" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span>
-<span id="cb19-250"><a href="#cb19-250" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb19-251"><a href="#cb19-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-252"><a href="#cb19-252" aria-hidden="true" tabindex="-1"></a>What this does (if you uncomment it):</span>
-<span id="cb19-253"><a href="#cb19-253" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Executes the sync plan but caps how many movies and actors will be scraped this run, so you can test the flow safely.</span>
-<span id="cb19-254"><a href="#cb19-254" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-255"><a href="#cb19-255" aria-hidden="true" tabindex="-1"></a><span class="fu">## Putting it all together</span></span>
-<span id="cb19-256"><a href="#cb19-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-257"><a href="#cb19-257" aria-hidden="true" tabindex="-1"></a>You now have a working OscarPredictions workspace on your machine. You used <span class="in">`init-data`</span> to seed it with the bundled historical dataset, <span class="in">`build-features`</span> to turn that data into a model-ready table, and <span class="in">`model`</span> to produce predictions and metrics. You also saw how <span class="in">`reset`</span> lets you rewind the workspace, and how <span class="in">`check-updates`</span> and <span class="in">`sync`</span> bring new ceremony years into the same pipeline with a single command.</span>
-<span id="cb19-258"><a href="#cb19-258" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-259"><a href="#cb19-259" aria-hidden="true" tabindex="-1"></a>From here, the practical mental model is:</span>
-<span id="cb19-260"><a href="#cb19-260" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-261"><a href="#cb19-261" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Run <span class="in">`build-features`</span> whenever your base CSVs change.</span>
-<span id="cb19-262"><a href="#cb19-262" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Run <span class="in">`model`</span> whenever you want a fresh evaluation and predictions.</span>
-<span id="cb19-263"><a href="#cb19-263" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Reach for <span class="in">`check-updates`</span> or <span class="in">`sync`</span> only when you want to bring in new data from outside your machine.</span>
-<span id="cb19-264"><a href="#cb19-264" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-265"><a href="#cb19-265" aria-hidden="true" tabindex="-1"></a><span class="fu">## Troubleshooting</span></span>
-<span id="cb19-266"><a href="#cb19-266" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-267"><a href="#cb19-267" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar: command not found`</span>: run <span class="in">`python3 -m oscar_predictions.cli --help`</span> to verify install path, then reinstall in the active environment.</span>
-<span id="cb19-268"><a href="#cb19-268" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Install fails on TestPyPI: retry with the exact <span class="in">`--index-url`</span> and <span class="in">`--extra-index-url`</span> flags.</span>
-<span id="cb19-269"><a href="#cb19-269" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Permission/path issues: use a writable workspace path and rerun <span class="in">`init-data`</span>.</span>
-<span id="cb19-270"><a href="#cb19-270" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Slow update/sync runs: start with <span class="in">`--dry-run`</span> or cap work with <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span>.</span>
-<span id="cb19-271"><a href="#cb19-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-272"><a href="#cb19-272" aria-hidden="true" tabindex="-1"></a><span class="fu">## Next steps</span></span>
-<span id="cb19-273"><a href="#cb19-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-274"><a href="#cb19-274" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Read <span class="co">[</span><span class="ot">Documentation</span><span class="co">](documentation.md)</span> for architecture and module details.</span>
-<span id="cb19-275"><a href="#cb19-275" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>See <span class="co">[</span><span class="ot">Technical Report</span><span class="co">](report.md)</span> for methodology and findings.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tutorial"</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>This tutorial is a hands-on walkthrough for a reader who understands the purpose of OscarPredictions but has never used the package before. It is written as a readable article, with copy/paste code cells you can run in your own terminal. The cells are not executed by the site itself.</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="fu">## What you'll build</span></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>OscarPredictions is a small Python toolkit that turns decades of Best Picture nominee data into a working prediction pipeline. By the end of this tutorial you will have:</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Installed the <span class="in">`oscar-predictions`</span> package and verified its command-line tool.</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Created a "workspace" on your machine where data and model outputs live side by side.</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Loaded bundled historical data, built feature tables from it, and trained a model that estimates each nominee's probability of winning.</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Practiced the optional refresh commands used to add new ceremony years as they happen.</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>You do not need any prior modeling or scraping experience. You only need to follow the steps in order.</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## How the package is organized</span></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>Everything is driven by a single command-line tool named <span class="in">`oscar`</span>. You tell it which subcommand to run and which workspace folder to use. The subcommands you will meet in this tutorial are:</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar init-data`</span>: Sets up a new workspace by copying the historical base data that ships with the package into a folder you choose.</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar build-features`</span>: Transforms the base data into model-ready feature tables.</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar model`</span>: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.</span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar reset`</span>: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar check-updates`</span>: After the bundled **1996–2025** snapshot, looks online for **2026 or later** ceremony years missing from your workspace and pulls them in.</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar sync`</span>: Runs the full end-to-end refresh (detect + scrape + rebuild features) in one step.</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>Think of <span class="in">`init-data`</span> and <span class="in">`build-features`</span> as the setup stages, <span class="in">`model`</span> as the payoff, and <span class="in">`reset`</span>, <span class="in">`check-updates`</span>, and <span class="in">`sync`</span> as maintenance tools for keeping a workspace current over time.</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a><span class="fu">## Prerequisites</span></span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Python 3.9+ installed</span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Internet access for package installation (and optional update/sync scraping)</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A terminal: on **macOS or Linux**, use Terminal (bash or zsh). On **Windows**, use **PowerShell** (Windows Terminal is fine). Where steps differ, this tutorial shows both a **bash** block and a **PowerShell** block.</span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a>The <span class="in">`oscar …`</span> commands are identical on every platform. Only creating folders, choosing your Python launcher, and listing files change between shells.</span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1) Set up a practice workspace</span></span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the <span class="in">`oscar`</span> tool will fill it with data, features, and results.</span>
+<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>Create and move into a workspace directory.</span>
+<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (bash or zsh):**</span>
+<span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
+<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
+<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
+<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
+<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-57"><a href="#cb26-57" aria-hidden="true" tabindex="-1"></a><span class="in">New-Item -ItemType Directory -Force tutorial_workspace | Out-Null</span></span>
+<span id="cb26-58"><a href="#cb26-58" aria-hidden="true" tabindex="-1"></a><span class="in">Set-Location tutorial_workspace</span></span>
+<span id="cb26-59"><a href="#cb26-59" aria-hidden="true" tabindex="-1"></a><span class="in">Get-Location</span></span>
+<span id="cb26-60"><a href="#cb26-60" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-61"><a href="#cb26-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-62"><a href="#cb26-62" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-63"><a href="#cb26-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Creates a new empty folder called <span class="in">`tutorial_workspace`</span> (if it does not already exist) and switches your shell into it.</span>
+<span id="cb26-64"><a href="#cb26-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-65"><a href="#cb26-65" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-66"><a href="#cb26-66" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The printed path ends with <span class="in">`tutorial_workspace`</span> (on Windows you may see a drive letter and backslashes; that is expected).</span>
+<span id="cb26-67"><a href="#cb26-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-68"><a href="#cb26-68" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
+<span id="cb26-69"><a href="#cb26-69" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm the printed path exists on disk.</span>
+<span id="cb26-70"><a href="#cb26-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-71"><a href="#cb26-71" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2) Install the package (TestPyPI)</span></span>
+<span id="cb26-72"><a href="#cb26-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-73"><a href="#cb26-73" aria-hidden="true" tabindex="-1"></a>OscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells <span class="in">`pip`</span> to look there first and fall back to the real PyPI for any normal dependencies such as <span class="in">`pandas`</span> and <span class="in">`scikit-learn`</span>.</span>
+<span id="cb26-74"><a href="#cb26-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-75"><a href="#cb26-75" aria-hidden="true" tabindex="-1"></a>Use the same install command from the README.</span>
+<span id="cb26-76"><a href="#cb26-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-77"><a href="#cb26-77" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (bash or zsh):**</span>
+<span id="cb26-78"><a href="#cb26-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-79"><a href="#cb26-79" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-80"><a href="#cb26-80" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
+<span id="cb26-81"><a href="#cb26-81" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb26-82"><a href="#cb26-82" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb26-83"><a href="#cb26-83" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span>
+<span id="cb26-84"><a href="#cb26-84" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-85"><a href="#cb26-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-86"><a href="#cb26-86" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):** use the same flags; line continuation uses a backtick. If <span class="in">`python3`</span> is not found, try <span class="in">`python`</span> or <span class="in">`py -3`</span> instead of <span class="in">`python3`</span>.</span>
+<span id="cb26-87"><a href="#cb26-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-88"><a href="#cb26-88" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-89"><a href="#cb26-89" aria-hidden="true" tabindex="-1"></a><span class="in">python -m pip install `</span></span>
+<span id="cb26-90"><a href="#cb26-90" aria-hidden="true" tabindex="-1"></a><span class="in">  --index-url https://test.pypi.org/simple/ `</span></span>
+<span id="cb26-91"><a href="#cb26-91" aria-hidden="true" tabindex="-1"></a><span class="in">  --extra-index-url https://pypi.org/simple/ `</span></span>
+<span id="cb26-92"><a href="#cb26-92" aria-hidden="true" tabindex="-1"></a><span class="in">  oscar-predictions</span></span>
+<span id="cb26-93"><a href="#cb26-93" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-94"><a href="#cb26-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-95"><a href="#cb26-95" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-96"><a href="#cb26-96" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Downloads and installs the <span class="in">`oscar-predictions`</span> package, plus the scientific libraries it needs to build features and train the model.</span>
+<span id="cb26-97"><a href="#cb26-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-98"><a href="#cb26-98" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-99"><a href="#cb26-99" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A "Successfully installed" line listing <span class="in">`oscar-predictions`</span> and its dependencies.</span>
+<span id="cb26-100"><a href="#cb26-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-101"><a href="#cb26-101" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb26-102"><a href="#cb26-102" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run the command and confirm pip reports it as already installed.</span>
+<span id="cb26-103"><a href="#cb26-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-104"><a href="#cb26-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3) Verify the CLI is available</span></span>
+<span id="cb26-105"><a href="#cb26-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-106"><a href="#cb26-106" aria-hidden="true" tabindex="-1"></a>Installing the package registers a small launcher called <span class="in">`oscar`</span> on your system's PATH. This is the only command you will use for the rest of the tutorial, so it is worth confirming that your shell can find it before moving on.</span>
+<span id="cb26-107"><a href="#cb26-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-108"><a href="#cb26-108" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-109"><a href="#cb26-109" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span>
+<span id="cb26-110"><a href="#cb26-110" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-111"><a href="#cb26-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-112"><a href="#cb26-112" aria-hidden="true" tabindex="-1"></a>The same command works in PowerShell: <span class="in">`oscar --help`</span>.</span>
+<span id="cb26-113"><a href="#cb26-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-114"><a href="#cb26-114" aria-hidden="true" tabindex="-1"></a>If <span class="in">`oscar`</span> is not found, your environment may not have its scripts directory on PATH. You can always invoke the same tool through Python directly:</span>
+<span id="cb26-115"><a href="#cb26-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-116"><a href="#cb26-116" aria-hidden="true" tabindex="-1"></a>**macOS / Linux:**</span>
+<span id="cb26-117"><a href="#cb26-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-118"><a href="#cb26-118" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-119"><a href="#cb26-119" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span>
+<span id="cb26-120"><a href="#cb26-120" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-121"><a href="#cb26-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-122"><a href="#cb26-122" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):** if <span class="in">`python3`</span> is not on your PATH, use <span class="in">`python`</span> or <span class="in">`py -3`</span>:</span>
+<span id="cb26-123"><a href="#cb26-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-124"><a href="#cb26-124" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-125"><a href="#cb26-125" aria-hidden="true" tabindex="-1"></a><span class="in">python -m oscar_predictions.cli --help</span></span>
+<span id="cb26-126"><a href="#cb26-126" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-127"><a href="#cb26-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-128"><a href="#cb26-128" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-129"><a href="#cb26-129" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the top-level help text and lists the available subcommands.</span>
+<span id="cb26-130"><a href="#cb26-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-131"><a href="#cb26-131" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-132"><a href="#cb26-132" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A help message listing commands including <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
+<span id="cb26-133"><a href="#cb26-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-134"><a href="#cb26-134" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
+<span id="cb26-135"><a href="#cb26-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>You should see commands including <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
+<span id="cb26-136"><a href="#cb26-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-137"><a href="#cb26-137" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4) Initialize bundled base data</span></span>
+<span id="cb26-138"><a href="#cb26-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-139"><a href="#cb26-139" aria-hidden="true" tabindex="-1"></a>The package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.</span>
+<span id="cb26-140"><a href="#cb26-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-141"><a href="#cb26-141" aria-hidden="true" tabindex="-1"></a>From your project root (replace the path if needed), initialize data into your workspace. Forward slashes in <span class="in">`--workspace-dir`</span> work in PowerShell too; you can also use a Windows path such as <span class="in">`.\tutorial_workspace`</span> or <span class="in">`C:\Users\you\OscarPredictions\tutorial_workspace`</span>.</span>
+<span id="cb26-142"><a href="#cb26-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-143"><a href="#cb26-143" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-144"><a href="#cb26-144" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb26-145"><a href="#cb26-145" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-146"><a href="#cb26-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-147"><a href="#cb26-147" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-148"><a href="#cb26-148" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Copies the bundled CSVs (<span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, <span class="in">`actor_awards.csv`</span>, <span class="in">`no_award_actors.csv`</span>) and the <span class="in">`major_award_shows.txt`</span> config into your workspace.</span>
+<span id="cb26-149"><a href="#cb26-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-150"><a href="#cb26-150" aria-hidden="true" tabindex="-1"></a>Check created files:</span>
+<span id="cb26-151"><a href="#cb26-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-152"><a href="#cb26-152" aria-hidden="true" tabindex="-1"></a>**macOS / Linux:**</span>
+<span id="cb26-153"><a href="#cb26-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-154"><a href="#cb26-154" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-155"><a href="#cb26-155" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span>
+<span id="cb26-156"><a href="#cb26-156" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-157"><a href="#cb26-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-158"><a href="#cb26-158" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
+<span id="cb26-159"><a href="#cb26-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-160"><a href="#cb26-160" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-161"><a href="#cb26-161" aria-hidden="true" tabindex="-1"></a><span class="in">Get-ChildItem -Name .\tutorial_workspace</span></span>
+<span id="cb26-162"><a href="#cb26-162" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-163"><a href="#cb26-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-164"><a href="#cb26-164" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-165"><a href="#cb26-165" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At minimum: <span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, <span class="in">`actor_awards.csv`</span>, <span class="in">`no_award_actors.csv`</span>, and <span class="in">`major_award_shows.txt`</span>.</span>
+<span id="cb26-166"><a href="#cb26-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-167"><a href="#cb26-167" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb26-168"><a href="#cb26-168" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Try <span class="in">`--overwrite`</span> and compare behavior. Without it, <span class="in">`init-data`</span> will not replace existing files, which is how you protect a workspace you have already customized. With it, the workspace is reset to the exact files that ship with the package.</span>
+<span id="cb26-169"><a href="#cb26-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-170"><a href="#cb26-170" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-171"><a href="#cb26-171" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span>
+<span id="cb26-172"><a href="#cb26-172" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-173"><a href="#cb26-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-174"><a href="#cb26-174" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5) Build post-cleaning features</span></span>
+<span id="cb26-175"><a href="#cb26-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-176"><a href="#cb26-176" aria-hidden="true" tabindex="-1"></a>A machine learning model cannot read the raw scraped tables directly; it needs a single tidy table with one row per nominated film and numeric columns describing that film's precursor awards and its cast's prior accolades. The <span class="in">`build-features`</span> command is what turns the raw CSVs into that model-ready table, along with two intermediate tables that make the transformation traceable.</span>
+<span id="cb26-177"><a href="#cb26-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-178"><a href="#cb26-178" aria-hidden="true" tabindex="-1"></a>Generate derived feature tables:</span>
+<span id="cb26-179"><a href="#cb26-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-180"><a href="#cb26-180" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-181"><a href="#cb26-181" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb26-182"><a href="#cb26-182" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-183"><a href="#cb26-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-184"><a href="#cb26-184" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-185"><a href="#cb26-185" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Aggregates awards by actor and year, rolls those totals up to each film's cast, and then joins them to the film-level records to produce the final modeling table.</span>
+<span id="cb26-186"><a href="#cb26-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-187"><a href="#cb26-187" aria-hidden="true" tabindex="-1"></a>Confirm expected outputs:</span>
+<span id="cb26-188"><a href="#cb26-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-189"><a href="#cb26-189" aria-hidden="true" tabindex="-1"></a>**macOS / Linux:**</span>
+<span id="cb26-190"><a href="#cb26-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-191"><a href="#cb26-191" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-192"><a href="#cb26-192" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span>
+<span id="cb26-193"><a href="#cb26-193" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-194"><a href="#cb26-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-195"><a href="#cb26-195" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
+<span id="cb26-196"><a href="#cb26-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-197"><a href="#cb26-197" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-198"><a href="#cb26-198" aria-hidden="true" tabindex="-1"></a><span class="in">Get-ChildItem .\tutorial_workspace -Name | Where-Object {</span></span>
+<span id="cb26-199"><a href="#cb26-199" aria-hidden="true" tabindex="-1"></a><span class="in">  $_ -match 'actor_year_award_matrix\.csv|film_actors_awards_sums_up_to_that_point\.csv|movies_with_cast_award_totals\.csv'</span></span>
+<span id="cb26-200"><a href="#cb26-200" aria-hidden="true" tabindex="-1"></a><span class="in">}</span></span>
+<span id="cb26-201"><a href="#cb26-201" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-202"><a href="#cb26-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-203"><a href="#cb26-203" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-204"><a href="#cb26-204" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Three new files: <span class="in">`actor_year_award_matrix.csv`</span>, <span class="in">`film_actors_awards_sums_up_to_that_point.csv`</span>, and <span class="in">`movies_with_cast_award_totals.csv`</span>. The last one is the table the model will train on.</span>
+<span id="cb26-205"><a href="#cb26-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-206"><a href="#cb26-206" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb26-207"><a href="#cb26-207" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Open <span class="in">`movies_with_cast_award_totals.csv`</span> and identify at least three model features.</span>
+<span id="cb26-208"><a href="#cb26-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-209"><a href="#cb26-209" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6) Run modeling</span></span>
+<span id="cb26-210"><a href="#cb26-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-211"><a href="#cb26-211" aria-hidden="true" tabindex="-1"></a>This is the payoff step. The <span class="in">`model`</span> command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.</span>
+<span id="cb26-212"><a href="#cb26-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-213"><a href="#cb26-213" aria-hidden="true" tabindex="-1"></a>Run the model and write artifacts.</span>
+<span id="cb26-214"><a href="#cb26-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-215"><a href="#cb26-215" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (line continuation with `\`):**</span>
+<span id="cb26-216"><a href="#cb26-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-217"><a href="#cb26-217" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-218"><a href="#cb26-218" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
+<span id="cb26-219"><a href="#cb26-219" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
+<span id="cb26-220"><a href="#cb26-220" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
+<span id="cb26-221"><a href="#cb26-221" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span>
+<span id="cb26-222"><a href="#cb26-222" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-223"><a href="#cb26-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-224"><a href="#cb26-224" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell, line continuation with backtick):**</span>
+<span id="cb26-225"><a href="#cb26-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-226"><a href="#cb26-226" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-227"><a href="#cb26-227" aria-hidden="true" tabindex="-1"></a><span class="in">oscar model `</span></span>
+<span id="cb26-228"><a href="#cb26-228" aria-hidden="true" tabindex="-1"></a><span class="in">  --workspace-dir ./tutorial_workspace `</span></span>
+<span id="cb26-229"><a href="#cb26-229" aria-hidden="true" tabindex="-1"></a><span class="in">  --report-json ./tutorial_workspace/report.json `</span></span>
+<span id="cb26-230"><a href="#cb26-230" aria-hidden="true" tabindex="-1"></a><span class="in">  --predictions-csv ./tutorial_workspace/predictions.csv</span></span>
+<span id="cb26-231"><a href="#cb26-231" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-232"><a href="#cb26-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-233"><a href="#cb26-233" aria-hidden="true" tabindex="-1"></a>You can also run the same command as a single line on either platform (no line breaks).</span>
+<span id="cb26-234"><a href="#cb26-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-235"><a href="#cb26-235" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-236"><a href="#cb26-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Trains a logistic regression on <span class="in">`movies_with_cast_award_totals.csv`</span>, prints evaluation metrics, writes the metrics to <span class="in">`report.json`</span>, and writes one predicted probability per film-year to <span class="in">`predictions.csv`</span>.</span>
+<span id="cb26-237"><a href="#cb26-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-238"><a href="#cb26-238" aria-hidden="true" tabindex="-1"></a>Confirm artifacts:</span>
+<span id="cb26-239"><a href="#cb26-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-240"><a href="#cb26-240" aria-hidden="true" tabindex="-1"></a>**macOS / Linux:**</span>
+<span id="cb26-241"><a href="#cb26-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-242"><a href="#cb26-242" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-243"><a href="#cb26-243" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span>
+<span id="cb26-244"><a href="#cb26-244" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-245"><a href="#cb26-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-246"><a href="#cb26-246" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
+<span id="cb26-247"><a href="#cb26-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-248"><a href="#cb26-248" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-249"><a href="#cb26-249" aria-hidden="true" tabindex="-1"></a><span class="in">Get-ChildItem .\tutorial_workspace -Name | Where-Object { $_ -match '^report\.json$|^predictions\.csv$' }</span></span>
+<span id="cb26-250"><a href="#cb26-250" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-251"><a href="#cb26-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-252"><a href="#cb26-252" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
+<span id="cb26-253"><a href="#cb26-253" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Both <span class="in">`report.json`</span> and <span class="in">`predictions.csv`</span> listed in your workspace.</span>
+<span id="cb26-254"><a href="#cb26-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-255"><a href="#cb26-255" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb26-256"><a href="#cb26-256" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run with a specific split to see how accuracy changes:</span>
+<span id="cb26-257"><a href="#cb26-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-258"><a href="#cb26-258" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-259"><a href="#cb26-259" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span>
+<span id="cb26-260"><a href="#cb26-260" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-261"><a href="#cb26-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-262"><a href="#cb26-262" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7) Optional practice: reset, updates, sync</span></span>
+<span id="cb26-263"><a href="#cb26-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-264"><a href="#cb26-264" aria-hidden="true" tabindex="-1"></a>The remaining commands exist because Oscar data keeps changing: new ceremonies happen each year, and you will sometimes want to rewind your workspace to test an update flow from a clean starting point. These are optional for a first read-through because some of them reach out to the internet and can take longer than the earlier steps.</span>
+<span id="cb26-265"><a href="#cb26-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-266"><a href="#cb26-266" aria-hidden="true" tabindex="-1"></a><span class="fu">### Reset (safe local practice)</span></span>
+<span id="cb26-267"><a href="#cb26-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-268"><a href="#cb26-268" aria-hidden="true" tabindex="-1"></a><span class="in">`oscar reset`</span> trims your workspace's base CSVs so only rows up to a chosen year remain, and removes the derived feature tables. It is the easiest way to simulate "what if I only had data through year X?" without touching the bundled package files. A dry run shows what would change without writing anything, which is the safest way to explore the command for the first time.</span>
+<span id="cb26-269"><a href="#cb26-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-270"><a href="#cb26-270" aria-hidden="true" tabindex="-1"></a>Preview reset:</span>
+<span id="cb26-271"><a href="#cb26-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-272"><a href="#cb26-272" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-273"><a href="#cb26-273" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
+<span id="cb26-274"><a href="#cb26-274" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-275"><a href="#cb26-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-276"><a href="#cb26-276" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-277"><a href="#cb26-277" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the rows and files that would be modified or deleted, and then exits without changing anything.</span>
+<span id="cb26-278"><a href="#cb26-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-279"><a href="#cb26-279" aria-hidden="true" tabindex="-1"></a>Run a real reset:</span>
+<span id="cb26-280"><a href="#cb26-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-281"><a href="#cb26-281" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-282"><a href="#cb26-282" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span>
+<span id="cb26-283"><a href="#cb26-283" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-284"><a href="#cb26-284" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-285"><a href="#cb26-285" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-286"><a href="#cb26-286" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Rewrites <span class="in">`movies.csv`</span>, <span class="in">`film_actors.csv`</span>, and <span class="in">`actor_awards.csv`</span> to drop rows past 2021, prunes <span class="in">`no_award_actors.csv`</span> to actors that still appear, and deletes the derived feature tables.</span>
+<span id="cb26-287"><a href="#cb26-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-288"><a href="#cb26-288" aria-hidden="true" tabindex="-1"></a>Rebuild features after reset:</span>
+<span id="cb26-289"><a href="#cb26-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-290"><a href="#cb26-290" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-291"><a href="#cb26-291" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb26-292"><a href="#cb26-292" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-293"><a href="#cb26-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-294"><a href="#cb26-294" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-295"><a href="#cb26-295" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Regenerates the feature tables so you can train a model on the earlier data state.</span>
+<span id="cb26-296"><a href="#cb26-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-297"><a href="#cb26-297" aria-hidden="true" tabindex="-1"></a><span class="fu">### Check updates (networked scraping)</span></span>
+<span id="cb26-298"><a href="#cb26-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-299"><a href="#cb26-299" aria-hidden="true" tabindex="-1"></a>The package bundles historical Oscar Best Picture data from **1996 through 2025**. After `oscar init-data`, your workspace starts from that snapshot. **`oscar check-updates`** compares your workspace to what is available online and, when it finds newer ceremony years (**2026 or later**), downloads and merges that new data: nominees, cast, actor awards, and then rebuilt feature tables.</span>
+<span id="cb26-300"><a href="#cb26-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-301"><a href="#cb26-301" aria-hidden="true" tabindex="-1"></a>It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the <span class="in">`#`</span> only when you intend to run a long scrape.</span>
+<span id="cb26-302"><a href="#cb26-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-303"><a href="#cb26-303" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
+<span id="cb26-304"><a href="#cb26-304" aria-hidden="true" tabindex="-1"></a><span class="fu">## ⚠️ ⚠️ Warning: long runtimes</span></span>
+<span id="cb26-305"><a href="#cb26-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-306"><a href="#cb26-306" aria-hidden="true" tabindex="-1"></a>**⚠️ `oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span> if you only want a partial test run first.</span>
+<span id="cb26-307"><a href="#cb26-307" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb26-308"><a href="#cb26-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-309"><a href="#cb26-309" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-310"><a href="#cb26-310" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span>
+<span id="cb26-311"><a href="#cb26-311" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-312"><a href="#cb26-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-313"><a href="#cb26-313" aria-hidden="true" tabindex="-1"></a><span class="fu">### End-to-end sync</span></span>
+<span id="cb26-314"><a href="#cb26-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-315"><a href="#cb26-315" aria-hidden="true" tabindex="-1"></a><span class="in">`oscar sync`</span> is the most complete refresh path. It plans each stage (scrape, derive, optional counts), checkpoints progress as it goes, and can limit per-run work so that a single command does not balloon into a long scrape. Starting with a dry run shows you the plan before any network calls are made.</span>
+<span id="cb26-316"><a href="#cb26-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-317"><a href="#cb26-317" aria-hidden="true" tabindex="-1"></a>Use dry run first:</span>
+<span id="cb26-318"><a href="#cb26-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-319"><a href="#cb26-319" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-320"><a href="#cb26-320" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
+<span id="cb26-321"><a href="#cb26-321" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-322"><a href="#cb26-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-323"><a href="#cb26-323" aria-hidden="true" tabindex="-1"></a>What this does:</span>
+<span id="cb26-324"><a href="#cb26-324" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Prints the stages <span class="in">`oscar sync`</span> would run, in order, without executing them.</span>
+<span id="cb26-325"><a href="#cb26-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-326"><a href="#cb26-326" aria-hidden="true" tabindex="-1"></a>Optional bounded sync:</span>
+<span id="cb26-327"><a href="#cb26-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-328"><a href="#cb26-328" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-329"><a href="#cb26-329" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span>
+<span id="cb26-330"><a href="#cb26-330" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-331"><a href="#cb26-331" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-332"><a href="#cb26-332" aria-hidden="true" tabindex="-1"></a>What this does (if you uncomment it):</span>
+<span id="cb26-333"><a href="#cb26-333" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Executes the sync plan but caps how many movies and actors will be scraped this run, so you can test the flow safely.</span>
+<span id="cb26-334"><a href="#cb26-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-335"><a href="#cb26-335" aria-hidden="true" tabindex="-1"></a><span class="fu">## Putting it all together</span></span>
+<span id="cb26-336"><a href="#cb26-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-337"><a href="#cb26-337" aria-hidden="true" tabindex="-1"></a>You now have a working OscarPredictions workspace on your machine. You used <span class="in">`init-data`</span> to seed it with the bundled historical dataset, <span class="in">`build-features`</span> to turn that data into a model-ready table, and <span class="in">`model`</span> to produce predictions and metrics. You also saw how <span class="in">`reset`</span> lets you rewind the workspace, and how <span class="in">`check-updates`</span> and <span class="in">`sync`</span> bring new ceremony years into the same pipeline with a single command.</span>
+<span id="cb26-338"><a href="#cb26-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-339"><a href="#cb26-339" aria-hidden="true" tabindex="-1"></a>From here, the practical mental model is:</span>
+<span id="cb26-340"><a href="#cb26-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-341"><a href="#cb26-341" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Run <span class="in">`build-features`</span> whenever your base CSVs change.</span>
+<span id="cb26-342"><a href="#cb26-342" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Run <span class="in">`model`</span> whenever you want a fresh evaluation and predictions.</span>
+<span id="cb26-343"><a href="#cb26-343" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Reach for <span class="in">`check-updates`</span> or <span class="in">`sync`</span> only when you want to bring in new data from outside your machine.</span>
+<span id="cb26-344"><a href="#cb26-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-345"><a href="#cb26-345" aria-hidden="true" tabindex="-1"></a><span class="fu">## Troubleshooting</span></span>
+<span id="cb26-346"><a href="#cb26-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-347"><a href="#cb26-347" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar: command not found`</span> (or not recognized in PowerShell): run <span class="in">`python3 -m oscar_predictions.cli --help`</span> on macOS/Linux, or <span class="in">`python -m oscar_predictions.cli --help`</span> / <span class="in">`py -3 -m oscar_predictions.cli --help`</span> on Windows, to verify the install path; then reinstall in the active environment.</span>
+<span id="cb26-348"><a href="#cb26-348" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Install fails on TestPyPI: retry with the exact <span class="in">`--index-url`</span> and <span class="in">`--extra-index-url`</span> flags.</span>
+<span id="cb26-349"><a href="#cb26-349" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Permission/path issues: use a writable workspace path and rerun <span class="in">`init-data`</span>.</span>
+<span id="cb26-350"><a href="#cb26-350" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Slow update/sync runs: start with <span class="in">`--dry-run`</span> or cap work with <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span>.</span>
+<span id="cb26-351"><a href="#cb26-351" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Windows:** if only <span class="in">`py`</span> works, use <span class="in">`py -3 -m pip install …`</span> for installs and <span class="in">`py -3 -m oscar_predictions.cli …`</span> instead of <span class="in">`python3`</span>. Paths can use <span class="in">`\`</span> or <span class="in">`/`</span> in most <span class="in">`oscar`</span> arguments.</span>
+<span id="cb26-352"><a href="#cb26-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-353"><a href="#cb26-353" aria-hidden="true" tabindex="-1"></a><span class="fu">## Next steps</span></span>
+<span id="cb26-354"><a href="#cb26-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-355"><a href="#cb26-355" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Read <span class="co">[</span><span class="ot">Documentation</span><span class="co">](documentation.md)</span> for architecture and module details.</span>
+<span id="cb26-356"><a href="#cb26-356" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>See <span class="co">[</span><span class="ot">Technical Report</span><span class="co">](report.md)</span> for methodology and findings.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
