@@ -80,7 +80,7 @@ Its job is to plan and run the pipeline stage by stage with checkpointing: the s
 
 `modeling.py` is the final consumer of the pipeline and is invoked through `oscar model`. It reads the joined feature table `movies_with_cast_award_totals.csv` produced by the earlier stages.
 
-It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split, and generates per-year winner predictions along with evaluation metrics. By default the report is printed to the CLI, but users can request artifacts via `--predictions-csv <path>` to save predictions as CSV and `--report-json <path>` to save the report as JSON.
+It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split. **`accuracy` and `roc_auc` reflect only the held-out test years.** The same fitted model is then applied to every row so CLI output, `yearly_results` in JSON, and optional `--predictions-csv` include all years (CSV rows include a `split` column marking `train` vs `test`). Users can request artifacts via `--predictions-csv <path>` and `--report-json <path>`.
 
 ### `movies_actors_eda.py` (optional analysis app)
 

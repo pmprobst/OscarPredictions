@@ -233,7 +233,7 @@ oscar model `
 You can also run the same command as a single line on either platform (no line breaks).
 
 What this does:
-- Trains a logistic regression on `movies_with_cast_award_totals.csv`, prints evaluation metrics, writes the metrics to `report.json`, and writes one predicted probability per film-year to `predictions.csv`.
+- Trains a logistic regression on `movies_with_cast_award_totals.csv` using a grouped train/test split by ceremony year. **`accuracy` and `roc_auc` in `report.json` are test-split only.** After training, the same model scores every nominee row, so the printed yearly output and `yearly_results` in JSON list **all ceremony years**. If you pass `--predictions-csv`, that file has one row per film with columns `year`, `title`, `y_true`, `y_prob`, `y_pred`, and `split` (`train` or `test`).
 
 Confirm artifacts:
 
@@ -301,7 +301,7 @@ The package bundles historical Oscar Best Picture data from **1996 through 2025*
 It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the `#` only when you intend to run a long scrape.
 
 ::: {.callout-warning}
-## ⚠️ Warning: long runtimes ⚠️ 
+##  Warning: long runtimes
 
 **`oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as `--max-movies` and `--max-actors` if you only want a partial test run first.
 :::

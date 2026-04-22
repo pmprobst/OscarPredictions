@@ -188,6 +188,19 @@ def _print_init_data_result(result: dict[str, object]) -> None:
     print("Bundled base data covers ceremony years through 2025.")
 
 
+def _print_model_test_metrics(report: dict[str, object]) -> None:
+    """Print evaluation metrics computed only on the held-out test split (by year)."""
+    acc = report.get("accuracy")
+    if isinstance(acc, (int, float)):
+        print(f"Accuracy (held-out test years): {float(acc):.4f}")
+    roc = report.get("roc_auc")
+    if isinstance(roc, (int, float)):
+        print(f"ROC AUC (held-out test years): {float(roc):.4f}")
+    elif "roc_auc" in report:
+        print("ROC AUC (held-out test years): n/a")
+    print()
+
+
 def _print_model_report(report: dict[str, object]) -> None:
     """Print per-year predicted and actual winners."""
     yearly_results = report.get("yearly_results")
@@ -253,6 +266,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             report_path=args.report_json,
             predictions_path=args.predictions_csv,
         )
+        _print_model_test_metrics(report)
         _print_model_report(report)
         return 0
     raise SystemExit(f"Unknown command: {args.command}")

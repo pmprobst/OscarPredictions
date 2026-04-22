@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+import csv
 import io
 import json
 import importlib.util
@@ -44,8 +45,10 @@ class TestModelingCommand(unittest.TestCase):
             )
             self.assertIn("accuracy", rep)
             self.assertIn("yearly_results", rep)
-            self.assertGreaterEqual(len(rep["yearly_results"]), 1)
-            first_year = rep["yearly_results"][0]
+            yearly = rep["yearly_results"]
+            self.assertEqual(len(yearly), 3)
+            self.assertEqual({item["year"] for item in yearly}, {2020, 2021, 2022})
+            first_year = yearly[0]
             self.assertIn("predicted_winner", first_year)
             self.assertIn("actual_winner", first_year)
             self.assertIn("nominees", first_year)
@@ -54,6 +57,15 @@ class TestModelingCommand(unittest.TestCase):
             loaded = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertIn("features", loaded)
             self.assertIn("yearly_results", loaded)
+
+            with pred_path.open(newline="", encoding="utf-8") as f:
+                pred_rows = list(csv.DictReader(f))
+            self.assertEqual(len(pred_rows), 6)
+            self.assertEqual(
+                set(pred_rows[0].keys()),
+                {"year", "title", "y_true", "y_prob", "y_pred", "split"},
+            )
+            self.assertEqual({r["split"] for r in pred_rows}, {"train", "test"})
 
     @unittest.skipUnless(
         importlib.util.find_spec("pandas") and importlib.util.find_spec("sklearn"),
@@ -67,6 +79,8 @@ class TestModelingCommand(unittest.TestCase):
 
             rep = run_model(ws, seed=7, test_size=0.5)
             yearly_results = rep["yearly_results"]
+            self.assertEqual(len(yearly_results), 3)
+            self.assertEqual({y["year"] for y in yearly_results}, {2020, 2021, 2022})
 
             expected_nominees_by_year = {2020: 2, 2021: 2, 2022: 2}
             for year_result in yearly_results:
@@ -89,6 +103,7 @@ class TestModelingCommand(unittest.TestCase):
                 rc = main(["model", "--workspace-dir", str(ws.root), "--seed", "1", "--test-size", "0.5"])
             self.assertEqual(rc, 0)
             out = buf.getvalue()
+            self.assertIn("Accuracy (held-out test years):", out)
             self.assertIn("Year ", out)
             self.assertIn("Predicted winner:", out)
             self.assertIn("Actual winner:", out)
