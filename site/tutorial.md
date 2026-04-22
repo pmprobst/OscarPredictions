@@ -18,9 +18,11 @@ You do not need any prior modeling or scraping experience. You only need to foll
 
 ## How the package is organized
 
-Everything is driven by a single command-line tool named `oscar`. You tell it which subcommand to run and which workspace folder to use. The subcommands you will meet in this tutorial are:
+Everything is driven by a single command-line tool named `oscar`. You tell it which subcommand to run. By default, every command uses the **current working directory** as the workspace—all CSV inputs and outputs are read and written in the folder your shell is in. If you want to use a different folder without `cd`, you can pass `--workspace-dir` (see the package README).
 
-- `oscar init-data`: Sets up a new workspace by copying the historical base data that ships with the package into a folder you choose.
+The subcommands you will meet in this tutorial are:
+
+- `oscar init-data`: Sets up a workspace by copying the historical base data that ships with the package into the current directory (or into `--workspace-dir` if you pass it).
 - `oscar build-features`: Transforms the base data into model-ready feature tables.
 - `oscar model`: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.
 - `oscar reset`: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.
@@ -39,40 +41,40 @@ The `oscar …` commands are identical on every platform. Only creating folders,
 
 ## 1) Set up a practice workspace
 
-A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the `oscar` tool will fill it with data, features, and results.
+A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder named `tutorial_workspace`, **change into that folder**, and run every later step from inside it so the defaults apply without extra flags.
 
-**Stay in your project root** (the directory that will contain `tutorial_workspace`, for example your git clone of OscarPredictions). Do not `cd` into `tutorial_workspace` yet: every later step uses `--workspace-dir ./tutorial_workspace`, which means "the folder named `tutorial_workspace` inside whatever directory your shell is currently in." If you were already inside `tutorial_workspace`, that path would incorrectly point at a nested `tutorial_workspace/tutorial_workspace`.
-
-Create the workspace directory from the project root:
+Pick a parent directory where you want this folder to live (for example your home directory or a folder next to a project you are working on). Then create `tutorial_workspace` and enter it.
 
 **macOS / Linux (bash or zsh):**
 
 ```bash
 mkdir -p tutorial_workspace
-ls -ld tutorial_workspace
+cd tutorial_workspace
+pwd
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 New-Item -ItemType Directory -Force tutorial_workspace | Out-Null
-Get-Item tutorial_workspace
+Set-Location tutorial_workspace
+Get-Location
 ```
 
 What this does:
-- Creates an empty folder named `tutorial_workspace` next to your other project files (if it does not already exist).
+- Creates `tutorial_workspace` if it does not already exist, then makes it your shell’s current directory.
 
 What you should see:
-- A directory listing for `tutorial_workspace` (it may be empty until step 4).
+- `pwd` / `Get-Location` prints a path that ends with `tutorial_workspace`.
 
 Checkpoint:
-- Confirm that `tutorial_workspace` exists in your current directory and that your shell prompt path is still the project root, not inside `tutorial_workspace`.
+- Confirm your prompt or printed path shows you are **inside** `tutorial_workspace` before continuing. The rest of the tutorial assumes this is your current directory.
 
 ## 2) Install the package (TestPyPI)
 
 OscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells `pip` to look there first and fall back to the real PyPI for any normal dependencies such as `pandas` and `scikit-learn`.
 
-Use the same install command from the README.
+Run the install from **inside** `tutorial_workspace` (your current directory from step 1).
 
 **macOS / Linux (bash or zsh):**
 
@@ -138,27 +140,27 @@ Checkpoint:
 
 The package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.
 
-From your project root (replace the path if needed), initialize data into your workspace. Forward slashes in `--workspace-dir` work in PowerShell too; you can also use a Windows path such as `.\tutorial_workspace` or `C:\Users\you\OscarPredictions\tutorial_workspace`.
+With your shell still **inside** `tutorial_workspace`, run:
 
 ```bash
-oscar init-data --workspace-dir ./tutorial_workspace
+oscar init-data
 ```
 
 What this does:
-- Copies the bundled CSVs (`movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`) and the `major_award_shows.txt` config into your workspace.
+- Copies the bundled CSVs (`movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`) and the `major_award_shows.txt` config into the current directory.
 
 Check created files:
 
 **macOS / Linux:**
 
 ```bash
-ls -1 ./tutorial_workspace
+ls -1
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Get-ChildItem -Name .\tutorial_workspace
+Get-ChildItem -Name
 ```
 
 What you should see:
@@ -168,7 +170,7 @@ Practice:
 - Try `--overwrite` and compare behavior. Without it, `init-data` will not replace existing files, which is how you protect a workspace you have already customized. With it, the workspace is reset to the exact files that ship with the package.
 
 ```bash
-oscar init-data --workspace-dir ./tutorial_workspace --overwrite
+oscar init-data --overwrite
 ```
 
 ## 5) Build post-cleaning features
@@ -178,7 +180,7 @@ A machine learning model cannot read the raw scraped tables directly; it needs a
 Generate derived feature tables:
 
 ```bash
-oscar build-features --workspace-dir ./tutorial_workspace
+oscar build-features
 ```
 
 What this does:
@@ -189,13 +191,13 @@ Confirm expected outputs:
 **macOS / Linux:**
 
 ```bash
-ls -1 ./tutorial_workspace | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'
+ls -1 | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Get-ChildItem .\tutorial_workspace -Name | Where-Object {
+Get-ChildItem -Name | Where-Object {
   $_ -match 'actor_year_award_matrix\.csv|film_actors_awards_sums_up_to_that_point\.csv|movies_with_cast_award_totals\.csv'
 }
 ```
@@ -216,18 +218,16 @@ Run the model and write artifacts.
 
 ```bash
 oscar model \
-  --workspace-dir ./tutorial_workspace \
-  --report-json ./tutorial_workspace/report.json \
-  --predictions-csv ./tutorial_workspace/predictions.csv
+  --report-json report.json \
+  --predictions-csv predictions.csv
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 oscar model `
-  --workspace-dir ./tutorial_workspace `
-  --report-json ./tutorial_workspace/report.json `
-  --predictions-csv ./tutorial_workspace/predictions.csv
+  --report-json report.json `
+  --predictions-csv predictions.csv
 ```
 
 You can also run the same command as a single line on either platform (no line breaks).
@@ -240,13 +240,13 @@ Confirm artifacts:
 **macOS / Linux:**
 
 ```bash
-ls -1 ./tutorial_workspace | sed -n '/report.json/p;/predictions.csv/p'
+ls -1 | sed -n '/report.json/p;/predictions.csv/p'
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Get-ChildItem .\tutorial_workspace -Name | Where-Object { $_ -match '^report\.json$|^predictions\.csv$' }
+Get-ChildItem -Name | Where-Object { $_ -match '^report\.json$|^predictions\.csv$' }
 ```
 
 What you should see:
@@ -256,7 +256,7 @@ Practice:
 - Re-run with a specific split to see how accuracy changes:
 
 ```bash
-oscar model --workspace-dir ./tutorial_workspace --seed 42 --test-size 0.25
+oscar model --seed 42 --test-size 0.25
 ```
 
 ## 7) Optional practice: reset, updates, sync
@@ -270,7 +270,7 @@ The remaining commands exist because Oscar data keeps changing: new ceremonies h
 Preview reset:
 
 ```bash
-oscar reset --workspace-dir ./tutorial_workspace --dry-run
+oscar reset --dry-run
 ```
 
 What this does:
@@ -279,7 +279,7 @@ What this does:
 Run a real reset:
 
 ```bash
-oscar reset --workspace-dir ./tutorial_workspace --cutoff-year 2021
+oscar reset --cutoff-year 2021
 ```
 
 What this does:
@@ -288,7 +288,7 @@ What this does:
 Rebuild features after reset:
 
 ```bash
-oscar build-features --workspace-dir ./tutorial_workspace
+oscar build-features
 ```
 
 What this does:
@@ -307,7 +307,7 @@ It is how you bring an existing workspace current when a new Oscars season appea
 :::
 
 ```bash
-oscar check-updates --workspace-dir ./tutorial_workspace
+oscar check-updates
 ```
 
 ### End-to-end sync
@@ -317,7 +317,7 @@ oscar check-updates --workspace-dir ./tutorial_workspace
 Use dry run first:
 
 ```bash
-oscar sync --workspace-dir ./tutorial_workspace --dry-run
+oscar sync --dry-run
 ```
 
 What this does:
@@ -326,7 +326,7 @@ What this does:
 Optional bounded sync:
 
 ```bash
-# oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200
+# oscar sync --max-movies 5 --max-actors 200
 ```
 
 What this does (if you uncomment it):
@@ -338,6 +338,7 @@ You now have a working OscarPredictions workspace on your machine. You used `ini
 
 From here, the practical mental model is:
 
+- Stay in your workspace directory (or pass `--workspace-dir`) whenever you run `oscar`.
 - Run `build-features` whenever your base CSVs change.
 - Run `model` whenever you want a fresh evaluation and predictions.
 - Reach for `check-updates` or `sync` only when you want to bring in new data from outside your machine.

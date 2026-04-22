@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oscar-predictions"
-version = "0.2.5"
+version = "0.2.6"
 description = "Oscar nominees scraping, feature engineering, updates, and modeling."
 readme = "README.md"
 requires-python = ">=3.10"

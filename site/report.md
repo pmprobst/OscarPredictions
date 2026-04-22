@@ -55,7 +55,7 @@ The model was evaluated on the held-out test set using accuracy and ROC AUC. Per
 |---|---|---|---|
 | [year] | [predicted] | [actual] | ✅ / ❌ |
 
-*Fill this table in by running `oscar model --workspace-dir ./data` and reviewing the printed output.*
+*Fill this table in by running `oscar model` from your workspace directory (after `cd` into the folder that contains `movies_with_cast_award_totals.csv`) and reviewing the printed output.*
 
 ### Feature Importance
 

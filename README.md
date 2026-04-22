@@ -18,8 +18,7 @@ After install, use the `oscar` CLI.
 ## Commands
 
 Workspace defaults:
-- `init-data` defaults to current directory (`.`)
-- `build-features`, `reset`, `check-updates`, `model`, and `sync` default to `./data`
+- All subcommands default to the **current directory** (`.`): inputs and outputs are read and written in whatever folder your shell is in. Use `cd` to move into a dedicated workspace first, or pass `--workspace-dir` to point at another folder (for example `--workspace-dir ./data`).
 
 ### 1) Initialize bundled base data (through 2025)
 
@@ -66,7 +65,7 @@ oscar reset --cutoff-year 2021
 oscar reset --workspace-dir ./data
 ```
 
-To restore the **exact** files shipped in the package instead of trimming in place, use `oscar init-data --workspace-dir ./data --overwrite`. Optional modeling outputs (`--report-json`, `--predictions-csv`) are not removed; delete those paths manually if needed.
+To restore the **exact** files shipped in the package instead of trimming in place, run `oscar init-data --overwrite` from that workspace (or add `--workspace-dir /path/to/workspace`). Optional modeling outputs (`--report-json`, `--predictions-csv`) are not removed; delete those paths manually if needed.
 
 ### 3) Build post-cleaning features
 

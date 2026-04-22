@@ -64,8 +64,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sync.add_argument(
         "--workspace-dir",
-        default="./data",
-        help="Workspace directory containing input/output CSV files (default: ./data).",
+        default=".",
+        help="Workspace directory containing input/output CSV files (default: current dir).",
     )
 
     init_data = sub.add_parser("init-data", help="Copy bundled base data (<=2023) into workspace.")
@@ -83,15 +83,19 @@ def build_parser() -> argparse.ArgumentParser:
     build_features = sub.add_parser("build-features", help="Generate post-cleaning feature outputs.")
     build_features.add_argument(
         "--workspace-dir",
-        default="./data",
-        help="Workspace directory containing base CSV files (default: ./data).",
+        default=".",
+        help="Workspace directory containing base CSV files (default: current dir).",
     )
 
     reset_ws = sub.add_parser(
         "reset",
         help="Trim base CSVs to cutoff year, prune no_award actors, delete derived outputs and sync state.",
     )
-    reset_ws.add_argument("--workspace-dir", default="./data", help="Workspace directory (default: ./data).")
+    reset_ws.add_argument(
+        "--workspace-dir",
+        default=".",
+        help="Workspace directory (default: current dir).",
+    )
     reset_ws.add_argument(
         "--cutoff-year",
         type=int,
@@ -107,15 +111,19 @@ def build_parser() -> argparse.ArgumentParser:
     check_updates = sub.add_parser("check-updates", help="Detect and ingest new nominee years, then rebuild.")
     check_updates.add_argument(
         "--workspace-dir",
-        default="./data",
-        help="Workspace directory containing CSV files (default: ./data).",
+        default=".",
+        help="Workspace directory containing CSV files (default: current dir).",
     )
     add_browser_args(check_updates)
     check_updates.add_argument("--max-movies", type=int, default=None, help="Cap per-year movie scrape attempts.")
     check_updates.add_argument("--max-actors", type=int, default=None, help="Cap actor scrape attempts.")
 
     model = sub.add_parser("model", help="Run production modeling on movies_with_cast_award_totals.csv.")
-    model.add_argument("--workspace-dir", default="./data", help="Workspace directory (default: ./data).")
+    model.add_argument(
+        "--workspace-dir",
+        default=".",
+        help="Workspace directory (default: current dir).",
+    )
     model.add_argument("--seed", type=int, default=42, help="Random seed for year-group train/test split.")
     model.add_argument("--test-size", type=float, default=0.25, help="Fraction of years held out for test split.")
     model.add_argument(
