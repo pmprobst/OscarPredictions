@@ -1,11 +1,3 @@
 playwright<2,>=1.49
-
-[all]
 pandas>=2.0
 scikit-learn>=1.4
-
-[model]
-pandas>=2.0
-scikit-learn>=1.4
-
-[scrape]

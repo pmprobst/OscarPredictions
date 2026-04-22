@@ -1,5 +1,5 @@
 # Local package install plus Streamlit app dependencies.
--e .[all]
+-e .
 streamlit
 matplotlib
 seaborn

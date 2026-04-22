@@ -21,13 +21,8 @@ Requires-Python: >=3.10
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: playwright<2,>=1.49
-Provides-Extra: scrape
-Provides-Extra: model
-Requires-Dist: pandas>=2.0; extra == "model"
-Requires-Dist: scikit-learn>=1.4; extra == "model"
-Provides-Extra: all
-Requires-Dist: pandas>=2.0; extra == "all"
-Requires-Dist: scikit-learn>=1.4; extra == "all"
+Requires-Dist: pandas>=2.0
+Requires-Dist: scikit-learn>=1.4
 Dynamic: license-file
 
 # OscarPredictions
@@ -36,34 +31,27 @@ Installable package for Oscar data initialization, update checks, feature genera
 
 ## Install
 
-The package installs with **no required third-party dependencies**. For a typical workflow (scraping + modeling), install the **`all`** extra:
+Install from TestPyPI:
 
 ```bash
-python3 -m pip install "oscar-predictions[all]"
-playwright install chromium
+python3 -m pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  oscar-predictions
 ```
-
-From a git checkout:
-
-```bash
-python3 -m pip install ".[all]"
-playwright install chromium
-```
-
-Optional dependency groups:
-
-- **`[scrape]`** – Playwright only (`sync`, `check-updates`, scrape-related commands).
-- **`[model]`** – pandas and scikit-learn only (`oscar model`).
-- **`[all]`** – both groups (recommended).
 
 After install, use the `oscar` CLI.
 
 ## Commands
 
-### 1) Initialize bundled base data (through 2023)
+Workspace defaults:
+- `init-data` defaults to current directory (`.`)
+- `build-features`, `reset`, `check-updates`, and `model` default to `./data`
+
+### 1) Initialize bundled base data (through 2025)
 
 ```bash
-oscar init-data --workspace-dir ./data
+oscar init-data
 ```
 
 This copies bundled package data into the workspace:
@@ -93,7 +81,7 @@ To restore the **exact** files shipped in the package instead of trimming in pla
 ### 3) Build post-cleaning features
 
 ```bash
-oscar build-features --workspace-dir ./data
+oscar build-features
 ```
 
 Produces:
@@ -105,7 +93,7 @@ Produces:
 ### 4) Check for new nominations and refresh
 
 ```bash
-oscar check-updates --workspace-dir ./data --headless
+oscar check-updates
 ```
 
 Behavior:
@@ -119,19 +107,19 @@ Behavior:
 ### 5) Run modeling
 
 ```bash
-oscar model --workspace-dir ./data --seed 42 --test-size 0.25
+oscar model --seed 42 --test-size 0.25
 ```
 
 Optional outputs:
 
 ```bash
-oscar model --workspace-dir ./data --report-json report.json --predictions-csv preds.csv
+oscar model --report-json report.json --predictions-csv preds.csv
 ```
 
 ## Development/testing
 
 ```bash
-python3 -m pip install -e ".[all]"
+python3 -m pip install -e .
 python3 -m unittest discover -s tests -v
 ```
 

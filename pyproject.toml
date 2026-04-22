@@ -26,15 +26,6 @@ classifiers = [
 ]
 dependencies = [
   "playwright>=1.49,<2",
-]
-
-[project.optional-dependencies]
-scrape = []
-model = [
-  "pandas>=2.0",
-  "scikit-learn>=1.4",
-]
-all = [
   "pandas>=2.0",
   "scikit-learn>=1.4",
 ]

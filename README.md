@@ -13,11 +13,6 @@ python3 -m pip install \
   oscar-predictions
 ```
 
-Optional dependency groups:
-
-- **`[model]`** – pandas and scikit-learn (`oscar model`).
-- **`[all]`** – currently the same as `model`.
-
 After install, use the `oscar` CLI.
 
 ## Commands
@@ -26,7 +21,7 @@ Workspace defaults:
 - `init-data` defaults to current directory (`.`)
 - `build-features`, `reset`, `check-updates`, and `model` default to `./data`
 
-### 1) Initialize bundled base data (through 2023)
+### 1) Initialize bundled base data (through 2025)
 
 ```bash
 oscar init-data
@@ -97,7 +92,7 @@ oscar model --report-json report.json --predictions-csv preds.csv
 ## Development/testing
 
 ```bash
-python3 -m pip install -e ".[all]"
+python3 -m pip install -e .
 python3 -m unittest discover -s tests -v
 ```
 
