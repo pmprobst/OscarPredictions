@@ -1,181 +1,105 @@
----
-title: "Documentation"
----
+# Architecture
 
-# Oscar Predictions Package Documentation
+This document is a walkthrough of the OscarPredictions data pipeline, from an empty workspace all the way to a trained model. It is organized around the Python modules under `oscar_predictions/` that create and update the pipeline's CSV artifacts, and it describes how each one fits into the larger story.
 
-## Overview
+The pipeline has a natural lifecycle: a workspace is initialized from bundled base data, IMDb is scraped to extend that data, post-cleaning features are derived from the resulting CSVs, and finally a model is trained on the feature table. The module sections below are ordered to follow that lifecycle, so reading them top to bottom traces a single run through the system. For every module, the prose explains when it runs, which files it reads, what it does to that data, and which CSV artifacts it produces or removes.
 
-**oscar_predictions** is a Python package for scraping, processing, and modeling Oscar Best Picture nomination data from IMDB. It provides a full pipeline, from raw web scraping through feature engineering to logistic regression modeling.
+## Core Modules
 
-This package provides:
+### `oscar_predictions/workspace.py` (`DataWorkspace`)
 
-- Web scraping tools for IMDB Oscar nominees, cast lists, and award histories
-- Feature engineering functions for building modeling-ready datasets
-- A logistic regression model for predicting Best Picture winners
+`DataWorkspace` is the foundation layer that the other stages rely on. It is used by `oscar init-data`, `oscar build-features`, `oscar reset`, `oscar check-updates`, and `oscar model` to resolve canonical workspace file paths and to stage bundled package data from `oscar_predictions/data/base/` along with the bundled `major_award_shows.txt` config from `oscar_predictions/data/config/`.
 
-## Installation
+When invoked, it copies the bundled base files into the active workspace, creating or overwriting `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`, and `major_award_shows.txt`. When a refresh is requested, it also deletes the derived outputs so they can be rebuilt cleanly: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, and `award_show_counts.csv`.
 
-Install the package with the `all` extra (recommended), which includes scraping and modeling dependencies:
+### `oscar_predictions/reset_workspace.py`
 
-```bash
-pip install "oscar-predictions[all]"
-playwright install chromium
-```
+This module backs the `oscar reset` CLI command and is used to roll the workspace back to a clean historical state. It reads the current `movies.csv`, `film_actors.csv`, `actor_awards.csv`, and `no_award_actors.csv` and trims them so that only rows with `year <= cutoff_year` (2023 by default) remain, pruning `no_award_actors.csv` down to the actor IDs that still appear after the cut.
 
-Optional dependency groups:
+The trimmed CSVs are written back in place, and all derived artifacts are removed so the next build starts from scratch: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, and `award_show_counts.csv` are deleted, along with the sync checkpoint file `.oscar_sync_state.json`.
 
-- `[scrape]` — Playwright only, for `sync`, `check-updates`, and scrape-related commands
-- `[model]` — pandas and scikit-learn only, for `oscar model`
-- `[all]` — both groups (recommended for most users)
+### `oscar_predictions/scrape_movies.py`
 
-## Package Structure
+`scrape_movies.py` is the first scraping stage. It is driven by `oscar sync` and `oscar check-updates`, but can also be run directly as a standalone script. It reads IMDb Oscars pages to discover Best Picture nominees and their precursor and director attributes, and consults the existing `movies.csv` and `film_actors.csv` so it can skip rows that already exist by IMDb ID.
 
-```
-oscar_predictions/
-├── cli.py                    # Command-line interface
-├── workspace.py              # Workspace paths and file lifecycle
-├── features.py               # Feature build chain
-├── updates.py                # Update detection and refresh flow
-├── modeling.py               # Production modeling pipeline
-├── reset_workspace.py        # Trim base CSVs and clear derived outputs
-├── data/                     # Bundled base data and config assets
-└── __init__.py
-```
+The result is new rows appended to `movies.csv`, and, when cast capture is enabled during the scrape, corresponding rows appended to `film_actors.csv` as well.
 
-## Modules and Functions
+### `oscar_predictions/scrape_actors.py`
 
-### `workspace.py`
+Once films are known, `scrape_actors.py` ensures each of them has cast coverage. It runs from `oscar sync` and `oscar check-updates`, or as a standalone script. It reads `movies.csv` to find the films to process, the current `film_actors.csv` to detect which ones are missing cast rows, and `no_award_actors.csv` so it knows which actors are eligible for a recheck. The actual cast data is pulled from IMDb film full-credits pages.
 
-Manages all file paths for a given working directory. All pipeline functions accept a `DataWorkspace` instance to locate their input and output files.
+This module backfills or extends cast rows for uncovered films and supports year-scoped updates during refresh flows. Its outputs are appended or updated rows in `film_actors.csv`, and a rewritten `no_award_actors.csv` whenever recheck pruning removes actors that should be reconsidered.
 
-Example usage:
+### `oscar_predictions/scrape_actor_awards.py`
 
-```python
-from oscar_predictions.workspace import DataWorkspace
+With cast data in hand, `scrape_actor_awards.py` goes out to IMDb actor-award pages to collect each actor's award history. Like the other scrapers, it is triggered by `oscar sync` and `oscar check-updates` and can also run standalone. It reads `film_actors.csv` to discover the actor IDs to process, and consults the existing `actor_awards.csv` and `no_award_actors.csv` to skip IDs that have already been handled, unless a recheck is explicitly requested.
 
-ws = DataWorkspace.from_path("./my_workspace")
-ws.init_base_data()
-```
+New award rows are appended to `actor_awards.csv`, while actors that turn out to have no award history are recorded in `no_award_actors.csv` so they are not repeatedly scraped on subsequent runs.
 
-`init_base_data()` copies the bundled base CSV files into the workspace directory. Pass `overwrite=True` to replace existing files.
+### `oscar_predictions/actor_year_award_matrix.py`
 
-### `sync.py`
+This is the first post-scraping feature stage. It runs as part of `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and it can also be invoked directly. It reads `actor_awards.csv` together with the configured list of major shows in `major_award_shows.txt`.
 
-Orchestrates the full end-to-end pipeline: scraping movies, cast, and actor awards, then rebuilding all derived feature tables. Supports checkpointing so interrupted runs resume where they left off.
+It normalizes the raw actor-award rows into actor-year aggregates, separating out metrics for the configured major awards. The output is a single artifact: `actor_year_award_matrix.csv`.
 
-Example usage:
+### `oscar_predictions/film_actors_award_totals.py`
 
-```python
-from oscar_predictions.sync import run_sync
-from oscar_predictions.config import SyncConfig, sync_paths_from_workspace
+Next in the derivation chain, `film_actors_award_totals.py` is triggered by `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and it can also be run as a standalone script. It reads `film_actors.csv` and the `actor_year_award_matrix.csv` produced upstream.
 
-paths = sync_paths_from_workspace("./my_workspace")
-config = SyncConfig(paths=paths, headless=True, dry_run=False)
-report = run_sync(config)
+For each actor it computes cumulative award totals up to each film's year, then rolls those per-actor totals into per-movie cast totals ready for joining. The result is `film_actors_awards_sums_up_to_that_point.csv`.
 
-for stage in report.stage_summaries:
-    print(stage.name, "→", "skipped" if stage.skipped else "ran")
-```
+### `oscar_predictions/join_movie_to_actor.py`
 
-### `features.py`
+This is the final join step in the feature chain. It is called from `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and can also run on its own. It reads `movies.csv` and the cast-totals table `film_actors_awards_sums_up_to_that_point.csv`.
 
-Generates derived feature tables from cleaned base data. Runs three steps: building the actor-year award matrix, computing per-film cast award totals, and joining those totals to the movies table.
+Joining these two tables produces the model-ready movie-level feature table, written as `movies_with_cast_award_totals.csv`.
 
-Example usage:
+### `oscar_predictions/award_show_counts.py`
 
-```python
-from oscar_predictions.features import run_build_features
-from oscar_predictions.workspace import DataWorkspace
+`award_show_counts.py` is an optional reporting stage, run by `oscar sync --include-counts` or as a standalone script. It reads `actor_awards.csv` and aggregates the total number of rows by award show, producing a compact summary artifact, `award_show_counts.csv`, that is useful for inspection and reporting.
 
-ws = DataWorkspace.from_path("./my_workspace")
-result = run_build_features(ws)
-print(result["join"])
-```
+### `oscar_predictions/features.py`
 
-### `modeling.py`
+`features.py` is the orchestration layer behind the `oscar build-features` CLI command and is also called by `oscar check-updates`. It pulls together the inputs consumed by the feature chain, `actor_awards.csv`, `major_award_shows.txt`, `film_actors.csv`, and `movies.csv`, and runs the post-cleaning stages in the correct order: first `actor_year_award_matrix.py`, then `film_actors_award_totals.py`, and finally `join_movie_to_actor.py`.
 
-Trains a logistic regression model on the processed movie dataset and returns per-year predicted vs. actual Best Picture winners along with accuracy and ROC AUC metrics.
+A successful run therefore rewrites the three derived tables in sequence: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`.
 
-Example usage:
+### `oscar_predictions/updates.py`
 
-```python
-from oscar_predictions.modeling import run_model
-from oscar_predictions.workspace import DataWorkspace
+`updates.py` is the engine behind `oscar check-updates` and is responsible for incorporating newly available Oscar years into an existing workspace. It reads `movies.csv` to see which ceremony years are already present, `film_actors.csv` to find actor IDs that may need to be rechecked for a new year, along with `actor_awards.csv` and `no_award_actors.csv`, and it fetches new data from IMDb nominee, credits, and actor-award pages.
 
-ws = DataWorkspace.from_path("./my_workspace")
-report = run_model(ws, seed=42, test_size=0.25)
+Once it has identified the missing years, it deletes the derived outputs so nothing stale is left around, scrapes movies, cast, and actor awards for those years, and rechecks newly nominated actors even if they had previously been marked as having no awards. It then rebuilds the post-cleaning feature tables. In practice this means appending to `movies.csv`, `film_actors.csv`, and `actor_awards.csv`, updating `no_award_actors.csv`, and rewriting `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`.
 
-print(f"Accuracy: {report['accuracy']:.2%}")
-for year_result in report["yearly_results"]:
-    print(year_result["year"], "→ Predicted:", year_result["predicted_winner"])
-```
+### `oscar_predictions/sync.py`
 
-### `updates.py`
+`sync.py` implements the `oscar sync` command and is the most general-purpose refresh path. It reads `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`, and `major_award_shows.txt`, and looks for an existing checkpoint in `.oscar_sync_state.json` if one is present.
 
-Checks IMDB for Oscar ceremony years not yet present in the workspace, scrapes any new nominees and their cast and award data, and rebuilds all derived feature tables.
+Its job is to plan and run the pipeline stage by stage with checkpointing: the scraping stages run first, and then the derived tables are rebuilt whenever upstream rows have actually changed (or whenever a rebuild is forced). Passing `--include-counts` adds the award-show aggregation stage to the plan. Across these stages it updates `movies.csv`, `film_actors.csv`, `actor_awards.csv`, and `no_award_actors.csv`; writes or rewrites `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`; optionally writes `award_show_counts.csv`; and updates `.oscar_sync_state.json` to reflect the new state of the workspace.
 
-Example usage:
+### `oscar_predictions/modeling.py`
 
-```python
-from oscar_predictions.updates import run_check_updates
-from oscar_predictions.workspace import DataWorkspace
+`modeling.py` is the final consumer of the pipeline and is invoked through `oscar model`. It reads the joined feature table `movies_with_cast_award_totals.csv` produced by the earlier stages.
 
-ws = DataWorkspace.from_path("./my_workspace")
-result = run_check_updates(ws, headless=True, max_movies=None, max_actors=None)
-print("New years found:", result["new_years"])
-```
+It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split, and generates per-year winner predictions along with evaluation metrics. By default the report is printed to the CLI, but users can request artifacts via `--predictions-csv <path>` to save predictions as CSV and `--report-json <path>` to save the report as JSON.
 
-### `reset_workspace.py`
+### `movies_actors_eda.py` (optional analysis app)
 
-Trims the base CSV files to a cutoff year, prunes the no-award actor registry to match the remaining data, deletes all derived outputs, and removes the sync state file. Useful for reproducing results from a specific point in time.
+`movies_actors_eda.py` is an optional Streamlit application that sits alongside the main pipeline and is run directly with `streamlit run movies_actors_eda.py`. It reads `movies.csv` and presents interactive exploratory analysis and visual summaries in the browser. It does not produce any pipeline CSV outputs of its own; its deliverable is the rendered dashboard.
 
-Example usage:
+## CSV Artifact Coverage
 
-```python
-from oscar_predictions.reset_workspace import run_reset_workspace
-from oscar_predictions.workspace import DataWorkspace
+`movies.csv` is seeded by `workspace.py` from the bundled base data. It is then extended by `scrape_movies.py` as new Best Picture nominees are discovered, and further updated through `updates.py` and `sync.py` as new ceremony years arrive. When the workspace is rolled back, `reset_workspace.py` trims it down to the cutoff year.
 
-ws = DataWorkspace.from_path("./my_workspace")
-run_reset_workspace(ws, cutoff_year=2022)
-```
+`film_actors.csv` is likewise seeded by `workspace.py`. It is grown by `scrape_movies.py` when cast capture is enabled, filled in more thoroughly by `scrape_actors.py`, and continues to be updated by `updates.py` and `sync.py`. `reset_workspace.py` trims it alongside the other base tables during a reset.
 
-Pass `dry_run=True` to preview what would be removed without modifying any files.
+`actor_awards.csv` starts life from `workspace.py`, accumulates new rows through `scrape_actor_awards.py`, and is further appended to by `updates.py` and `sync.py`. A reset via `reset_workspace.py` trims it back to rows within the cutoff year.
 
-## Data
+`no_award_actors.csv` is initialized by `workspace.py` and then maintained as a side-effect of the scraping stages: `scrape_actors.py` and `scrape_actor_awards.py` both update or prune it, and `updates.py` and `sync.py` keep it current on their refresh paths. It is trimmed by `reset_workspace.py` so that only actors still referenced after the cut remain.
 
-The `data/` directory inside the package contains bundled CSV files covering Oscar Best Picture nominees from 1996 through 2023, including film metadata, cast lists, and actor award histories. These files are accessed internally using `importlib.resources` and copied into a user workspace via `init_base_data()`.
+`actor_year_award_matrix.csv` is a derived artifact generated by `actor_year_award_matrix.py` whenever the feature chain runs, whether from `features.py`, `updates.py`, or `sync.py`. It is deleted by `workspace.py` or `reset_workspace.py` during a refresh or reset so that it can always be rebuilt cleanly.
 
-## Dependencies
+`film_actors_awards_sums_up_to_that_point.csv` is produced by `film_actors_award_totals.py` through the same three orchestrators, `features.py`, `updates.py`, and `sync.py`, and is likewise deleted by `workspace.py` and `reset_workspace.py` when the workspace is refreshed or reset.
 
-Dependencies are split into optional groups:
+`movies_with_cast_award_totals.csv` is generated by `join_movie_to_actor.py` at the end of the feature chain, again via `features.py`, `updates.py`, or `sync.py`. It is deleted by `workspace.py` and `reset_workspace.py` during a refresh or reset, and it is the single table consumed by `modeling.py` at the end of the pipeline.
 
-- `[scrape]` — Playwright (required for any scraping commands)
-- `[model]` — pandas, scikit-learn (required for `oscar model`)
-- `[all]` — installs both groups
-
-The package itself installs with no required third-party dependencies. See `pyproject.toml` for the full list.
-
-## Example Workflow
-
-```python
-from oscar_predictions.workspace import DataWorkspace
-from oscar_predictions.features import run_build_features
-from oscar_predictions.modeling import run_model
-
-ws = DataWorkspace.from_path("./my_workspace")
-ws.init_base_data()
-
-run_build_features(ws)
-
-report = run_model(ws)
-print(f"Accuracy: {report['accuracy']:.2%}")
-```
-
-## License
-
-This project is licensed under the MIT License.
-
-## Authors
-
-Created by Annie Busath and Paul Probst as part of a Data Science project.
+`award_show_counts.csv` is an optional reporting artifact generated by `award_show_counts.py` when it is included in a `sync.py` run via `--include-counts`, and it is deleted by `workspace.py` and `reset_workspace.py` during a refresh or reset.
