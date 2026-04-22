@@ -2,7 +2,23 @@ from playwright.sync_api import sync_playwright
 import csv
 import os
 
-CSV_FILE = "movies.csv"
+CSV_FILE = "movies_final.csv"
+
+def expand_all_buttons(page, event_id):
+    # expand 'more' button on award shows with multiple nominations
+    try:
+        section = page.get_by_test_id(f"sub-section-{event_id}")
+        section.wait_for()
+
+        buttons = section.locator('button:has-text("more")')
+
+        for i in range(buttons.count()):
+            try:
+                buttons.nth(i).click()
+            except:
+                pass
+    except:
+        pass
 
 def get_critics_choice(browser, movie_url):
     page = browser.new_page()
@@ -15,6 +31,7 @@ def get_critics_choice(browser, movie_url):
         try:
             # find critics choice awards
             page.get_by_label("Jump to").select_option("#ev0000133")    # code for critics choice in dropdown
+            expand_all_buttons(page, "ev0000133")
             page.wait_for_timeout(1000)
         except:
             return {"critics_choice_nom": 0, "critics_choice_win": 0}
@@ -56,6 +73,7 @@ def get_bafta(browser, movie_url):
         try:
             # find bafta awards
             page.get_by_label("Jump to").select_option("#ev0000123")    # code for critics choice in dropdown
+            expand_all_buttons(page, "ev0000123")
             page.wait_for_timeout(1000)
         except:
             return {"bafta_nom": 0, "bafta_win": 0}
@@ -101,6 +119,7 @@ def get_golden_globes(browser, movie_url):
         try:
             # find bafta awards
             page.get_by_label("Jump to").select_option("#ev0000292")    # code for critics choice in dropdown
+            expand_all_buttons(page, "ev0000292")
             page.wait_for_timeout(1000)
         except:
             return {"golden_globes_nom": 0, "golden_globes_win": 0}
@@ -148,6 +167,7 @@ def get_pga(browser, movie_url):
         try:
             # find bafta awards
             page.get_by_label("Jump to").select_option("#ev0000531")    # code for critics choice in dropdown
+            expand_all_buttons(page, "ev0000531")
             page.wait_for_timeout(1000)
         except:
             return {"pga_nom": 0, "pga_win": 0}
@@ -195,18 +215,10 @@ def get_sag(browser, movie_url):
         try:
             # find bafta awards
             page.get_by_label("Jump to").select_option("#ev0000598")    # code for critics choice in dropdown
+            expand_all_buttons(page, "ev0000598")
             page.wait_for_timeout(1000)
         except:
             return {"sag_nom": 0, "sag_win": 0}
-        
-        section = page.get_by_test_id("sub-section-ev0000598")
-        buttons = section.locator('button:has-text("more")')
-
-        for i in range(buttons.count()):
-            try:
-                buttons.nth(i).click()
-            except:
-                pass
 
         # find list items for best picture awards
         items = page.locator("li")
