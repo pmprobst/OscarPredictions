@@ -145,6 +145,8 @@ oscar check-updates --max-movies 5 --max-actors 200
 oscar model
 ```
 
+Training uses a grouped train/test split by ceremony year: **`accuracy` and `roc_auc` in the JSON report are computed only on held-out test years.** After fitting, the same model scores **every row** in the feature table. The CLI yearly breakdown, `yearly_results` in JSON, and rows written with `--predictions-csv` therefore cover **all years**; the CSV includes columns `year`, `title`, `y_true`, `y_prob`, `y_pred`, and **`split`** (`train` or `test`).
+
 Optional examples:
 
 ```bash
