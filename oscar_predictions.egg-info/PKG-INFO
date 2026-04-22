@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: oscar-predictions
-Version: 0.2.2
+Version: 0.2.3
 Summary: Oscar nominees scraping, feature engineering, updates, and modeling.
 Author-email: Paul Probst <github@paul.probst.org>
 License-Expression: MIT
