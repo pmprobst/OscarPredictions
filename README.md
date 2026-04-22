@@ -4,11 +4,14 @@ Installable package for Oscar data initialization, update checks, feature genera
 
 ## Install
 
-The package installs with **no required third-party dependencies**. For a typical workflow (scraping + modeling), install the **`all`** extra:
+Install from TestPyPI:
 
 ```bash
-python3 -m pip install "oscar-predictions[all]"
-playwright install chromium
+python3 -m pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  oscar-predictions==0.2.3
+python3 -m playwright install chromium
 ```
 
 From a git checkout:
@@ -20,9 +23,8 @@ playwright install chromium
 
 Optional dependency groups:
 
-- **`[scrape]`** – Playwright only (`sync`, `check-updates`, scrape-related commands).
-- **`[model]`** – pandas and scikit-learn only (`oscar model`).
-- **`[all]`** – both groups (recommended).
+- **`[model]`** – pandas and scikit-learn (`oscar model`).
+- **`[all]`** – currently the same as `model`.
 
 After install, use the `oscar` CLI.
 
