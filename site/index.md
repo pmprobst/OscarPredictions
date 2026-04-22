@@ -18,5 +18,5 @@ We built a Python package that:
 - [Documentation](documentation.md) - Function references and usage
 - [Tutorial](tutorial.qmd) - Get started with the package
 - [Technical Report](report.md) - Methodology and key findings
-- [Streamlit App](http://addupdatedstreamlit.app) - Interactive predictions
+- [Streamlit App](https://oscarpredictions.streamlit.app/) - Interactive predictions
 - [GitHub Repo](https://github.com/pmprobst/OscarPredictions)

@@ -19,7 +19,7 @@ website:
       - text: "Technical Report"
         href: site/report.md
       - text: "Streamlit App"
-        href: https://your-streamlit-link.streamlit.app
+        href: https://oscarpredictions.streamlit.app/
     right:
       - icon: github
         href: https://github.com/pmprobst/OscarPredictions
