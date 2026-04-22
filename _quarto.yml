@@ -14,8 +14,6 @@ website:
         href: site/index.md
       - text: "Documentation"
         href: site/documentation.md
-      - text: "Architecture"
-        href: site/architecture.md
       - text: "Tutorial"
         href: site/tutorial.qmd
       - text: "Technical Report"
