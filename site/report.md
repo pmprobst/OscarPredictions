@@ -2,13 +2,15 @@
 title: "Technical Report"
 ---
 
+# Technical Report
+
 ## Executive Summary
 
 This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film's cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film's Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.
 
 ## Project Context
 
-The Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Conventional wisdom holds that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film's cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.
+The Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Movie lovers believe that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film's cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.
 
 Our goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most.
 
@@ -24,7 +26,7 @@ All data was scraped from publicly accessible IMDB pages using Playwright. The b
 
 **1. Data Acquisition**
 
-We built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film's IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member. The pipeline is incremental — it checkpoints progress and skips already-scraped records on re-runs.
+We built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film's IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member.
 
 **2. Feature Engineering**
 
@@ -32,30 +34,19 @@ From the raw scraped data we engineered three layers of features. First, we buil
 
 **3. Modeling**
 
-We trained a logistic regression model using scikit-learn on a 75/25 stratified train/test split. Logistic regression was chosen for its interpretability — the model coefficients directly indicate which features most strongly predict a win. All numeric features were retained; non-numeric columns (`title`, `url`) were dropped before fitting.
+We trained a logistic regression model using scikit-learn with varying year stratified train/test splits. Logistic regression was chosen for its interpretability: the model coefficients directly indicate which features most strongly predict a win.
 
 ## Results
 
-The model was evaluated on the held-out test set using accuracy and ROC AUC. Per-year predicted vs. actual winners were also examined to understand where the model succeeded and where it did not.
+The model was evaluated on the held-out test set using accuracy by examining per-year predicted vs. actual winners to understand where the model succeeded and where it did not.
 
 ### Model Performance
 
-| Metric | Value |
-|---|---|
-| Number of films | [fill in] |
-| Number of features | [fill in] |
-| Train/test split | 75% / 25% |
-| Random seed | 42 |
-| Accuracy | [fill in] |
-| ROC AUC | [fill in] |
-
-### Per-Year Predicted vs. Actual Winners (Test Set)
-
-| Year | Predicted Winner | Actual Winner | Correct |
-|---|---|---|---|
-| [year] | [predicted] | [actual] | ✅ / ❌ |
-
-*Fill this table in by running `oscar model` from your workspace directory (after `cd` into the folder that contains `movies_with_cast_award_totals.csv`) and reviewing the printed output.*
+| Train Size | Test | Accuracy|
+|---|---|---|
+| 25 | 5 | 100% |
+| 20 | 10 | 81.8% |
+| 15 | 15 | 81.2% |
 
 ### Feature Importance
 
@@ -63,24 +54,26 @@ The logistic regression coefficients reveal which features most strongly predict
 
 | Feature | Coefficient |
 |---|---|
-| [fill in top features] | [fill in] |
+| sag_nom | 0.793 |
+| bafta_nom | 0.734 |
+| cast_dga_wins_total | 0.639 |
+| pga_winrate | 0.605 |
+| pga_win | 0.605 |
 
 ## Discussion
 
-Our analysis shows that precursor award show results and cast award histories together provide a meaningful signal for predicting the Oscar Best Picture winner. The model correctly identified the winner in a majority of test years, with the strongest predictive features coming from [fill in based on your coefficients — e.g. PGA wins, BAFTA wins].
+Our analysis shows that precursor award show results and cast award histories together provide meaningful signal for predicting the Oscar Best Picture winner. The model correctly consistently identified the winner about 81% of the time, a strong result that confirms award season momentum is genuinely predictive of Best Picture outcomes.
 
-The cast award history features contributed additional signal beyond the precursor shows alone, suggesting that Academy voters are influenced not only by which films won at earlier shows but also by the accumulated prestige of a film's cast.
+The strongest positive predictors were SAG nominations, BAFTA nominations, and cast DGA wins, suggesting that films recognized by the acting and directing guilds early in the season carry a significant advantage. PGA win rate and outright PGA wins were also among the top predictors, consistent with the consensus among movie lovers that the Producers Guild is one of the most reliable leading indicators of Oscar success. Interestingly, cast-level features such as total Oscar wins, total acting wins, and total DGA wins among a film's cast, ranked among the top predictors alongside the precursor shows, confirming that cast prestige adds real predictive power beyond precursor results alone.
 
-The model struggled most in years where a late-season upset occurred — cases where a film swept the precursor shows but still lost the Oscar, or where a film gained momentum too late in the season to be captured by our features.
 
 ## Limitations
 
-- **Scraping fragility:** IMDB's page structure can change over time, which may require updates to the scraping logic to maintain compatibility.
-- **Binary target:** The model predicts a win probability per film but is ultimately evaluated against a binary outcome. In years where no film in the test set won (due to the train/test split), per-year evaluation is less meaningful.
-- **Feature scope:** Our features are limited to precursor award shows and cast award histories. Other potentially predictive signals — box office performance, critical score, production budget, genre — were not included and represent natural extensions of this work.
+- **Multicollinearity:** Several features in our dataset are highly correlated with one another — for example, a film that wins the PGA is obviously going to be nominated for PGA, and a film with a decorated cast is likely to appear at multiple precursor shows. This makes it difficult for the model to isolate the unique effect of any single feature. The negative coefficients on some features such as BAFTA wins and PGA nominations are likely a symptom of this: there is no logical reason that winning BAFTA should hurt a film's Oscar chances. Rather, the model is picking up on correlations between features rather than true causal relationships, and the coefficients should be interpreted with caution.
+
+- **Class imbalance:** Out of every group of Best Picture nominees, exactly one film wins each year. This means that in any given year, roughly 80–90% of the rows in our dataset are losses and only one is a win. With such a skewed target variable, the model has very few positive examples to learn from relative to the number of negative ones, which can make it harder to distinguish a true winner from a strong runner-up. This is a fundamental constraint of the problem rather than a flaw in our approach, but it does limit how confidently the model can assign win probabilities.
 
 ## Future Work
 
 - Incorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.
-- Experiment with more flexible models (random forest, gradient boosting) to capture non-linear relationships between features.
-- Extend the pipeline to automatically update as new precursor award results are announced during the award season, enabling real-time predictions before the Oscar ceremony.
+- Address multicollinearity and class imbalance to provide a clearer picture of the actual impact of precursor wins and nominations
