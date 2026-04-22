@@ -19,7 +19,7 @@ def run_model(
     import pandas as pd
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import accuracy_score, roc_auc_score
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import GroupShuffleSplit
 
     data_path = workspace.movie_totals
     df = pd.read_csv(data_path)
@@ -42,14 +42,12 @@ def run_model(
     for col in x.columns:
         x[col] = pd.to_numeric(x[col], errors="coerce").fillna(0)
 
-    x_train, x_test, y_train, y_test, id_train, id_test = train_test_split(
-        x,
-        y,
-        identity,
-        test_size=test_size,
-        random_state=seed,
-        stratify=y if y.nunique() > 1 else None,
-    )
+    groups = identity["year"].to_numpy()
+    splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
+    train_idx, test_idx = next(splitter.split(x, y, groups=groups))
+    x_train, x_test = x.iloc[train_idx], x.iloc[test_idx]
+    y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+    id_train, id_test = identity.iloc[train_idx], identity.iloc[test_idx]
     model = LogisticRegression(max_iter=1000)
     model.fit(x_train, y_train)
     probs = model.predict_proba(x_test)[:, 1]

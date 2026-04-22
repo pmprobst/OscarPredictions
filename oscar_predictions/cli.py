@@ -116,8 +116,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     model = sub.add_parser("model", help="Run production modeling on movies_with_cast_award_totals.csv.")
     model.add_argument("--workspace-dir", default="./data", help="Workspace directory (default: ./data).")
-    model.add_argument("--seed", type=int, default=42, help="Random seed for train/test split.")
-    model.add_argument("--test-size", type=float, default=0.25, help="Test split fraction.")
+    model.add_argument("--seed", type=int, default=42, help="Random seed for year-group train/test split.")
+    model.add_argument("--test-size", type=float, default=0.25, help="Fraction of years held out for test split.")
     model.add_argument(
         "--report-json",
         default=None,
