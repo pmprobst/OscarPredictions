@@ -8,6 +8,7 @@ Can precursor award shows and cast accolades predict the Oscar Best Picture winn
 
 ## What We Built
 We built a Python package that:
+
 - Scrapes IMDB for Oscar Best Picture nominees across 30 years of ceremonies
 - Collects precursor award data
 - Aggregates cast award histories
