@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-movies = pd.read_csv('movies.csv')
+movies = pd.read_csv('movies_with_cast_award_totals.csv')
 movies['era'] = movies['year'].apply(lambda x: 'post_2010' if x >= 2010 else 'pre_2010')
 precursors = ['critics_choice', 'bafta', 'golden_globes', 'pga', 'sag']
 nom_cols = [f'{p}_nom' for p in precursors]
@@ -49,12 +49,13 @@ if selected_film:
     st.dataframe(film_data)
     st.divider()
 
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     'Overview',
     'Base Rates',
     'Precursor Predictiveness',
     'Sweep Analysis',
-    'Era Comparison'
+    'Era Comparison',
+    'Actor and Crew Awards'
 ])
 
 with tab1:
@@ -188,3 +189,84 @@ with tab5:
         ax.legend()
         plt.tight_layout()
         st.pyplot(fig)
+
+with tab6:
+    st.header('Actor & Crew Awards')
+    st.write('How do the accumulated awards of a film\'s cast and crew relate to Oscar wins?')
+
+    maj_cols_base = [
+        'academy_awards_usa', 'bafta_awards', 'golden_globes_usa',
+        'actor_awards', 'directors_guild_of_america_usa',
+        'writers_guild_of_america_usa', 'pga_awards', 'critics_choice_awards',
+        'film_independent_spirit_awards', 'satellite_awards'
+    ]
+    maj_nom_cols = [f'maj_{c}_noms' for c in maj_cols_base]
+    maj_win_cols = [f'maj_{c}_wins' for c in maj_cols_base]
+    maj_labels = [c.replace('_', ' ').title() for c in maj_cols_base]
+
+    # Film lookup
+    st.subheader('Look Up a Film')
+    film_lookup = st.selectbox('Select a Film', [''] + sorted(movies['title'].tolist()), key='maj_film_lookup')
+
+    if film_lookup:
+        film_row = movies[movies['title'] == film_lookup].iloc[0]
+        oscar_result = '🏆 Won Oscar' if film_row['oscar_win'] == 1 else '❌ Did Not Win Oscar'
+        st.write(f'**{film_lookup}** ({int(film_row["year"])}) — {oscar_result}')
+
+        film_data = pd.DataFrame({
+            'Category': maj_labels,
+            'Nominations': [film_row[c] for c in maj_nom_cols],
+            'Wins': [film_row[c] for c in maj_win_cols]
+        })
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.dataframe(film_data.set_index('Category'))
+
+        with col2:
+            fig, ax = plt.subplots(figsize=(5, 4))
+            x = range(len(maj_labels))
+            ax.barh([i + 0.2 for i in x], film_data['Nominations'], height=0.4, label='Nominations', alpha=0.8)
+            ax.barh([i - 0.2 for i in x], film_data['Wins'], height=0.4, label='Wins', alpha=0.8)
+            ax.set_yticks(x)
+            ax.set_yticklabels(maj_labels, fontsize=7)
+            ax.set_xlabel('Count')
+            ax.set_title(f'Cast/Crew Awards: {film_lookup}')
+            ax.legend()
+            plt.tight_layout()
+            st.pyplot(fig)
+
+        st.divider()
+
+    # Average cast noms/wins for Oscar winners vs non-winners
+    st.subheader('Average Cast/Crew Nominations and Wins: Oscar Winners vs Non-Winners')
+
+    metric = st.radio('Metric', ['Nominations', 'Wins'], key='maj_metric')
+    cols_to_use = maj_nom_cols if metric == 'Nominations' else maj_win_cols
+
+    avg = filtered.groupby('oscar_win')[cols_to_use].mean().T
+    avg.index = maj_labels
+    avg.columns = ['Did Not Win Oscar', 'Won Oscar']
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    avg.plot(kind='bar', ax=ax)
+    ax.set_title(f'Average Cast/Crew {metric} by Oscar Outcome')
+    ax.set_ylabel(f'Average {metric}')
+    ax.set_xticklabels(maj_labels, rotation=45, ha='right', fontsize=8)
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    # Which cast/crew categories best correlate with Oscar win
+    st.subheader('Which Cast/Crew Award Categories Best Predict the Oscar?')
+
+    corrs = filtered[maj_win_cols + ['oscar_win']].corr()['oscar_win'].drop('oscar_win')
+    corrs.index = maj_labels
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    corrs.sort_values().plot(kind='barh', ax=ax)
+    ax.set_title('Correlation of Cast/Crew Award Wins with Oscar Win')
+    ax.set_xlabel('Correlation')
+    ax.axvline(x=0, color='black', linewidth=0.8)
+    plt.tight_layout()
+    st.pyplot(fig)
