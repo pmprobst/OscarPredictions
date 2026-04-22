@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://pmprobst.github.io/OscarPredictions/tutorial.html</loc>
-    <lastmod>2026-04-22T02:49:23.249Z</lastmod>
+    <loc>https://pmprobst.github.io/OscarPredictions/site/documentation.html</loc>
+    <lastmod>2026-04-22T16:01:49.365Z</lastmod>
   </url>
   <url>
-    <loc>https://pmprobst.github.io/OscarPredictions/movies_eda.html</loc>
-    <lastmod>2026-04-22T03:43:11.996Z</lastmod>
+    <loc>https://pmprobst.github.io/OscarPredictions/site/report.html</loc>
+    <lastmod>2026-04-22T16:02:05.009Z</lastmod>
   </url>
   <url>
-    <loc>https://pmprobst.github.io/OscarPredictions/documentation.html</loc>
-    <lastmod>2026-04-22T02:49:33.111Z</lastmod>
+    <loc>https://pmprobst.github.io/OscarPredictions/PARITY.html</loc>
+    <lastmod>2026-04-19T03:03:29.343Z</lastmod>
   </url>
   <url>
     <loc>https://pmprobst.github.io/OscarPredictions/modeling.html</loc>
-    <lastmod>2026-04-22T03:40:02.928Z</lastmod>
+    <lastmod>2026-04-22T03:57:41.838Z</lastmod>
   </url>
   <url>
-    <loc>https://pmprobst.github.io/OscarPredictions/report.html</loc>
-    <lastmod>2026-04-22T03:39:53.125Z</lastmod>
+    <loc>https://pmprobst.github.io/OscarPredictions/ARCHITECTURE.html</loc>
+    <lastmod>2026-04-19T03:03:29.341Z</lastmod>
   </url>
   <url>
-    <loc>https://pmprobst.github.io/OscarPredictions/index.html</loc>
-    <lastmod>2026-04-22T03:31:22.686Z</lastmod>
+    <loc>https://pmprobst.github.io/OscarPredictions/ENTRYPOINTS.html</loc>
+    <lastmod>2026-04-19T03:03:29.342Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pmprobst.github.io/OscarPredictions/movies_eda.html</loc>
+    <lastmod>2026-04-22T03:57:41.845Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pmprobst.github.io/OscarPredictions/todo.html</loc>
+    <lastmod>2026-04-13T20:56:32.396Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pmprobst.github.io/OscarPredictions/site/tutorial.html</loc>
+    <lastmod>2026-04-22T16:02:19.557Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pmprobst.github.io/OscarPredictions/site/index.html</loc>
+    <lastmod>2026-04-22T16:01:34.402Z</lastmod>
   </url>
 </urlset>

@@ -11,13 +11,13 @@ website:
     background: primary
     left:
       - text: "Home"
-        href: index.md
+        href: site/index.md
       - text: "Documentation"
-        href: documentation.md
+        href: site/documentation.md
       - text: "Tutorial"
-        href: tutorial.qmd
+        href: site/tutorial.qmd
       - text: "Technical Report"
-        href: report.md
+        href: site/report.md
       - text: "Streamlit App"
         href: https://your-streamlit-link.streamlit.app
     right:
