@@ -11,5 +11,5 @@ If you are viewing this repository directly, use these links:
 
 - [Site Home](./site/index.md)
 - [Documentation](./site/documentation.md)
-- [Tutorial](./site/tutorial.qmd)
+- [Tutorial](./site/tutorial.md)
 - [Technical Report](./site/report.md)

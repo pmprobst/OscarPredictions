@@ -16,7 +16,7 @@ We built a Python package that:
 
 ## Quick Links
 - [Documentation](documentation.md) - Function references and usage
-- [Tutorial](tutorial.qmd) - Get started with the package
+- [Tutorial](tutorial.md) - Get started with the package
 - [Technical Report](report.md) - Methodology and key findings
 - [Streamlit App](https://oscarpredictions.streamlit.app/) - Interactive predictions
 - [GitHub Repo](https://github.com/pmprobst/OscarPredictions)

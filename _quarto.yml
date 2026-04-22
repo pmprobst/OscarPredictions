@@ -15,7 +15,7 @@ website:
       - text: "Documentation"
         href: site/documentation.md
       - text: "Tutorial"
-        href: site/tutorial.qmd
+        href: site/tutorial.md
       - text: "Technical Report"
         href: site/report.md
       - text: "Streamlit App"
