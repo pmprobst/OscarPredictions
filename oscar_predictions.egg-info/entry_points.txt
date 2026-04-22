@@ -1,0 +1,2 @@
+[console_scripts]
+oscar = oscar_predictions.cli:main
