@@ -1,253 +1,105 @@
 # Architecture
 
-This document explains the OscarPredictions data pipeline end to end. The main focus is the core modules that create and update the pipeline's CSV artifacts.
+This document is a walkthrough of the OscarPredictions data pipeline, from an empty workspace all the way to a trained model. It is organized around the Python modules under `oscar_predictions/` that create and update the pipeline's CSV artifacts, and it describes how each one fits into the larger story.
 
-## How to read this page
-
-Each module section follows the same format:
-- Trigger: how it runs (CLI command or upstream module).
-- Input: CSV/data files it reads.
-- Process: key transformation or scraping behavior.
-- Output: CSV/artifacts it writes or updates.
-
-Read the modules in order to follow the full pipeline lifecycle from workspace initialization, through scraping and feature engineering, to modeling.
+The pipeline has a natural lifecycle: a workspace is initialized from bundled base data, IMDb is scraped to extend that data, post-cleaning features are derived from the resulting CSVs, and finally a model is trained on the feature table. The module sections below are ordered to follow that lifecycle, so reading them top to bottom traces a single run through the system. For every module, the prose explains when it runs, which files it reads, what it does to that data, and which CSV artifacts it produces or removes.
 
 ## Core Modules
 
 ### `oscar_predictions/workspace.py` (`DataWorkspace`)
 
-- Trigger: used by `oscar init-data`, `oscar build-features`, `oscar reset`, `oscar check-updates`, and `oscar model`.
-- Input:
-  - Bundled package data from `oscar_predictions/data/base/`.
-  - Bundled config `major_award_shows.txt` from `oscar_predictions/data/config/`.
-- Process:
-  - Resolves canonical workspace file paths.
-  - Copies bundled base files into a workspace.
-  - Deletes derived CSV outputs when a refresh is needed.
-- Output:
-  - Creates/overwrites `movies.csv`.
-  - Creates/overwrites `film_actors.csv`.
-  - Creates/overwrites `actor_awards.csv`.
-  - Creates/overwrites `no_award_actors.csv`.
-  - Creates/overwrites `major_award_shows.txt`.
-  - Deletes (when requested): `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, `award_show_counts.csv`.
+`DataWorkspace` is the foundation layer that the other stages rely on. It is used by `oscar init-data`, `oscar build-features`, `oscar reset`, `oscar check-updates`, and `oscar model` to resolve canonical workspace file paths and to stage bundled package data from `oscar_predictions/data/base/` along with the bundled `major_award_shows.txt` config from `oscar_predictions/data/config/`.
+
+When invoked, it copies the bundled base files into the active workspace, creating or overwriting `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`, and `major_award_shows.txt`. When a refresh is requested, it also deletes the derived outputs so they can be rebuilt cleanly: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, and `award_show_counts.csv`.
 
 ### `oscar_predictions/reset_workspace.py`
 
-- Trigger: CLI command `oscar reset`.
-- Input:
-  - `movies.csv`
-  - `film_actors.csv`
-  - `actor_awards.csv`
-  - `no_award_actors.csv`
-- Process:
-  - Trims base CSV rows to `year <= cutoff_year` (default 2023).
-  - Prunes `no_award_actors.csv` so it stays aligned with retained actor IDs.
-  - Clears derived outputs and sync checkpoint state.
-- Output:
-  - Rewrites `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`.
-  - Deletes `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, `award_show_counts.csv`.
-  - Deletes `.oscar_sync_state.json`.
+This module backs the `oscar reset` CLI command and is used to roll the workspace back to a clean historical state. It reads the current `movies.csv`, `film_actors.csv`, `actor_awards.csv`, and `no_award_actors.csv` and trims them so that only rows with `year <= cutoff_year` (2023 by default) remain, pruning `no_award_actors.csv` down to the actor IDs that still appear after the cut.
+
+The trimmed CSVs are written back in place, and all derived artifacts are removed so the next build starts from scratch: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`, and `award_show_counts.csv` are deleted, along with the sync checkpoint file `.oscar_sync_state.json`.
 
 ### `oscar_predictions/scrape_movies.py`
 
-- Trigger:
-  - Triggered by `oscar sync` and `oscar check-updates`.
-  - Can also run as a standalone script.
-- Input:
-  - IMDb Oscars pages for nominee discovery.
-  - Existing `movies.csv` and `film_actors.csv` (append/skip checks).
-- Process:
-  - Scrapes Best Picture nominee films and precursor/director attributes.
-  - Optionally captures cast rows for each scraped film.
-  - Skips rows already present by IMDb ID.
-- Output:
-  - Appends new rows to `movies.csv`.
-  - Optionally appends cast rows to `film_actors.csv`.
+`scrape_movies.py` is the first scraping stage. It is driven by `oscar sync` and `oscar check-updates`, but can also be run directly as a standalone script. It reads IMDb Oscars pages to discover Best Picture nominees and their precursor and director attributes, and consults the existing `movies.csv` and `film_actors.csv` so it can skip rows that already exist by IMDb ID.
+
+The result is new rows appended to `movies.csv`, and, when cast capture is enabled during the scrape, corresponding rows appended to `film_actors.csv` as well.
 
 ### `oscar_predictions/scrape_actors.py`
 
-- Trigger:
-  - Triggered by `oscar sync` and `oscar check-updates`.
-  - Can also run as a standalone script.
-- Input:
-  - `movies.csv`
-  - Existing `film_actors.csv`
-  - `no_award_actors.csv` (for prune/recheck logic)
-  - IMDb film full-credits pages.
-- Process:
-  - Backfills or extends cast rows for movies missing cast coverage.
-  - Supports year-scoped updates during refresh flows.
-  - Removes actors from `no_award_actors.csv` when they should be rechecked.
-- Output:
-  - Appends/updates `film_actors.csv`.
-  - Rewrites `no_award_actors.csv` when recheck pruning applies.
+Once films are known, `scrape_actors.py` ensures each of them has cast coverage. It runs from `oscar sync` and `oscar check-updates`, or as a standalone script. It reads `movies.csv` to find the films to process, the current `film_actors.csv` to detect which ones are missing cast rows, and `no_award_actors.csv` so it knows which actors are eligible for a recheck. The actual cast data is pulled from IMDb film full-credits pages.
+
+This module backfills or extends cast rows for uncovered films and supports year-scoped updates during refresh flows. Its outputs are appended or updated rows in `film_actors.csv`, and a rewritten `no_award_actors.csv` whenever recheck pruning removes actors that should be reconsidered.
 
 ### `oscar_predictions/scrape_actor_awards.py`
 
-- Trigger:
-  - Triggered by `oscar sync` and `oscar check-updates`.
-  - Can also run as a standalone script.
-- Input:
-  - `film_actors.csv`
-  - Existing `actor_awards.csv`
-  - Existing `no_award_actors.csv`
-  - IMDb actor awards pages.
-- Process:
-  - Scrapes award history for actor IDs found in cast data.
-  - Skips previously processed IDs unless explicitly rechecked.
-  - Tracks actors with no award rows in a dedicated registry.
-- Output:
-  - Appends rows to `actor_awards.csv`.
-  - Appends/updates `no_award_actors.csv`.
+With cast data in hand, `scrape_actor_awards.py` goes out to IMDb actor-award pages to collect each actor's award history. Like the other scrapers, it is triggered by `oscar sync` and `oscar check-updates` and can also run standalone. It reads `film_actors.csv` to discover the actor IDs to process, and consults the existing `actor_awards.csv` and `no_award_actors.csv` to skip IDs that have already been handled, unless a recheck is explicitly requested.
+
+New award rows are appended to `actor_awards.csv`, while actors that turn out to have no award history are recorded in `no_award_actors.csv` so they are not repeatedly scraped on subsequent runs.
 
 ### `oscar_predictions/actor_year_award_matrix.py`
 
-- Trigger:
-  - Triggered by `oscar build-features`, `oscar check-updates`, and `oscar sync` derived stage.
-  - Can also run as a standalone script.
-- Input:
-  - `actor_awards.csv`
-  - `major_award_shows.txt`
-- Process:
-  - Normalizes actor-award rows into actor-year aggregates.
-  - Separates major-award metrics using the configured major-show list.
-- Output:
-  - Writes `actor_year_award_matrix.csv`.
+This is the first post-scraping feature stage. It runs as part of `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and it can also be invoked directly. It reads `actor_awards.csv` together with the configured list of major shows in `major_award_shows.txt`.
+
+It normalizes the raw actor-award rows into actor-year aggregates, separating out metrics for the configured major awards. The output is a single artifact: `actor_year_award_matrix.csv`.
 
 ### `oscar_predictions/film_actors_award_totals.py`
 
-- Trigger:
-  - Triggered by `oscar build-features`, `oscar check-updates`, and `oscar sync` derived stage.
-  - Can also run as a standalone script.
-- Input:
-  - `film_actors.csv`
-  - `actor_year_award_matrix.csv`
-- Process:
-  - Calculates actor cumulative award totals up to each film year.
-  - Produces per-movie cast totals for downstream joining.
-- Output:
-  - Writes `film_actors_awards_sums_up_to_that_point.csv`.
+Next in the derivation chain, `film_actors_award_totals.py` is triggered by `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and it can also be run as a standalone script. It reads `film_actors.csv` and the `actor_year_award_matrix.csv` produced upstream.
+
+For each actor it computes cumulative award totals up to each film's year, then rolls those per-actor totals into per-movie cast totals ready for joining. The result is `film_actors_awards_sums_up_to_that_point.csv`.
 
 ### `oscar_predictions/join_movie_to_actor.py`
 
-- Trigger:
-  - Triggered by `oscar build-features`, `oscar check-updates`, and `oscar sync` derived stage.
-  - Can also run as a standalone script.
-- Input:
-  - `movies.csv`
-  - `film_actors_awards_sums_up_to_that_point.csv`
-- Process:
-  - Joins cast-award totals onto each movie row.
-  - Produces the model-ready movie-level feature table.
-- Output:
-  - Writes `movies_with_cast_award_totals.csv`.
+This is the final join step in the feature chain. It is called from `oscar build-features`, `oscar check-updates`, and the derived stage of `oscar sync`, and can also run on its own. It reads `movies.csv` and the cast-totals table `film_actors_awards_sums_up_to_that_point.csv`.
+
+Joining these two tables produces the model-ready movie-level feature table, written as `movies_with_cast_award_totals.csv`.
 
 ### `oscar_predictions/award_show_counts.py`
 
-- Trigger:
-  - Triggered by `oscar sync --include-counts`.
-  - Can also run as a standalone script.
-- Input:
-  - `actor_awards.csv`
-- Process:
-  - Aggregates total rows by award show.
-  - Produces a compact counts artifact for inspection/reporting.
-- Output:
-  - Writes `award_show_counts.csv`.
+`award_show_counts.py` is an optional reporting stage, run by `oscar sync --include-counts` or as a standalone script. It reads `actor_awards.csv` and aggregates the total number of rows by award show, producing a compact summary artifact, `award_show_counts.csv`, that is useful for inspection and reporting.
 
 ### `oscar_predictions/features.py`
 
-- Trigger:
-  - CLI command `oscar build-features`.
-  - Called by `oscar check-updates`.
-- Input:
-  - `actor_awards.csv`
-  - `major_award_shows.txt`
-  - `film_actors.csv`
-  - `movies.csv`
-- Process:
-  - Executes the post-cleaning feature chain:
-    1. `actor_year_award_matrix.py`
-    2. `film_actors_award_totals.py`
-    3. `join_movie_to_actor.py`
-- Output:
-  - Writes `actor_year_award_matrix.csv`.
-  - Writes `film_actors_awards_sums_up_to_that_point.csv`.
-  - Writes `movies_with_cast_award_totals.csv`.
+`features.py` is the orchestration layer behind the `oscar build-features` CLI command and is also called by `oscar check-updates`. It pulls together the inputs consumed by the feature chain, `actor_awards.csv`, `major_award_shows.txt`, `film_actors.csv`, and `movies.csv`, and runs the post-cleaning stages in the correct order: first `actor_year_award_matrix.py`, then `film_actors_award_totals.py`, and finally `join_movie_to_actor.py`.
+
+A successful run therefore rewrites the three derived tables in sequence: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`.
 
 ### `oscar_predictions/updates.py`
 
-- Trigger: CLI command `oscar check-updates`.
-- Input:
-  - `movies.csv` (detect existing years)
-  - `film_actors.csv` (collect actor IDs for recheck by new year)
-  - `actor_awards.csv`
-  - `no_award_actors.csv`
-  - IMDb nominee, credits, and actor-award pages
-- Process:
-  - Detects ceremony years missing from current `movies.csv`.
-  - Deletes derived outputs before refresh.
-  - Scrapes new-year movies, cast, and actor awards.
-  - Rechecks newly nominated actors even if previously marked no-award.
-  - Rebuilds post-cleaning feature outputs.
-- Output:
-  - Appends `movies.csv`, `film_actors.csv`, `actor_awards.csv`.
-  - Appends/updates `no_award_actors.csv`.
-  - Rewrites derived files: `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`.
+`updates.py` is the engine behind `oscar check-updates` and is responsible for incorporating newly available Oscar years into an existing workspace. It reads `movies.csv` to see which ceremony years are already present, `film_actors.csv` to find actor IDs that may need to be rechecked for a new year, along with `actor_awards.csv` and `no_award_actors.csv`, and it fetches new data from IMDb nominee, credits, and actor-award pages.
+
+Once it has identified the missing years, it deletes the derived outputs so nothing stale is left around, scrapes movies, cast, and actor awards for those years, and rechecks newly nominated actors even if they had previously been marked as having no awards. It then rebuilds the post-cleaning feature tables. In practice this means appending to `movies.csv`, `film_actors.csv`, and `actor_awards.csv`, updating `no_award_actors.csv`, and rewriting `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`.
 
 ### `oscar_predictions/sync.py`
 
-- Trigger: CLI command `oscar sync`.
-- Input:
-  - `movies.csv`
-  - `film_actors.csv`
-  - `actor_awards.csv`
-  - `no_award_actors.csv`
-  - `major_award_shows.txt`
-  - Existing `.oscar_sync_state.json` checkpoint state (if present)
-- Process:
-  - Plans and runs stage-by-stage incremental sync with checkpointing.
-  - Runs scraping stages first, then rebuilds derived tables when upstream rows changed (or when forced).
-  - Optionally adds award-show aggregation stage with `--include-counts`.
-- Output:
-  - Updates `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`.
-  - Writes/rewrites `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, `movies_with_cast_award_totals.csv`.
-  - Optionally writes `award_show_counts.csv`.
-  - Writes/updates `.oscar_sync_state.json`.
+`sync.py` implements the `oscar sync` command and is the most general-purpose refresh path. It reads `movies.csv`, `film_actors.csv`, `actor_awards.csv`, `no_award_actors.csv`, and `major_award_shows.txt`, and looks for an existing checkpoint in `.oscar_sync_state.json` if one is present.
+
+Its job is to plan and run the pipeline stage by stage with checkpointing: the scraping stages run first, and then the derived tables are rebuilt whenever upstream rows have actually changed (or whenever a rebuild is forced). Passing `--include-counts` adds the award-show aggregation stage to the plan. Across these stages it updates `movies.csv`, `film_actors.csv`, `actor_awards.csv`, and `no_award_actors.csv`; writes or rewrites `actor_year_award_matrix.csv`, `film_actors_awards_sums_up_to_that_point.csv`, and `movies_with_cast_award_totals.csv`; optionally writes `award_show_counts.csv`; and updates `.oscar_sync_state.json` to reflect the new state of the workspace.
 
 ### `oscar_predictions/modeling.py`
 
-- Trigger: CLI command `oscar model`.
-- Input:
-  - `movies_with_cast_award_totals.csv`
-- Process:
-  - Cleans and encodes model features.
-  - Trains and evaluates logistic-regression pipeline by grouped year split.
-  - Generates per-year winner predictions and metrics.
-- Output:
-  - In-memory model report printed via CLI.
-  - Optional artifact `--predictions-csv <path>` (user-defined CSV path).
-  - Optional artifact `--report-json <path>` (JSON, not CSV).
+`modeling.py` is the final consumer of the pipeline and is invoked through `oscar model`. It reads the joined feature table `movies_with_cast_award_totals.csv` produced by the earlier stages.
+
+It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split, and generates per-year winner predictions along with evaluation metrics. By default the report is printed to the CLI, but users can request artifacts via `--predictions-csv <path>` to save predictions as CSV and `--report-json <path>` to save the report as JSON.
 
 ### `movies_actors_eda.py` (optional analysis app)
 
-- Trigger: standalone Streamlit run (`streamlit run movies_actors_eda.py`).
-- Input:
-  - `movies.csv`
-- Process:
-  - Provides interactive exploratory analysis and visual summaries.
-- Output:
-  - Browser-rendered dashboard (no required pipeline CSV output).
+`movies_actors_eda.py` is an optional Streamlit application that sits alongside the main pipeline and is run directly with `streamlit run movies_actors_eda.py`. It reads `movies.csv` and presents interactive exploratory analysis and visual summaries in the browser. It does not produce any pipeline CSV outputs of its own; its deliverable is the rendered dashboard.
 
 ## CSV Artifact Coverage
 
-- `movies.csv`: initialized by `workspace.py`; updated by `scrape_movies.py`, `updates.py`, `sync.py`; trimmed by `reset_workspace.py`.
-- `film_actors.csv`: initialized by `workspace.py`; updated by `scrape_movies.py` (optional cast), `scrape_actors.py`, `updates.py`, `sync.py`; trimmed by `reset_workspace.py`.
-- `actor_awards.csv`: initialized by `workspace.py`; updated by `scrape_actor_awards.py`, `updates.py`, `sync.py`; trimmed by `reset_workspace.py`.
-- `no_award_actors.csv`: initialized by `workspace.py`; updated/pruned by `scrape_actors.py` and `scrape_actor_awards.py`; updated by `updates.py`, `sync.py`; trimmed by `reset_workspace.py`.
-- `actor_year_award_matrix.csv`: generated by `actor_year_award_matrix.py` through `features.py`, `updates.py`, and `sync.py`; deleted by `workspace.py`/`reset_workspace.py` during refresh/reset.
-- `film_actors_awards_sums_up_to_that_point.csv`: generated by `film_actors_award_totals.py` through `features.py`, `updates.py`, and `sync.py`; deleted by `workspace.py`/`reset_workspace.py`.
-- `movies_with_cast_award_totals.csv`: generated by `join_movie_to_actor.py` through `features.py`, `updates.py`, and `sync.py`; deleted by `workspace.py`/`reset_workspace.py`; consumed by `modeling.py`.
-- `award_show_counts.csv`: generated by `award_show_counts.py` when included in `sync.py`; deleted by `workspace.py`/`reset_workspace.py`.
+`movies.csv` is seeded by `workspace.py` from the bundled base data. It is then extended by `scrape_movies.py` as new Best Picture nominees are discovered, and further updated through `updates.py` and `sync.py` as new ceremony years arrive. When the workspace is rolled back, `reset_workspace.py` trims it down to the cutoff year.
 
+`film_actors.csv` is likewise seeded by `workspace.py`. It is grown by `scrape_movies.py` when cast capture is enabled, filled in more thoroughly by `scrape_actors.py`, and continues to be updated by `updates.py` and `sync.py`. `reset_workspace.py` trims it alongside the other base tables during a reset.
+
+`actor_awards.csv` starts life from `workspace.py`, accumulates new rows through `scrape_actor_awards.py`, and is further appended to by `updates.py` and `sync.py`. A reset via `reset_workspace.py` trims it back to rows within the cutoff year.
+
+`no_award_actors.csv` is initialized by `workspace.py` and then maintained as a side-effect of the scraping stages: `scrape_actors.py` and `scrape_actor_awards.py` both update or prune it, and `updates.py` and `sync.py` keep it current on their refresh paths. It is trimmed by `reset_workspace.py` so that only actors still referenced after the cut remain.
+
+`actor_year_award_matrix.csv` is a derived artifact generated by `actor_year_award_matrix.py` whenever the feature chain runs, whether from `features.py`, `updates.py`, or `sync.py`. It is deleted by `workspace.py` or `reset_workspace.py` during a refresh or reset so that it can always be rebuilt cleanly.
+
+`film_actors_awards_sums_up_to_that_point.csv` is produced by `film_actors_award_totals.py` through the same three orchestrators, `features.py`, `updates.py`, and `sync.py`, and is likewise deleted by `workspace.py` and `reset_workspace.py` when the workspace is refreshed or reset.
+
+`movies_with_cast_award_totals.csv` is generated by `join_movie_to_actor.py` at the end of the feature chain, again via `features.py`, `updates.py`, or `sync.py`. It is deleted by `workspace.py` and `reset_workspace.py` during a refresh or reset, and it is the single table consumed by `modeling.py` at the end of the pipeline.
+
+`award_show_counts.csv` is an optional reporting artifact generated by `award_show_counts.py` when it is included in a `sync.py` run via `--include-counts`, and it is deleted by `workspace.py` and `reset_workspace.py` during a refresh or reset.
