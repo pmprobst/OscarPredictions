@@ -41,32 +41,32 @@ The `oscar …` commands are identical on every platform. Only creating folders,
 
 A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the `oscar` tool will fill it with data, features, and results.
 
-Create and move into a workspace directory.
+**Stay in your project root** (the directory that will contain `tutorial_workspace`, for example your git clone of OscarPredictions). Do not `cd` into `tutorial_workspace` yet: every later step uses `--workspace-dir ./tutorial_workspace`, which means "the folder named `tutorial_workspace` inside whatever directory your shell is currently in." If you were already inside `tutorial_workspace`, that path would incorrectly point at a nested `tutorial_workspace/tutorial_workspace`.
+
+Create the workspace directory from the project root:
 
 **macOS / Linux (bash or zsh):**
 
 ```bash
 mkdir -p tutorial_workspace
-cd tutorial_workspace
-pwd
+ls -ld tutorial_workspace
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 New-Item -ItemType Directory -Force tutorial_workspace | Out-Null
-Set-Location tutorial_workspace
-Get-Location
+Get-Item tutorial_workspace
 ```
 
 What this does:
-- Creates a new empty folder called `tutorial_workspace` (if it does not already exist) and switches your shell into it.
+- Creates an empty folder named `tutorial_workspace` next to your other project files (if it does not already exist).
 
 What you should see:
-- The printed path ends with `tutorial_workspace` (on Windows you may see a drive letter and backslashes; that is expected).
+- A directory listing for `tutorial_workspace` (it may be empty until step 4).
 
 Checkpoint:
-- Confirm the printed path exists on disk.
+- Confirm that `tutorial_workspace` exists in your current directory and that your shell prompt path is still the project root, not inside `tutorial_workspace`.
 
 ## 2) Install the package (TestPyPI)
 
@@ -212,7 +212,7 @@ This is the payoff step. The `model` command loads the final feature table, trai
 
 Run the model and write artifacts.
 
-**macOS / Linux (line continuation with `\`):**
+**macOS / Linux:**
 
 ```bash
 oscar model \
@@ -221,7 +221,7 @@ oscar model \
   --predictions-csv ./tutorial_workspace/predictions.csv
 ```
 
-**Windows (PowerShell, line continuation with backtick):**
+**Windows (PowerShell):**
 
 ```powershell
 oscar model `
@@ -301,13 +301,13 @@ The package bundles historical Oscar Best Picture data from **1996 through 2025*
 It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the `#` only when you intend to run a long scrape.
 
 ::: {.callout-warning}
-## ⚠️ ⚠️ Warning: long runtimes
+## ⚠️ Warning: long runtimes ⚠️ 
 
-**⚠️ `oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as `--max-movies` and `--max-actors` if you only want a partial test run first.
+**`oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as `--max-movies` and `--max-actors` if you only want a partial test run first.
 :::
 
 ```bash
-# oscar check-updates --workspace-dir ./tutorial_workspace
+oscar check-updates --workspace-dir ./tutorial_workspace
 ```
 
 ### End-to-end sync

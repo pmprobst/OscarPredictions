@@ -247,18 +247,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="set-up-a-practice-workspace" class="level2">
 <h2 class="anchored" data-anchor-id="set-up-a-practice-workspace">1) Set up a practice workspace</h2>
 <p>A “workspace” in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the <code>oscar</code> tool will fill it with data, features, and results.</p>
-<p>Create and move into a workspace directory.</p>
+<p><strong>Stay in your project root</strong> (the directory that will contain <code>tutorial_workspace</code>, for example your git clone of OscarPredictions). Do not <code>cd</code> into <code>tutorial_workspace</code> yet: every later step uses <code>--workspace-dir ./tutorial_workspace</code>, which means “the folder named <code>tutorial_workspace</code> inside whatever directory your shell is currently in.” If you were already inside <code>tutorial_workspace</code>, that path would incorrectly point at a nested <code>tutorial_workspace/tutorial_workspace</code>.</p>
+<p>Create the workspace directory from the project root:</p>
 <p><strong>macOS / Linux (bash or zsh):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-ld</span> tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Windows (PowerShell):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">New-Item</span> <span class="op">-</span>ItemType Directory <span class="op">-</span>Force tutorial_workspace <span class="op">|</span> <span class="fu">Out-Null</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Set-Location</span> tutorial_workspace</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-Location</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>What this does: - Creates a new empty folder called <code>tutorial_workspace</code> (if it does not already exist) and switches your shell into it.</p>
-<p>What you should see: - The printed path ends with <code>tutorial_workspace</code> (on Windows you may see a drive letter and backslashes; that is expected).</p>
-<p>Checkpoint: - Confirm the printed path exists on disk.</p>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">Get-Item</span> tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>What this does: - Creates an empty folder named <code>tutorial_workspace</code> next to your other project files (if it does not already exist).</p>
+<p>What you should see: - A directory listing for <code>tutorial_workspace</code> (it may be empty until step 4).</p>
+<p>Checkpoint: - Confirm that <code>tutorial_workspace</code> exists in your current directory and that your shell prompt path is still the project root, not inside <code>tutorial_workspace</code>.</p>
 </section>
 <section id="install-the-package-testpypi" class="level2">
 <h2 class="anchored" data-anchor-id="install-the-package-testpypi">2) Install the package (TestPyPI)</h2>
@@ -327,12 +326,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="run-modeling">6) Run modeling</h2>
 <p>This is the payoff step. The <code>model</code> command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.</p>
 <p>Run the model and write artifacts.</p>
-<p><strong>macOS / Linux (line continuation with <code>\</code>):</strong></p>
+<p><strong>macOS / Linux:</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Windows (PowerShell, line continuation with backtick):</strong></p>
+<p><strong>Windows (PowerShell):</strong></p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>oscar model `</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>workspace-dir <span class="op">./</span>tutorial_workspace `</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="op">--</span>report-json <span class="op">./</span>tutorial_workspace<span class="op">/</span>report<span class="op">.</span><span class="fu">json</span> `</span>
@@ -374,14 +373,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>⚠️ ⚠️ Warning: long runtimes
+<span class="screen-reader-only">Warning</span>⚠️ Warning: long runtimes ⚠️
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>⚠️ <code>oscar check-updates</code> can take multiple hours per ceremony year</strong> being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <code>--max-movies</code> and <code>--max-actors</code> if you only want a partial test run first.</p>
+<p><strong><code>oscar check-updates</code> can take multiple hours per ceremony year</strong> being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <code>--max-movies</code> and <code>--max-actors</code> if you only want a partial test run first.</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> check-updates <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="end-to-end-sync" class="level3">
 <h3 class="anchored" data-anchor-id="end-to-end-sync">End-to-end sync</h3>
@@ -921,32 +920,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>A "workspace" in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the <span class="in">`oscar`</span> tool will fill it with data, features, and results.</span>
 <span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>Create and move into a workspace directory.</span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a>**Stay in your project root** (the directory that will contain <span class="in">`tutorial_workspace`</span>, for example your git clone of OscarPredictions). Do not <span class="in">`cd`</span> into <span class="in">`tutorial_workspace`</span> yet: every later step uses <span class="in">`--workspace-dir ./tutorial_workspace`</span>, which means "the folder named <span class="in">`tutorial_workspace`</span> inside whatever directory your shell is currently in." If you were already inside <span class="in">`tutorial_workspace`</span>, that path would incorrectly point at a nested <span class="in">`tutorial_workspace/tutorial_workspace`</span>.</span>
 <span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (bash or zsh):**</span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>Create the workspace directory from the project root:</span>
 <span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
-<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
-<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
-<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
-<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
-<span id="cb26-57"><a href="#cb26-57" aria-hidden="true" tabindex="-1"></a><span class="in">New-Item -ItemType Directory -Force tutorial_workspace | Out-Null</span></span>
-<span id="cb26-58"><a href="#cb26-58" aria-hidden="true" tabindex="-1"></a><span class="in">Set-Location tutorial_workspace</span></span>
-<span id="cb26-59"><a href="#cb26-59" aria-hidden="true" tabindex="-1"></a><span class="in">Get-Location</span></span>
+<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (bash or zsh):**</span>
+<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
+<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-ld</span> tutorial_workspace</span>
+<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
+<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-57"><a href="#cb26-57" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
+<span id="cb26-58"><a href="#cb26-58" aria-hidden="true" tabindex="-1"></a><span class="in">New-Item -ItemType Directory -Force tutorial_workspace | Out-Null</span></span>
+<span id="cb26-59"><a href="#cb26-59" aria-hidden="true" tabindex="-1"></a><span class="in">Get-Item tutorial_workspace</span></span>
 <span id="cb26-60"><a href="#cb26-60" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb26-61"><a href="#cb26-61" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-62"><a href="#cb26-62" aria-hidden="true" tabindex="-1"></a>What this does:</span>
-<span id="cb26-63"><a href="#cb26-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Creates a new empty folder called <span class="in">`tutorial_workspace`</span> (if it does not already exist) and switches your shell into it.</span>
+<span id="cb26-63"><a href="#cb26-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Creates an empty folder named <span class="in">`tutorial_workspace`</span> next to your other project files (if it does not already exist).</span>
 <span id="cb26-64"><a href="#cb26-64" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-65"><a href="#cb26-65" aria-hidden="true" tabindex="-1"></a>What you should see:</span>
-<span id="cb26-66"><a href="#cb26-66" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>The printed path ends with <span class="in">`tutorial_workspace`</span> (on Windows you may see a drive letter and backslashes; that is expected).</span>
+<span id="cb26-66"><a href="#cb26-66" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A directory listing for <span class="in">`tutorial_workspace`</span> (it may be empty until step 4).</span>
 <span id="cb26-67"><a href="#cb26-67" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-68"><a href="#cb26-68" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
-<span id="cb26-69"><a href="#cb26-69" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm the printed path exists on disk.</span>
+<span id="cb26-69"><a href="#cb26-69" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm that <span class="in">`tutorial_workspace`</span> exists in your current directory and that your shell prompt path is still the project root, not inside <span class="in">`tutorial_workspace`</span>.</span>
 <span id="cb26-70"><a href="#cb26-70" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-71"><a href="#cb26-71" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2) Install the package (TestPyPI)</span></span>
 <span id="cb26-72"><a href="#cb26-72" aria-hidden="true" tabindex="-1"></a></span>
@@ -1092,7 +1091,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-212"><a href="#cb26-212" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-213"><a href="#cb26-213" aria-hidden="true" tabindex="-1"></a>Run the model and write artifacts.</span>
 <span id="cb26-214"><a href="#cb26-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-215"><a href="#cb26-215" aria-hidden="true" tabindex="-1"></a>**macOS / Linux (line continuation with `\`):**</span>
+<span id="cb26-215"><a href="#cb26-215" aria-hidden="true" tabindex="-1"></a>**macOS / Linux:**</span>
 <span id="cb26-216"><a href="#cb26-216" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-217"><a href="#cb26-217" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
 <span id="cb26-218"><a href="#cb26-218" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
@@ -1101,7 +1100,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-221"><a href="#cb26-221" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span>
 <span id="cb26-222"><a href="#cb26-222" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb26-223"><a href="#cb26-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-224"><a href="#cb26-224" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell, line continuation with backtick):**</span>
+<span id="cb26-224"><a href="#cb26-224" aria-hidden="true" tabindex="-1"></a>**Windows (PowerShell):**</span>
 <span id="cb26-225"><a href="#cb26-225" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-226"><a href="#cb26-226" aria-hidden="true" tabindex="-1"></a><span class="in">```powershell</span></span>
 <span id="cb26-227"><a href="#cb26-227" aria-hidden="true" tabindex="-1"></a><span class="in">oscar model `</span></span>
@@ -1181,13 +1180,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-301"><a href="#cb26-301" aria-hidden="true" tabindex="-1"></a>It is how you bring an existing workspace current when a new Oscars season appears in the wild. The command below is commented out because running it makes live network requests to IMDb. Remove the <span class="in">`#`</span> only when you intend to run a long scrape.</span>
 <span id="cb26-302"><a href="#cb26-302" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-303"><a href="#cb26-303" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
-<span id="cb26-304"><a href="#cb26-304" aria-hidden="true" tabindex="-1"></a><span class="fu">## ⚠️ ⚠️ Warning: long runtimes</span></span>
+<span id="cb26-304"><a href="#cb26-304" aria-hidden="true" tabindex="-1"></a><span class="fu">## ⚠️ Warning: long runtimes ⚠️ </span></span>
 <span id="cb26-305"><a href="#cb26-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-306"><a href="#cb26-306" aria-hidden="true" tabindex="-1"></a>**⚠️ `oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span> if you only want a partial test run first.</span>
+<span id="cb26-306"><a href="#cb26-306" aria-hidden="true" tabindex="-1"></a>**`oscar check-updates` can take multiple hours per ceremony year** being added (scraping nominees, full cast lists, and award histories is slow and rate-sensitive). Plan for an unattended machine, a stable network, and consider using caps such as <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span> if you only want a partial test run first.</span>
 <span id="cb26-307"><a href="#cb26-307" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb26-308"><a href="#cb26-308" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-309"><a href="#cb26-309" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
-<span id="cb26-310"><a href="#cb26-310" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span>
+<span id="cb26-310"><a href="#cb26-310" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> check-updates <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
 <span id="cb26-311"><a href="#cb26-311" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb26-312"><a href="#cb26-312" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb26-313"><a href="#cb26-313" aria-hidden="true" tabindex="-1"></a><span class="fu">### End-to-end sync</span></span>
