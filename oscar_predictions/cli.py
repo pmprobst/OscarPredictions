@@ -176,6 +176,23 @@ def _print_build_features_result(result: dict[str, object]) -> None:
             print(f"  - {label}: {value}")
 
 
+def _print_model_report(report: dict[str, object]) -> None:
+    """Print per-year predicted and actual winners."""
+    yearly_results = report.get("yearly_results")
+    if not isinstance(yearly_results, list) or not yearly_results:
+        return
+
+    for item in yearly_results:
+        if not isinstance(item, dict):
+            continue
+        year = item.get("year")
+        predicted = item.get("predicted_winner") or "(none)"
+        actual = item.get("actual_winner") or "(none)"
+        print(f"Year {year}")
+        print(f"  Predicted winner: {predicted}")
+        print(f"  Actual winner: {actual}")
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
     if args.command == "sync":
@@ -224,6 +241,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             report_path=args.report_json,
             predictions_path=args.predictions_csv,
         )
-        print(json.dumps(report, indent=2, sort_keys=True))
+        _print_model_report(report)
         return 0
     raise SystemExit(f"Unknown command: {args.command}")

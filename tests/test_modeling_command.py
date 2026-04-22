@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import importlib.util
 import tempfile
@@ -38,10 +40,17 @@ class TestModelingCommand(unittest.TestCase):
                 predictions_path=str(pred_path),
             )
             self.assertIn("accuracy", rep)
+            self.assertIn("yearly_results", rep)
+            self.assertGreaterEqual(len(rep["yearly_results"]), 1)
+            first_year = rep["yearly_results"][0]
+            self.assertIn("predicted_winner", first_year)
+            self.assertIn("actual_winner", first_year)
+            self.assertIn("nominees", first_year)
             self.assertTrue(report_path.exists())
             self.assertTrue(pred_path.exists())
             loaded = json.loads(report_path.read_text(encoding="utf-8"))
             self.assertIn("features", loaded)
+            self.assertIn("yearly_results", loaded)
 
     @unittest.skipUnless(
         importlib.util.find_spec("pandas") and importlib.util.find_spec("sklearn"),
@@ -59,8 +68,15 @@ class TestModelingCommand(unittest.TestCase):
                 "D,http://d,2021,1,3,2\n",
                 encoding="utf-8",
             )
-            rc = main(["model", "--workspace-dir", str(ws.root), "--seed", "1", "--test-size", "0.5"])
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = main(["model", "--workspace-dir", str(ws.root), "--seed", "1", "--test-size", "0.5"])
             self.assertEqual(rc, 0)
+            out = buf.getvalue()
+            self.assertIn("Year ", out)
+            self.assertIn("Predicted winner:", out)
+            self.assertIn("Actual winner:", out)
+            self.assertNotIn("model metrics:", out)
 
 
 if __name__ == "__main__":
