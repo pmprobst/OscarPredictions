@@ -1,0 +1,32 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Oscar Predictions"
+  description: "Our Python package for predicting Oscar winners"
+  site-url: https://pmprobst.github.io/OscarPredictions/
+
+  navbar:
+    background: primary
+    left:
+      - text: "Home"
+        href: index.md
+      - text: "Documentation"
+        href: documentation.md
+      - text: "Tutorial"
+        href: tutorial.qmd
+      - text: "Technical Report"
+        href: report.md
+      - text: "Streamlit App"
+        href: https://your-streamlit-link.streamlit.app
+    right:
+      - icon: github
+        href: https://github.com/pmprobst/OscarPredictions
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
+    code-tools: true
