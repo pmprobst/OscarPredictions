@@ -170,13 +170,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#oscarpredictions-tutorial" id="toc-oscarpredictions-tutorial" class="nav-link active" data-scroll-target="#oscarpredictions-tutorial">OscarPredictions Tutorial</a>
   <ul class="collapse">
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
-  <li><a href="#set-up-helpers-and-a-practice-workspace" id="toc-set-up-helpers-and-a-practice-workspace" class="nav-link" data-scroll-target="#set-up-helpers-and-a-practice-workspace">1) Set up helpers and a practice workspace</a></li>
+  <li><a href="#set-up-a-practice-workspace" id="toc-set-up-a-practice-workspace" class="nav-link" data-scroll-target="#set-up-a-practice-workspace">1) Set up a practice workspace</a></li>
   <li><a href="#install-the-package-testpypi" id="toc-install-the-package-testpypi" class="nav-link" data-scroll-target="#install-the-package-testpypi">2) Install the package (TestPyPI)</a></li>
   <li><a href="#verify-the-cli-is-available" id="toc-verify-the-cli-is-available" class="nav-link" data-scroll-target="#verify-the-cli-is-available">3) Verify the CLI is available</a></li>
   <li><a href="#initialize-bundled-base-data" id="toc-initialize-bundled-base-data" class="nav-link" data-scroll-target="#initialize-bundled-base-data">4) Initialize bundled base data</a></li>
   <li><a href="#build-post-cleaning-features" id="toc-build-post-cleaning-features" class="nav-link" data-scroll-target="#build-post-cleaning-features">5) Build post-cleaning features</a></li>
   <li><a href="#run-modeling" id="toc-run-modeling" class="nav-link" data-scroll-target="#run-modeling">6) Run modeling</a></li>
-  <li><a href="#optional-practice-reset-update-checks-and-sync" id="toc-optional-practice-reset-update-checks-and-sync" class="nav-link" data-scroll-target="#optional-practice-reset-update-checks-and-sync">7) Optional: Practice reset, update checks, and sync</a>
+  <li><a href="#optional-practice-reset-updates-sync" id="toc-optional-practice-reset-updates-sync" class="nav-link" data-scroll-target="#optional-practice-reset-updates-sync">7) Optional practice: reset, updates, sync</a>
   <ul class="collapse">
   <li><a href="#reset-safe-local-practice" id="toc-reset-safe-local-practice" class="nav-link" data-scroll-target="#reset-safe-local-practice">Reset (safe local practice)</a></li>
   <li><a href="#check-updates-networked-scraping" id="toc-check-updates-networked-scraping" class="nav-link" data-scroll-target="#check-updates-networked-scraping">Check updates (networked scraping)</a></li>
@@ -193,7 +193,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">Tutorial</h1><button type="button" class="btn code-tools-button dropdown-toggle" id="quarto-code-tools-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi"></i> Code</button><ul class="dropdown-menu dropdown-menu-end" aria-labelelledby="quarto-code-tools-menu"><li><a id="quarto-show-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Show All Code</a></li><li><a id="quarto-hide-all-code" class="dropdown-item" href="javascript:void(0)" role="button">Hide All Code</a></li><li><hr class="dropdown-divider"></li><li><a id="quarto-view-source" class="dropdown-item" href="javascript:void(0)" role="button">View Source</a></li></ul></div></div>
+<div class="quarto-title-block"><div><h1 class="title">Tutorial</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 
@@ -212,588 +212,106 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="oscarpredictions-tutorial" class="level1">
 <h1>OscarPredictions Tutorial</h1>
-<p>This tutorial turns the package workflow into a hands-on practice lab. You will install the package, initialize a workspace, generate features, run a model, and optionally test update/sync flows.</p>
+<p>This tutorial is a hands-on practice lab. It is written as Markdown with copy/paste code cells, not executable notebook cells.</p>
 <section id="prerequisites" class="level2">
 <h2 class="anchored" data-anchor-id="prerequisites">Prerequisites</h2>
 <ul>
-<li>Python 3.9+ installed.</li>
-<li>Internet access for package installation (and for optional update/sync scraping steps).</li>
-<li>A shell where you can run CLI commands.</li>
+<li>Python 3.9+ installed</li>
+<li>Internet access for package installation (and optional update/sync scraping)</li>
+<li>A shell where you can run CLI commands</li>
 </ul>
-<p>If you are running this in Jupyter/Quarto, the cells below are executable as-is.</p>
 </section>
-<section id="set-up-helpers-and-a-practice-workspace" class="level2">
-<h2 class="anchored" data-anchor-id="set-up-helpers-and-a-practice-workspace">1) Set up helpers and a practice workspace</h2>
-<p>Run this first cell to define a helper for shell commands and create a local practice directory.</p>
-<div id="b12ca6c8" class="cell" data-execution_count="1">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(cmd: <span class="bu">str</span>, cwd: Path <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"$ </span><span class="sc">{</span>cmd<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> subprocess.run(</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        cmd,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        cwd<span class="op">=</span><span class="bu">str</span>(cwd) <span class="cf">if</span> cwd <span class="cf">else</span> <span class="va">None</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        shell<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        capture_output<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.stdout:</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(result.stdout)</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.stderr:</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(result.stderr)</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.returncode <span class="op">!=</span> <span class="dv">0</span>:</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="ss">f"Command failed with exit code </span><span class="sc">{</span>result<span class="sc">.</span>returncode<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>cmd<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>workspace <span class="op">=</span> Path(<span class="st">"tutorial_workspace"</span>).resolve()</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>workspace.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Workspace: </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Workspace: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace</code></pre>
-</div>
-</div>
+<section id="set-up-a-practice-workspace" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-a-practice-workspace">1) Set up a practice workspace</h2>
+<p>Create and move into a workspace directory:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Checkpoint: - Confirm the printed path exists on disk.</p>
 </section>
 <section id="install-the-package-testpypi" class="level2">
 <h2 class="anchored" data-anchor-id="install-the-package-testpypi">2) Install the package (TestPyPI)</h2>
-<p>This uses the same install command from the README.</p>
-<div id="f9ee2770" class="cell" data-execution_count="2">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>run(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"python3 -m pip install "</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"--index-url https://test.pypi.org/simple/ "</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"--extra-index-url https://pypi.org/simple/ "</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"oscar-predictions"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<div class="ansi-escaped-output">
-<pre>$ python3 -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ oscar-predictions
-
-Looking in indexes: https://test.pypi.org/simple/, https://pypi.org/simple/
-
-Requirement already satisfied: oscar-predictions in ./.venv/lib/python3.14/site-packages (0.2.3)
-
-Requirement already satisfied: playwright&lt;2,&gt;=1.49 in ./.venv/lib/python3.14/site-packages (from oscar-predictions) (1.58.0)
-
-Requirement already satisfied: pyee&lt;14,&gt;=13 in ./.venv/lib/python3.14/site-packages (from playwright&lt;2,&gt;=1.49-&gt;oscar-predictions) (13.0.1)
-
-Requirement already satisfied: greenlet&lt;4.0.0,&gt;=3.1.1 in ./.venv/lib/python3.14/site-packages (from playwright&lt;2,&gt;=1.49-&gt;oscar-predictions) (3.4.0)
-
-Requirement already satisfied: typing-extensions in ./.venv/lib/python3.14/site-packages (from pyee&lt;14,&gt;=13-&gt;playwright&lt;2,&gt;=1.49-&gt;oscar-predictions) (4.15.0)
-
-
-
-
-
-<span class="ansi-bold">[</span><span class="ansi-blue-fg">notice</span><span class="ansi-bold">]</span> A new release of pip is available: <span class="ansi-red-fg">25.3</span> -&gt; <span class="ansi-green-fg">26.0.1</span>
-
-<span class="ansi-bold">[</span><span class="ansi-blue-fg">notice</span><span class="ansi-bold">]</span> To update, run: <span class="ansi-green-fg">pip install --upgrade pip</span>
-
-
-</pre>
-</div>
-</div>
-</div>
-<p>Practice: - Re-run the cell and observe that <code>pip</code> reports the package as already satisfied.</p>
+<p>Use the same install command from the README:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Practice: - Re-run the command and confirm pip reports it as already installed.</p>
 </section>
 <section id="verify-the-cli-is-available" class="level2">
 <h2 class="anchored" data-anchor-id="verify-the-cli-is-available">3) Verify the CLI is available</h2>
-<div id="e51bfdf8" class="cell" data-execution_count="3">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>run(<span class="st">"oscar --help"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<div class="ansi-escaped-output">
-<pre>$ oscar --help
-
-<span class="ansi-blue-fg ansi-bold">usage: </span><span class="ansi-magenta-fg ansi-bold">oscar</span> [<span class="ansi-green-fg">-h</span>]
-
-             <span class="ansi-green-fg">{sync,init-data,build-features,reset,check-updates,model} ...</span>
-
-
-
-OscarPredictions unified CLI.
-
-
-
-<span class="ansi-blue-fg ansi-bold">positional arguments:</span>
-
-  <span class="ansi-green-fg ansi-bold">{sync,init-data,build-features,reset,check-updates,model}</span>
-
-    <span class="ansi-green-fg ansi-bold">sync</span>                Run end-to-end incremental pipeline sync.
-
-    <span class="ansi-green-fg ansi-bold">init-data</span>           Copy bundled base data (&lt;=2023) into workspace.
-
-    <span class="ansi-green-fg ansi-bold">build-features</span>      Generate post-cleaning feature outputs.
-
-    <span class="ansi-green-fg ansi-bold">reset</span>               Trim base CSVs to cutoff year, prune no_award actors,
-
-                        delete derived outputs and sync state.
-
-    <span class="ansi-green-fg ansi-bold">check-updates</span>       Detect and ingest new nominee years, then rebuild.
-
-    <span class="ansi-green-fg ansi-bold">model</span>               Run production modeling on
-
-                        movies_with_cast_award_totals.csv.
-
-
-
-<span class="ansi-blue-fg ansi-bold">options:</span>
-
-  <span class="ansi-green-fg ansi-bold">-h</span>, <span class="ansi-cyan-fg ansi-bold">--help</span>            show this help message and exit
-
-
-</pre>
-</div>
-</div>
-</div>
-<p>If <code>oscar</code> is not found in your environment, try:</p>
-<div id="102f187a" class="cell" data-execution_count="4">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>run(<span class="st">"python3 -m oscar_predictions.cli --help"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ python3 -m oscar_predictions.cli --help</code></pre>
-</div>
-</div>
-<p>Checkpoint: - You should see command groups like <code>init-data</code>, <code>build-features</code>, <code>check-updates</code>, <code>model</code>, <code>reset</code>, and <code>sync</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>If <code>oscar</code> is not found:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Checkpoint: - You should see commands including <code>init-data</code>, <code>build-features</code>, <code>check-updates</code>, <code>model</code>, <code>reset</code>, and <code>sync</code>.</p>
 </section>
 <section id="initialize-bundled-base-data" class="level2">
 <h2 class="anchored" data-anchor-id="initialize-bundled-base-data">4) Initialize bundled base data</h2>
-<p>Initialize package data into the tutorial workspace.</p>
-<div id="ad838380" class="cell" data-execution_count="5">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar init-data --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar init-data --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace
-Initialized workspace /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace
-{
-  "copied": 0,
-  "skipped": 5
-}
-</code></pre>
-</div>
-</div>
-<p>Check which files were created:</p>
-<div id="f5c5eda4" class="cell" data-execution_count="6">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> <span class="bu">sorted</span>(workspace.iterdir()):</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(p.name)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>actor_awards.csv
-actor_year_award_matrix.csv
-film_actors.csv
-film_actors_awards_sums_up_to_that_point.csv
-major_award_shows.txt
-movies.csv
-movies_with_cast_award_totals.csv
-no_award_actors.csv</code></pre>
-</div>
-</div>
-<p>Practice: - Run <code>oscar init-data --workspace-dir &lt;path&gt; --overwrite</code> and compare behavior.</p>
+<p>From your project root (replace the path if needed), initialize data into your workspace:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check created files:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Practice: - Try <code>--overwrite</code> and compare behavior.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="build-post-cleaning-features" class="level2">
 <h2 class="anchored" data-anchor-id="build-post-cleaning-features">5) Build post-cleaning features</h2>
-<p>Generate derived feature tables from the base data.</p>
-<div id="11768354" class="cell" data-execution_count="7">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar build-features --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar build-features --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace
-OK: matrix total noms+wins (93664) equals matched rows (93664).
-Processed 93664 award rows; 93664 regex-matched; 0 unparsed or bad outcome; 27648 actor-year rows -&gt; /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv
-Wrote 21701 rows to /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv (42 feature columns).
-Wrote 216 rows to /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv
-matrix:
-  - rows added: 27648
-  - actor year rows: 27648
-  - processed rows: 93664
-  - matched rows: 93664
-  - unparsed rows: 0
-  - output matrix: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv
-totals:
-  - rows added: 21701
-  - written rows: 21701
-  - feature count: 42
-  - output totals: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv
-join:
-  - rows added: 216
-  - written rows: 216
-  - inner join: False
-  - include cast count: True
-  - output movies with totals: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv
-</code></pre>
-</div>
-</div>
-<p>Inspect the expected feature outputs:</p>
-<div id="0e63daf4" class="cell" data-execution_count="8">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>expected <span class="op">=</span> [</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"actor_year_award_matrix.csv"</span>,</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"film_actors_awards_sums_up_to_that_point.csv"</span>,</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"movies_with_cast_award_totals.csv"</span>,</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name <span class="kw">in</span> expected:</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> workspace <span class="op">/</span> name</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="st">'present'</span> <span class="cf">if</span> path<span class="sc">.</span>exists() <span class="cf">else</span> <span class="st">'missing'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>actor_year_award_matrix.csv: present
-film_actors_awards_sums_up_to_that_point.csv: present
-movies_with_cast_award_totals.csv: present</code></pre>
-</div>
-</div>
+<p>Generate derived feature tables:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Confirm expected outputs:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Practice: - Open <code>movies_with_cast_award_totals.csv</code> and identify at least three model features.</p>
 </section>
 <section id="run-modeling" class="level2">
 <h2 class="anchored" data-anchor-id="run-modeling">6) Run modeling</h2>
-<p>Train and evaluate the model using the tutorial workspace.</p>
-<div id="804fc175" class="cell" data-execution_count="9">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>report_path <span class="op">=</span> workspace <span class="op">/</span> <span class="st">"report.json"</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> workspace <span class="op">/</span> <span class="st">"predictions.csv"</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>run(</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"oscar model --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> "</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"--report-json </span><span class="sc">{</span>report_path<span class="sc">}</span><span class="ss"> --predictions-csv </span><span class="sc">{</span>preds_path<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar model --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace --report-json /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/report.json --predictions-csv /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/predictions.csv
-Year 1996
-  Predicted winner: Babe
-  Actual winner: (none)
-Year 1997
-  Predicted winner: The English Patient
-  Actual winner: The English Patient
-Year 1998
-  Predicted winner: Good Will Hunting
-  Actual winner: (none)
-Year 1999
-  Predicted winner: Life Is Beautiful
-  Actual winner: Shakespeare in Love
-Year 2000
-  Predicted winner: The Sixth Sense
-  Actual winner: (none)
-Year 2001
-  Predicted winner: Crouching Tiger, Hidden Dragon
-  Actual winner: (none)
-Year 2002
-  Predicted winner: A Beautiful Mind
-  Actual winner: A Beautiful Mind
-Year 2003
-  Predicted winner: The Pianist
-  Actual winner: (none)
-Year 2004
-  Predicted winner: The Lord of the Rings: The Return of the King
-  Actual winner: The Lord of the Rings: The Return of the King
-Year 2005
-  Predicted winner: Sideways
-  Actual winner: (none)
-Year 2008
-  Predicted winner: Atonement
-  Actual winner: (none)
-Year 2009
-  Predicted winner: The Curious Case of Benjamin Button
-  Actual winner: (none)
-Year 2010
-  Predicted winner: Up in the Air
-  Actual winner: (none)
-Year 2011
-  Predicted winner: The King's Speech
-  Actual winner: The King's Speech
-Year 2012
-  Predicted winner: The Help
-  Actual winner: (none)
-Year 2013
-  Predicted winner: Les Misérables
-  Actual winner: (none)
-Year 2014
-  Predicted winner: 12 Years a Slave
-  Actual winner: 12 Years a Slave
-Year 2015
-  Predicted winner: Whiplash
-  Actual winner: (none)
-Year 2016
-  Predicted winner: The Revenant
-  Actual winner: (none)
-Year 2017
-  Predicted winner: La La Land
-  Actual winner: Moonlight
-Year 2018
-  Predicted winner: Call Me by Your Name
-  Actual winner: (none)
-Year 2019
-  Predicted winner: The Favourite
-  Actual winner: (none)
-Year 2020
-  Predicted winner: The Irishman
-  Actual winner: (none)
-Year 2021
-  Predicted winner: The Trial of the Chicago 7
-  Actual winner: (none)
-Year 2023
-  Predicted winner: The Fabelmans
-  Actual winner: (none)
-Year 2024
-  Predicted winner: Anatomy of a Fall
-  Actual winner: (none)
-Year 2025
-  Predicted winner: The Substance
-  Actual winner: (none)
-
-/Users/pprobst/Repos/OscarPredictions/site/.venv/lib/python3.14/site-packages/sklearn/linear_model/_logistic.py:406: ConvergenceWarning: lbfgs failed to converge after 1000 iteration(s) (status=1):
-STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
-
-Increase the number of iterations to improve the convergence (max_iter=1000).
-You might also want to scale the data as shown in:
-    https://scikit-learn.org/stable/modules/preprocessing.html
-Please also refer to the documentation for alternative solver options:
-    https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
-  n_iter_i = _check_optimize_result(
-</code></pre>
-</div>
-</div>
-<p>Confirm output artifacts:</p>
-<div id="0f7afba9" class="cell" data-execution_count="10">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> out_path <span class="kw">in</span> [report_path, preds_path]:</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>out_path<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="st">'present'</span> <span class="cf">if</span> out_path<span class="sc">.</span>exists() <span class="cf">else</span> <span class="st">'missing'</span><span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>report.json: present
-predictions.csv: present</code></pre>
-</div>
-</div>
-<p>Practice: - Re-run modeling with <code>--seed 42 --test-size 0.25</code> and compare outputs.</p>
+<p>Run the model and write artifacts:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Confirm artifacts:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Practice: - Re-run with a specific split:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="optional-practice-reset-update-checks-and-sync" class="level2">
-<h2 class="anchored" data-anchor-id="optional-practice-reset-update-checks-and-sync">7) Optional: Practice reset, update checks, and sync</h2>
-<p>These are optional because update/sync may take longer and require live scraping.</p>
+<section id="optional-practice-reset-updates-sync" class="level2">
+<h2 class="anchored" data-anchor-id="optional-practice-reset-updates-sync">7) Optional practice: reset, updates, sync</h2>
+<p>These are optional because update/sync can take longer and may require live scraping.</p>
 <section id="reset-safe-local-practice" class="level3">
 <h3 class="anchored" data-anchor-id="reset-safe-local-practice">Reset (safe local practice)</h3>
-<div id="ce6337fb" class="cell" data-execution_count="11">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar reset --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --dry-run"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar reset --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace --dry-run
-{
-  "actor_awards": {
-    "exists": true,
-    "kept_rows": 82406,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_awards.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 93664,
-    "written": false
-  },
-  "cutoff_year": 2023,
-  "derived_removed": [
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv",
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv",
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv"
-  ],
-  "dry_run": true,
-  "film_actors": {
-    "exists": true,
-    "kept_rows": 19077,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 21701,
-    "written": false
-  },
-  "movies": {
-    "exists": true,
-    "kept_rows": 196,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 216,
-    "written": false
-  },
-  "no_award_actors": {
-    "exists": true,
-    "kept_rows": 10262,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/no_award_actors.csv",
-    "total_rows": 12009,
-    "written": false
-  },
-  "state_removed": false,
-  "workspace": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace"
-}
-</code></pre>
-</div>
-</div>
-<p>Try a real reset to a different historical cutoff:</p>
-<div id="406c56bc" class="cell" data-execution_count="12">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar reset --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --cutoff-year 2021"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar reset --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace --cutoff-year 2021
-{
-  "actor_awards": {
-    "exists": true,
-    "kept_rows": 72325,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_awards.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 93664,
-    "written": true
-  },
-  "cutoff_year": 2021,
-  "derived_removed": [
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv",
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv",
-    "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv"
-  ],
-  "dry_run": false,
-  "film_actors": {
-    "exists": true,
-    "kept_rows": 16971,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 21701,
-    "written": true
-  },
-  "movies": {
-    "exists": true,
-    "kept_rows": 176,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies.csv",
-    "skipped_bad_year": 0,
-    "total_rows": 216,
-    "written": true
-  },
-  "no_award_actors": {
-    "exists": true,
-    "kept_rows": 8840,
-    "path": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/no_award_actors.csv",
-    "total_rows": 12009,
-    "written": true
-  },
-  "state_removed": false,
-  "workspace": "/Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace"
-}
-</code></pre>
-</div>
-</div>
-<p>After resetting, rebuild features:</p>
-<div id="54d4b9c4" class="cell" data-execution_count="13">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar build-features --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar build-features --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace
-OK: matrix total noms+wins (72325) equals matched rows (72325).
-Processed 72325 award rows; 72325 regex-matched; 0 unparsed or bad outcome; 22607 actor-year rows -&gt; /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv
-Wrote 16971 rows to /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv (42 feature columns).
-Wrote 176 rows to /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv
-matrix:
-  - rows added: 22607
-  - actor year rows: 22607
-  - processed rows: 72325
-  - matched rows: 72325
-  - unparsed rows: 0
-  - output matrix: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/actor_year_award_matrix.csv
-totals:
-  - rows added: 16971
-  - written rows: 16971
-  - feature count: 42
-  - output totals: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/film_actors_awards_sums_up_to_that_point.csv
-join:
-  - rows added: 176
-  - written rows: 176
-  - inner join: False
-  - include cast count: True
-  - output movies with totals: /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace/movies_with_cast_award_totals.csv
-</code></pre>
-</div>
-</div>
+<p>Preview reset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run a real reset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Rebuild features after reset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="check-updates-networked-scraping" class="level3">
 <h3 class="anchored" data-anchor-id="check-updates-networked-scraping">Check updates (networked scraping)</h3>
-<div id="992295c7" class="cell" data-execution_count="14">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: enable if you want to run update checks against IMDb</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># run(f"oscar check-updates --workspace-dir {workspace}")</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Uncomment the run(...) line above to execute check-updates."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Uncomment the run(...) line above to execute check-updates.</code></pre>
-</div>
-</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="end-to-end-sync" class="level3">
 <h3 class="anchored" data-anchor-id="end-to-end-sync">End-to-end sync</h3>
-<p>Use a dry run first:</p>
-<div id="2d8b120c" class="cell" data-execution_count="15">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar sync --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --dry-run"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>$ oscar sync --workspace-dir /Users/pprobst/Repos/OscarPredictions/site/tutorial_workspace --dry-run
-[SKIP] scrape_movies {'reason': 'dry_run'}
-[SKIP] scrape_actors {'reason': 'dry_run'}
-[SKIP] scrape_actor_awards {'reason': 'dry_run'}
-[SKIP] actor_year_award_matrix {'reason': 'planner_skip'}
-[SKIP] film_actors_award_totals {'reason': 'planner_skip'}
-[SKIP] join_movie_to_actor {'reason': 'planner_skip'}
-[SKIP] award_show_counts {'reason': 'planner_skip'}
-</code></pre>
-</div>
-</div>
-<p>Then optionally run a bounded sync:</p>
-<div id="1ec3359e" class="cell" data-execution_count="16">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional bounded sync example:</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="co"># run(</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co">#     f"oscar sync --workspace-dir {workspace} --max-movies 5 --max-actors 200"</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="co"># )</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Uncomment the run(...) block above to execute bounded sync."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Uncomment the run(...) block above to execute bounded sync.</code></pre>
-</div>
-</div>
+<p>Use dry run first:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional bounded sync:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="troubleshooting" class="level2">
 <h2 class="anchored" data-anchor-id="troubleshooting">Troubleshooting</h2>
 <ul>
-<li><code>oscar: command not found</code>: use <code>python3 -m oscar_predictions.cli --help</code> to verify install path, then reinstall in the active environment.</li>
-<li>Install fails on TestPyPI: retry with the exact index/extra-index flags shown above.</li>
-<li>Permissions/path issues: choose a writable workspace directory and rerun <code>init-data</code>.</li>
-<li>Slow or flaky update/sync runs: start with dry-run or capped scraping (<code>--max-movies</code>, <code>--max-actors</code>).</li>
+<li><code>oscar: command not found</code>: run <code>python3 -m oscar_predictions.cli --help</code> to verify install path, then reinstall in the active environment.</li>
+<li>Install fails on TestPyPI: retry with the exact <code>--index-url</code> and <code>--extra-index-url</code> flags.</li>
+<li>Permission/path issues: use a writable workspace path and rerun <code>init-data</code>.</li>
+<li>Slow update/sync runs: start with <code>--dry-run</code> or cap work with <code>--max-movies</code> and <code>--max-actors</code>.</li>
 </ul>
 </section>
 <section id="next-steps" class="level2">
 <h2 class="anchored" data-anchor-id="next-steps">Next steps</h2>
 <ul>
-<li>Read <a href="../site/documentation.html">Documentation</a> for architecture and module-level details.</li>
-<li>Use <a href="../site/report.html">Technical Report</a> to connect model outputs to methodology and findings.</li>
+<li>Read <a href="../site/documentation.html">Documentation</a> for architecture and module details.</li>
+<li>See <a href="../site/report.html">Technical Report</a> for methodology and findings.</li>
 </ul>
 
 
@@ -1254,217 +772,180 @@ join:
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tutorial"</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="an">jupyter:</span><span class="co"> python3</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="fu"># OscarPredictions Tutorial</span></span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>This tutorial turns the package workflow into a hands-on practice lab. You will install the package, initialize a workspace, generate features, run a model, and optionally test update/sync flows.</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Prerequisites</span></span>
-<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Python 3.9+ installed.</span>
-<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Internet access for package installation (and for optional update/sync scraping steps).</span>
-<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A shell where you can run CLI commands.</span>
-<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>If you are running this in Jupyter/Quarto, the cells below are executable as-is.</span>
-<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1) Set up helpers and a practice workspace</span></span>
-<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>Run this first cell to define a helper for shell commands and create a local practice directory.</span>
-<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> __future__ <span class="im">import</span> annotations</span>
-<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> subprocess</span>
-<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
-<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run(cmd: <span class="bu">str</span>, cwd: Path <span class="op">|</span> <span class="va">None</span> <span class="op">=</span> <span class="va">None</span>) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"$ </span><span class="sc">{</span>cmd<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>    result <span class="op">=</span> subprocess.run(</span>
-<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a>        cmd,</span>
-<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>        cwd<span class="op">=</span><span class="bu">str</span>(cwd) <span class="cf">if</span> cwd <span class="cf">else</span> <span class="va">None</span>,</span>
-<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a>        shell<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>        capture_output<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.stdout:</span>
-<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(result.stdout)</span>
-<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.stderr:</span>
-<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(result.stderr)</span>
-<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> result.returncode <span class="op">!=</span> <span class="dv">0</span>:</span>
-<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">RuntimeError</span>(<span class="ss">f"Command failed with exit code </span><span class="sc">{</span>result<span class="sc">.</span>returncode<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>cmd<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a>workspace <span class="op">=</span> Path(<span class="st">"tutorial_workspace"</span>).resolve()</span>
-<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a>workspace.mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Workspace: </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-53"><a href="#cb31-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-54"><a href="#cb31-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-55"><a href="#cb31-55" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
-<span id="cb31-56"><a href="#cb31-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm the printed path exists on disk.</span>
-<span id="cb31-57"><a href="#cb31-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-58"><a href="#cb31-58" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2) Install the package (TestPyPI)</span></span>
-<span id="cb31-59"><a href="#cb31-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-60"><a href="#cb31-60" aria-hidden="true" tabindex="-1"></a>This uses the same install command from the README.</span>
-<span id="cb31-61"><a href="#cb31-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-64"><a href="#cb31-64" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-65"><a href="#cb31-65" aria-hidden="true" tabindex="-1"></a>run(</span>
-<span id="cb31-66"><a href="#cb31-66" aria-hidden="true" tabindex="-1"></a>    <span class="st">"python3 -m pip install "</span></span>
-<span id="cb31-67"><a href="#cb31-67" aria-hidden="true" tabindex="-1"></a>    <span class="st">"--index-url https://test.pypi.org/simple/ "</span></span>
-<span id="cb31-68"><a href="#cb31-68" aria-hidden="true" tabindex="-1"></a>    <span class="st">"--extra-index-url https://pypi.org/simple/ "</span></span>
-<span id="cb31-69"><a href="#cb31-69" aria-hidden="true" tabindex="-1"></a>    <span class="st">"oscar-predictions"</span></span>
-<span id="cb31-70"><a href="#cb31-70" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb31-71"><a href="#cb31-71" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-72"><a href="#cb31-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-73"><a href="#cb31-73" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb31-74"><a href="#cb31-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run the cell and observe that <span class="in">`pip`</span> reports the package as already satisfied.</span>
-<span id="cb31-75"><a href="#cb31-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-76"><a href="#cb31-76" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3) Verify the CLI is available</span></span>
-<span id="cb31-77"><a href="#cb31-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-80"><a href="#cb31-80" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-81"><a href="#cb31-81" aria-hidden="true" tabindex="-1"></a>run(<span class="st">"oscar --help"</span>)</span>
-<span id="cb31-82"><a href="#cb31-82" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-83"><a href="#cb31-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-84"><a href="#cb31-84" aria-hidden="true" tabindex="-1"></a>If <span class="in">`oscar`</span> is not found in your environment, try:</span>
-<span id="cb31-85"><a href="#cb31-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-88"><a href="#cb31-88" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-89"><a href="#cb31-89" aria-hidden="true" tabindex="-1"></a>run(<span class="st">"python3 -m oscar_predictions.cli --help"</span>)</span>
-<span id="cb31-90"><a href="#cb31-90" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-91"><a href="#cb31-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-92"><a href="#cb31-92" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
-<span id="cb31-93"><a href="#cb31-93" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>You should see command groups like <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
-<span id="cb31-94"><a href="#cb31-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-95"><a href="#cb31-95" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4) Initialize bundled base data</span></span>
-<span id="cb31-96"><a href="#cb31-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-97"><a href="#cb31-97" aria-hidden="true" tabindex="-1"></a>Initialize package data into the tutorial workspace.</span>
-<span id="cb31-98"><a href="#cb31-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-101"><a href="#cb31-101" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-102"><a href="#cb31-102" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar init-data --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-103"><a href="#cb31-103" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-104"><a href="#cb31-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-105"><a href="#cb31-105" aria-hidden="true" tabindex="-1"></a>Check which files were created:</span>
-<span id="cb31-106"><a href="#cb31-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-109"><a href="#cb31-109" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-110"><a href="#cb31-110" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> p <span class="kw">in</span> <span class="bu">sorted</span>(workspace.iterdir()):</span>
-<span id="cb31-111"><a href="#cb31-111" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(p.name)</span>
-<span id="cb31-112"><a href="#cb31-112" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-113"><a href="#cb31-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-114"><a href="#cb31-114" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb31-115"><a href="#cb31-115" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Run <span class="in">`oscar init-data --workspace-dir &lt;path&gt; --overwrite`</span> and compare behavior.</span>
-<span id="cb31-116"><a href="#cb31-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-117"><a href="#cb31-117" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5) Build post-cleaning features</span></span>
-<span id="cb31-118"><a href="#cb31-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-119"><a href="#cb31-119" aria-hidden="true" tabindex="-1"></a>Generate derived feature tables from the base data.</span>
-<span id="cb31-120"><a href="#cb31-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-123"><a href="#cb31-123" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-124"><a href="#cb31-124" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar build-features --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-125"><a href="#cb31-125" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-126"><a href="#cb31-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-127"><a href="#cb31-127" aria-hidden="true" tabindex="-1"></a>Inspect the expected feature outputs:</span>
-<span id="cb31-128"><a href="#cb31-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-131"><a href="#cb31-131" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-132"><a href="#cb31-132" aria-hidden="true" tabindex="-1"></a>expected <span class="op">=</span> [</span>
-<span id="cb31-133"><a href="#cb31-133" aria-hidden="true" tabindex="-1"></a>    <span class="st">"actor_year_award_matrix.csv"</span>,</span>
-<span id="cb31-134"><a href="#cb31-134" aria-hidden="true" tabindex="-1"></a>    <span class="st">"film_actors_awards_sums_up_to_that_point.csv"</span>,</span>
-<span id="cb31-135"><a href="#cb31-135" aria-hidden="true" tabindex="-1"></a>    <span class="st">"movies_with_cast_award_totals.csv"</span>,</span>
-<span id="cb31-136"><a href="#cb31-136" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb31-137"><a href="#cb31-137" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name <span class="kw">in</span> expected:</span>
-<span id="cb31-138"><a href="#cb31-138" aria-hidden="true" tabindex="-1"></a>    path <span class="op">=</span> workspace <span class="op">/</span> name</span>
-<span id="cb31-139"><a href="#cb31-139" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="st">'present'</span> <span class="cf">if</span> path<span class="sc">.</span>exists() <span class="cf">else</span> <span class="st">'missing'</span><span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-140"><a href="#cb31-140" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-141"><a href="#cb31-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-142"><a href="#cb31-142" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb31-143"><a href="#cb31-143" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Open <span class="in">`movies_with_cast_award_totals.csv`</span> and identify at least three model features.</span>
-<span id="cb31-144"><a href="#cb31-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-145"><a href="#cb31-145" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6) Run modeling</span></span>
-<span id="cb31-146"><a href="#cb31-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-147"><a href="#cb31-147" aria-hidden="true" tabindex="-1"></a>Train and evaluate the model using the tutorial workspace.</span>
-<span id="cb31-148"><a href="#cb31-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-151"><a href="#cb31-151" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-152"><a href="#cb31-152" aria-hidden="true" tabindex="-1"></a>report_path <span class="op">=</span> workspace <span class="op">/</span> <span class="st">"report.json"</span></span>
-<span id="cb31-153"><a href="#cb31-153" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> workspace <span class="op">/</span> <span class="st">"predictions.csv"</span></span>
-<span id="cb31-154"><a href="#cb31-154" aria-hidden="true" tabindex="-1"></a>run(</span>
-<span id="cb31-155"><a href="#cb31-155" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"oscar model --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> "</span></span>
-<span id="cb31-156"><a href="#cb31-156" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"--report-json </span><span class="sc">{</span>report_path<span class="sc">}</span><span class="ss"> --predictions-csv </span><span class="sc">{</span>preds_path<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb31-157"><a href="#cb31-157" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb31-158"><a href="#cb31-158" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-159"><a href="#cb31-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-160"><a href="#cb31-160" aria-hidden="true" tabindex="-1"></a>Confirm output artifacts:</span>
-<span id="cb31-161"><a href="#cb31-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-164"><a href="#cb31-164" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-165"><a href="#cb31-165" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> out_path <span class="kw">in</span> [report_path, preds_path]:</span>
-<span id="cb31-166"><a href="#cb31-166" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>out_path<span class="sc">.</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span><span class="st">'present'</span> <span class="cf">if</span> out_path<span class="sc">.</span>exists() <span class="cf">else</span> <span class="st">'missing'</span><span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-167"><a href="#cb31-167" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-168"><a href="#cb31-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-169"><a href="#cb31-169" aria-hidden="true" tabindex="-1"></a>Practice:</span>
-<span id="cb31-170"><a href="#cb31-170" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run modeling with <span class="in">`--seed 42 --test-size 0.25`</span> and compare outputs.</span>
-<span id="cb31-171"><a href="#cb31-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-172"><a href="#cb31-172" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7) Optional: Practice reset, update checks, and sync</span></span>
-<span id="cb31-173"><a href="#cb31-173" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-174"><a href="#cb31-174" aria-hidden="true" tabindex="-1"></a>These are optional because update/sync may take longer and require live scraping.</span>
-<span id="cb31-175"><a href="#cb31-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-176"><a href="#cb31-176" aria-hidden="true" tabindex="-1"></a><span class="fu">### Reset (safe local practice)</span></span>
-<span id="cb31-177"><a href="#cb31-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-180"><a href="#cb31-180" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-181"><a href="#cb31-181" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar reset --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --dry-run"</span>)</span>
-<span id="cb31-182"><a href="#cb31-182" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-183"><a href="#cb31-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-184"><a href="#cb31-184" aria-hidden="true" tabindex="-1"></a>Try a real reset to a different historical cutoff:</span>
-<span id="cb31-185"><a href="#cb31-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-188"><a href="#cb31-188" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-189"><a href="#cb31-189" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar reset --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --cutoff-year 2021"</span>)</span>
-<span id="cb31-190"><a href="#cb31-190" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-191"><a href="#cb31-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-192"><a href="#cb31-192" aria-hidden="true" tabindex="-1"></a>After resetting, rebuild features:</span>
-<span id="cb31-193"><a href="#cb31-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-196"><a href="#cb31-196" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-197"><a href="#cb31-197" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar build-features --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb31-198"><a href="#cb31-198" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-199"><a href="#cb31-199" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-200"><a href="#cb31-200" aria-hidden="true" tabindex="-1"></a><span class="fu">### Check updates (networked scraping)</span></span>
-<span id="cb31-201"><a href="#cb31-201" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-204"><a href="#cb31-204" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-205"><a href="#cb31-205" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: enable if you want to run update checks against IMDb</span></span>
-<span id="cb31-206"><a href="#cb31-206" aria-hidden="true" tabindex="-1"></a><span class="co"># run(f"oscar check-updates --workspace-dir {workspace}")</span></span>
-<span id="cb31-207"><a href="#cb31-207" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Uncomment the run(...) line above to execute check-updates."</span>)</span>
-<span id="cb31-208"><a href="#cb31-208" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-209"><a href="#cb31-209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-210"><a href="#cb31-210" aria-hidden="true" tabindex="-1"></a><span class="fu">### End-to-end sync</span></span>
-<span id="cb31-211"><a href="#cb31-211" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-212"><a href="#cb31-212" aria-hidden="true" tabindex="-1"></a>Use a dry run first:</span>
-<span id="cb31-213"><a href="#cb31-213" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-216"><a href="#cb31-216" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-217"><a href="#cb31-217" aria-hidden="true" tabindex="-1"></a>run(<span class="ss">f"oscar sync --workspace-dir </span><span class="sc">{</span>workspace<span class="sc">}</span><span class="ss"> --dry-run"</span>)</span>
-<span id="cb31-218"><a href="#cb31-218" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-219"><a href="#cb31-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-220"><a href="#cb31-220" aria-hidden="true" tabindex="-1"></a>Then optionally run a bounded sync:</span>
-<span id="cb31-221"><a href="#cb31-221" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-224"><a href="#cb31-224" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb31-225"><a href="#cb31-225" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional bounded sync example:</span></span>
-<span id="cb31-226"><a href="#cb31-226" aria-hidden="true" tabindex="-1"></a><span class="co"># run(</span></span>
-<span id="cb31-227"><a href="#cb31-227" aria-hidden="true" tabindex="-1"></a><span class="co">#     f"oscar sync --workspace-dir {workspace} --max-movies 5 --max-actors 200"</span></span>
-<span id="cb31-228"><a href="#cb31-228" aria-hidden="true" tabindex="-1"></a><span class="co"># )</span></span>
-<span id="cb31-229"><a href="#cb31-229" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Uncomment the run(...) block above to execute bounded sync."</span>)</span>
-<span id="cb31-230"><a href="#cb31-230" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb31-231"><a href="#cb31-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-232"><a href="#cb31-232" aria-hidden="true" tabindex="-1"></a><span class="fu">## Troubleshooting</span></span>
-<span id="cb31-233"><a href="#cb31-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-234"><a href="#cb31-234" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar: command not found`</span>: use <span class="in">`python3 -m oscar_predictions.cli --help`</span> to verify install path, then reinstall in the active environment.</span>
-<span id="cb31-235"><a href="#cb31-235" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Install fails on TestPyPI: retry with the exact index/extra-index flags shown above.</span>
-<span id="cb31-236"><a href="#cb31-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Permissions/path issues: choose a writable workspace directory and rerun <span class="in">`init-data`</span>.</span>
-<span id="cb31-237"><a href="#cb31-237" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Slow or flaky update/sync runs: start with dry-run or capped scraping (<span class="in">`--max-movies`</span>, <span class="in">`--max-actors`</span>).</span>
-<span id="cb31-238"><a href="#cb31-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-239"><a href="#cb31-239" aria-hidden="true" tabindex="-1"></a><span class="fu">## Next steps</span></span>
-<span id="cb31-240"><a href="#cb31-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-241"><a href="#cb31-241" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Read <span class="co">[</span><span class="ot">Documentation</span><span class="co">](documentation.md)</span> for architecture and module-level details.</span>
-<span id="cb31-242"><a href="#cb31-242" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Use <span class="co">[</span><span class="ot">Technical Report</span><span class="co">](report.md)</span> to connect model outputs to methodology and findings.</span>
-</code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Tutorial"</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="an">toc:</span><span class="co"> true</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu"># OscarPredictions Tutorial</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>This tutorial is a hands-on practice lab. It is written as Markdown with copy/paste code cells, not executable notebook cells.</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="fu">## Prerequisites</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Python 3.9+ installed</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Internet access for package installation (and optional update/sync scraping)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A shell where you can run CLI commands</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1) Set up a practice workspace</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>Create and move into a workspace directory:</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> tutorial_workspace</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tutorial_workspace</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a><span class="bu">pwd</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Confirm the printed path exists on disk.</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2) Install the package (TestPyPI)</span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>Use the same install command from the README:</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> pip install <span class="dt">\</span></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">--index-url</span> https://test.pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">--extra-index-url</span> https://pypi.org/simple/ <span class="dt">\</span></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>  oscar-predictions</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run the command and confirm pip reports it as already installed.</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3) Verify the CLI is available</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> <span class="at">--help</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>If <span class="in">`oscar`</span> is not found:</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-m</span> oscar_predictions.cli <span class="at">--help</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>Checkpoint:</span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>You should see commands including <span class="in">`init-data`</span>, <span class="in">`build-features`</span>, <span class="in">`check-updates`</span>, <span class="in">`model`</span>, <span class="in">`reset`</span>, and <span class="in">`sync`</span>.</span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a><span class="fu">## 4) Initialize bundled base data</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a>From your project root (replace the path if needed), initialize data into your workspace:</span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>Check created files:</span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace</span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Try <span class="in">`--overwrite`</span> and compare behavior.</span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> init-data <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--overwrite</span></span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5) Build post-cleaning features</span></span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a>Generate derived feature tables:</span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-86"><a href="#cb19-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-87"><a href="#cb19-87" aria-hidden="true" tabindex="-1"></a>Confirm expected outputs:</span>
+<span id="cb19-88"><a href="#cb19-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-89"><a href="#cb19-89" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-90"><a href="#cb19-90" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'</span></span>
+<span id="cb19-91"><a href="#cb19-91" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-92"><a href="#cb19-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-93"><a href="#cb19-93" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb19-94"><a href="#cb19-94" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Open <span class="in">`movies_with_cast_award_totals.csv`</span> and identify at least three model features.</span>
+<span id="cb19-95"><a href="#cb19-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-96"><a href="#cb19-96" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6) Run modeling</span></span>
+<span id="cb19-97"><a href="#cb19-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-98"><a href="#cb19-98" aria-hidden="true" tabindex="-1"></a>Run the model and write artifacts:</span>
+<span id="cb19-99"><a href="#cb19-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-100"><a href="#cb19-100" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-101"><a href="#cb19-101" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="dt">\</span></span>
+<span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a>  <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="dt">\</span></span>
+<span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a>  <span class="at">--report-json</span> ./tutorial_workspace/report.json <span class="dt">\</span></span>
+<span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a>  <span class="at">--predictions-csv</span> ./tutorial_workspace/predictions.csv</span>
+<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a>Confirm artifacts:</span>
+<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-110"><a href="#cb19-110" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-1</span> ./tutorial_workspace <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/report.json/p;/predictions.csv/p'</span></span>
+<span id="cb19-111"><a href="#cb19-111" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-112"><a href="#cb19-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-113"><a href="#cb19-113" aria-hidden="true" tabindex="-1"></a>Practice:</span>
+<span id="cb19-114"><a href="#cb19-114" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Re-run with a specific split:</span>
+<span id="cb19-115"><a href="#cb19-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-116"><a href="#cb19-116" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-117"><a href="#cb19-117" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> model <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--seed</span> 42 <span class="at">--test-size</span> 0.25</span>
+<span id="cb19-118"><a href="#cb19-118" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-119"><a href="#cb19-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-120"><a href="#cb19-120" aria-hidden="true" tabindex="-1"></a><span class="fu">## 7) Optional practice: reset, updates, sync</span></span>
+<span id="cb19-121"><a href="#cb19-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-122"><a href="#cb19-122" aria-hidden="true" tabindex="-1"></a>These are optional because update/sync can take longer and may require live scraping.</span>
+<span id="cb19-123"><a href="#cb19-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-124"><a href="#cb19-124" aria-hidden="true" tabindex="-1"></a><span class="fu">### Reset (safe local practice)</span></span>
+<span id="cb19-125"><a href="#cb19-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-126"><a href="#cb19-126" aria-hidden="true" tabindex="-1"></a>Preview reset:</span>
+<span id="cb19-127"><a href="#cb19-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-128"><a href="#cb19-128" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-129"><a href="#cb19-129" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
+<span id="cb19-130"><a href="#cb19-130" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-131"><a href="#cb19-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-132"><a href="#cb19-132" aria-hidden="true" tabindex="-1"></a>Run a real reset:</span>
+<span id="cb19-133"><a href="#cb19-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-134"><a href="#cb19-134" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-135"><a href="#cb19-135" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> reset <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--cutoff-year</span> 2021</span>
+<span id="cb19-136"><a href="#cb19-136" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-137"><a href="#cb19-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-138"><a href="#cb19-138" aria-hidden="true" tabindex="-1"></a>Rebuild features after reset:</span>
+<span id="cb19-139"><a href="#cb19-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-140"><a href="#cb19-140" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-141"><a href="#cb19-141" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> build-features <span class="at">--workspace-dir</span> ./tutorial_workspace</span>
+<span id="cb19-142"><a href="#cb19-142" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-143"><a href="#cb19-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-144"><a href="#cb19-144" aria-hidden="true" tabindex="-1"></a><span class="fu">### Check updates (networked scraping)</span></span>
+<span id="cb19-145"><a href="#cb19-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-146"><a href="#cb19-146" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-147"><a href="#cb19-147" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar check-updates --workspace-dir ./tutorial_workspace</span></span>
+<span id="cb19-148"><a href="#cb19-148" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-149"><a href="#cb19-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-150"><a href="#cb19-150" aria-hidden="true" tabindex="-1"></a><span class="fu">### End-to-end sync</span></span>
+<span id="cb19-151"><a href="#cb19-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-152"><a href="#cb19-152" aria-hidden="true" tabindex="-1"></a>Use dry run first:</span>
+<span id="cb19-153"><a href="#cb19-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-154"><a href="#cb19-154" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-155"><a href="#cb19-155" aria-hidden="true" tabindex="-1"></a><span class="ex">oscar</span> sync <span class="at">--workspace-dir</span> ./tutorial_workspace <span class="at">--dry-run</span></span>
+<span id="cb19-156"><a href="#cb19-156" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-157"><a href="#cb19-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-158"><a href="#cb19-158" aria-hidden="true" tabindex="-1"></a>Optional bounded sync:</span>
+<span id="cb19-159"><a href="#cb19-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-160"><a href="#cb19-160" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb19-161"><a href="#cb19-161" aria-hidden="true" tabindex="-1"></a><span class="co"># oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200</span></span>
+<span id="cb19-162"><a href="#cb19-162" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb19-163"><a href="#cb19-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-164"><a href="#cb19-164" aria-hidden="true" tabindex="-1"></a><span class="fu">## Troubleshooting</span></span>
+<span id="cb19-165"><a href="#cb19-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-166"><a href="#cb19-166" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`oscar: command not found`</span>: run <span class="in">`python3 -m oscar_predictions.cli --help`</span> to verify install path, then reinstall in the active environment.</span>
+<span id="cb19-167"><a href="#cb19-167" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Install fails on TestPyPI: retry with the exact <span class="in">`--index-url`</span> and <span class="in">`--extra-index-url`</span> flags.</span>
+<span id="cb19-168"><a href="#cb19-168" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Permission/path issues: use a writable workspace path and rerun <span class="in">`init-data`</span>.</span>
+<span id="cb19-169"><a href="#cb19-169" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Slow update/sync runs: start with <span class="in">`--dry-run`</span> or cap work with <span class="in">`--max-movies`</span> and <span class="in">`--max-actors`</span>.</span>
+<span id="cb19-170"><a href="#cb19-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-171"><a href="#cb19-171" aria-hidden="true" tabindex="-1"></a><span class="fu">## Next steps</span></span>
+<span id="cb19-172"><a href="#cb19-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-173"><a href="#cb19-173" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Read <span class="co">[</span><span class="ot">Documentation</span><span class="co">](documentation.md)</span> for architecture and module details.</span>
+<span id="cb19-174"><a href="#cb19-174" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>See <span class="co">[</span><span class="ot">Technical Report</span><span class="co">](report.md)</span> for methodology and findings.</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
