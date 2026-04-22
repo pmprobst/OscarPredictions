@@ -74,7 +74,7 @@
     "href": "site/report.html",
     "title": "Technical Report",
     "section": "",
-    "text": "This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film’s cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film’s Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.\n\n\n\nThe Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Conventional wisdom holds that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film’s cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.\nOur goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most.\n\n\n\n\nOscar nominees: IMDB event pages for the Academy Awards, cycling through ceremony years from 1996 to 2026. Each page lists the Best Picture nominees and links to their individual IMDB film pages.\nPrecursor award data: IMDB awards pages for each nominated film, recording nominations and wins at the Golden Globe Awards, Screen Actors Guild (SAG) Awards, Producers Guild of America (PGA) Awards, Critics Choice Awards, and BAFTA.\nCast award histories: IMDB filmography and awards pages for each cast member of each nominated film. Only awards won prior to the year of that film’s Oscar nomination were counted, preventing any data leakage from future accolades.\n\nAll data was scraped from publicly accessible IMDB pages using Playwright. The bundled base dataset covering 1996–2023 is included with the package.\n\n\n\n1. Data Acquisition\nWe built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film’s IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member. The pipeline is incremental — it checkpoints progress and skips already-scraped records on re-runs.\n2. Feature Engineering\nFrom the raw scraped data we engineered three layers of features. First, we built an actor-year award matrix recording how many awards each actor had won by each calendar year. Second, we summed those per-actor totals across each film’s full cast to produce film-level cast award aggregates. Third, we joined those cast totals to the film-level precursor award data to produce the final modeling dataset, with one row per nominated film per year and a binary target indicating whether that film won Best Picture.\n3. Modeling\nWe trained a logistic regression model using scikit-learn on a 75/25 stratified train/test split. Logistic regression was chosen for its interpretability — the model coefficients directly indicate which features most strongly predict a win. All numeric features were retained; non-numeric columns (title, url) were dropped before fitting.\n\n\n\nThe model was evaluated on the held-out test set using accuracy and ROC AUC. Per-year predicted vs. actual winners were also examined to understand where the model succeeded and where it did not.\n\n\n\n\n\nMetric\nValue\n\n\n\n\nNumber of films\n[fill in]\n\n\nNumber of features\n[fill in]\n\n\nTrain/test split\n75% / 25%\n\n\nRandom seed\n42\n\n\nAccuracy\n[fill in]\n\n\nROC AUC\n[fill in]\n\n\n\n\n\n\n\n\n\nYear\nPredicted Winner\nActual Winner\nCorrect\n\n\n\n\n[year]\n[predicted]\n[actual]\n✅ / ❌\n\n\n\nFill this table in by running oscar model --workspace-dir ./data and reviewing the printed output.\n\n\n\nThe logistic regression coefficients reveal which features most strongly predicted a Best Picture win. Positive coefficients indicate that higher values of that feature increased the predicted probability of winning.\n\n\n\nFeature\nCoefficient\n\n\n\n\n[fill in top features]\n[fill in]\n\n\n\n\n\n\n\nOur analysis shows that precursor award show results and cast award histories together provide a meaningful signal for predicting the Oscar Best Picture winner. The model correctly identified the winner in a majority of test years, with the strongest predictive features coming from [fill in based on your coefficients — e.g. PGA wins, BAFTA wins].\nThe cast award history features contributed additional signal beyond the precursor shows alone, suggesting that Academy voters are influenced not only by which films won at earlier shows but also by the accumulated prestige of a film’s cast.\nThe model struggled most in years where a late-season upset occurred — cases where a film swept the precursor shows but still lost the Oscar, or where a film gained momentum too late in the season to be captured by our features.\n\n\n\n\nScraping fragility: IMDB’s page structure can change over time, which may require updates to the scraping logic to maintain compatibility.\nBinary target: The model predicts a win probability per film but is ultimately evaluated against a binary outcome. In years where no film in the test set won (due to the train/test split), per-year evaluation is less meaningful.\nFeature scope: Our features are limited to precursor award shows and cast award histories. Other potentially predictive signals — box office performance, critical score, production budget, genre — were not included and represent natural extensions of this work.\n\n\n\n\n\nIncorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.\nExperiment with more flexible models (random forest, gradient boosting) to capture non-linear relationships between features.\nExtend the pipeline to automatically update as new precursor award results are announced during the award season, enabling real-time predictions before the Oscar ceremony."
+    "text": "This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film’s cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film’s Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes."
   },
   {
     "objectID": "site/report.html#executive-summary",
@@ -87,50 +87,50 @@
     "objectID": "site/report.html#project-context",
     "href": "site/report.html#project-context",
     "title": "Technical Report",
-    "section": "",
-    "text": "The Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Conventional wisdom holds that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film’s cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.\nOur goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most."
+    "section": "Project Context",
+    "text": "Project Context\nThe Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Conventional wisdom holds that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film’s cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.\nOur goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most."
   },
   {
     "objectID": "site/report.html#data-sources",
     "href": "site/report.html#data-sources",
     "title": "Technical Report",
-    "section": "",
-    "text": "Oscar nominees: IMDB event pages for the Academy Awards, cycling through ceremony years from 1996 to 2026. Each page lists the Best Picture nominees and links to their individual IMDB film pages.\nPrecursor award data: IMDB awards pages for each nominated film, recording nominations and wins at the Golden Globe Awards, Screen Actors Guild (SAG) Awards, Producers Guild of America (PGA) Awards, Critics Choice Awards, and BAFTA.\nCast award histories: IMDB filmography and awards pages for each cast member of each nominated film. Only awards won prior to the year of that film’s Oscar nomination were counted, preventing any data leakage from future accolades.\n\nAll data was scraped from publicly accessible IMDB pages using Playwright. The bundled base dataset covering 1996–2023 is included with the package."
+    "section": "Data Sources",
+    "text": "Data Sources\n\nOscar nominees: IMDB event pages for the Academy Awards, cycling through ceremony years from 1996 to 2026. Each page lists the Best Picture nominees and links to their individual IMDB film pages.\nPrecursor award data: IMDB awards pages for each nominated film, recording nominations and wins at the Golden Globe Awards, Screen Actors Guild (SAG) Awards, Producers Guild of America (PGA) Awards, Critics Choice Awards, and BAFTA.\nCast award histories: IMDB filmography and awards pages for each cast member of each nominated film. Only awards won prior to the year of that film’s Oscar nomination were counted, preventing any data leakage from future accolades.\n\nAll data was scraped from publicly accessible IMDB pages using Playwright. The bundled base dataset covering 1996–2023 is included with the package."
   },
   {
     "objectID": "site/report.html#methodology",
     "href": "site/report.html#methodology",
     "title": "Technical Report",
-    "section": "",
-    "text": "1. Data Acquisition\nWe built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film’s IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member. The pipeline is incremental — it checkpoints progress and skips already-scraped records on re-runs.\n2. Feature Engineering\nFrom the raw scraped data we engineered three layers of features. First, we built an actor-year award matrix recording how many awards each actor had won by each calendar year. Second, we summed those per-actor totals across each film’s full cast to produce film-level cast award aggregates. Third, we joined those cast totals to the film-level precursor award data to produce the final modeling dataset, with one row per nominated film per year and a binary target indicating whether that film won Best Picture.\n3. Modeling\nWe trained a logistic regression model using scikit-learn on a 75/25 stratified train/test split. Logistic regression was chosen for its interpretability — the model coefficients directly indicate which features most strongly predict a win. All numeric features were retained; non-numeric columns (title, url) were dropped before fitting."
+    "section": "Methodology",
+    "text": "Methodology\n1. Data Acquisition\nWe built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film’s IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member. The pipeline is incremental — it checkpoints progress and skips already-scraped records on re-runs.\n2. Feature Engineering\nFrom the raw scraped data we engineered three layers of features. First, we built an actor-year award matrix recording how many awards each actor had won by each calendar year. Second, we summed those per-actor totals across each film’s full cast to produce film-level cast award aggregates. Third, we joined those cast totals to the film-level precursor award data to produce the final modeling dataset, with one row per nominated film per year and a binary target indicating whether that film won Best Picture.\n3. Modeling\nWe trained a logistic regression model using scikit-learn on a 75/25 stratified train/test split. Logistic regression was chosen for its interpretability — the model coefficients directly indicate which features most strongly predict a win. All numeric features were retained; non-numeric columns (title, url) were dropped before fitting."
   },
   {
     "objectID": "site/report.html#results",
     "href": "site/report.html#results",
     "title": "Technical Report",
-    "section": "",
-    "text": "The model was evaluated on the held-out test set using accuracy and ROC AUC. Per-year predicted vs. actual winners were also examined to understand where the model succeeded and where it did not.\n\n\n\n\n\nMetric\nValue\n\n\n\n\nNumber of films\n[fill in]\n\n\nNumber of features\n[fill in]\n\n\nTrain/test split\n75% / 25%\n\n\nRandom seed\n42\n\n\nAccuracy\n[fill in]\n\n\nROC AUC\n[fill in]\n\n\n\n\n\n\n\n\n\nYear\nPredicted Winner\nActual Winner\nCorrect\n\n\n\n\n[year]\n[predicted]\n[actual]\n✅ / ❌\n\n\n\nFill this table in by running oscar model --workspace-dir ./data and reviewing the printed output.\n\n\n\nThe logistic regression coefficients reveal which features most strongly predicted a Best Picture win. Positive coefficients indicate that higher values of that feature increased the predicted probability of winning.\n\n\n\nFeature\nCoefficient\n\n\n\n\n[fill in top features]\n[fill in]"
+    "section": "Results",
+    "text": "Results\nThe model was evaluated on the held-out test set using accuracy and ROC AUC. Per-year predicted vs. actual winners were also examined to understand where the model succeeded and where it did not.\n\nModel Performance\n\n\n\nMetric\nValue\n\n\n\n\nNumber of films\n[fill in]\n\n\nNumber of features\n[fill in]\n\n\nTrain/test split\n75% / 25%\n\n\nRandom seed\n42\n\n\nAccuracy\n[fill in]\n\n\nROC AUC\n[fill in]\n\n\n\n\n\nPer-Year Predicted vs. Actual Winners (Test Set)\n\n\n\nYear\nPredicted Winner\nActual Winner\nCorrect\n\n\n\n\n[year]\n[predicted]\n[actual]\n✅ / ❌\n\n\n\nFill this table in by running oscar model --workspace-dir ./data and reviewing the printed output.\n\n\nFeature Importance\nThe logistic regression coefficients reveal which features most strongly predicted a Best Picture win. Positive coefficients indicate that higher values of that feature increased the predicted probability of winning.\n\n\n\nFeature\nCoefficient\n\n\n\n\n[fill in top features]\n[fill in]"
   },
   {
     "objectID": "site/report.html#discussion",
     "href": "site/report.html#discussion",
     "title": "Technical Report",
-    "section": "",
-    "text": "Our analysis shows that precursor award show results and cast award histories together provide a meaningful signal for predicting the Oscar Best Picture winner. The model correctly identified the winner in a majority of test years, with the strongest predictive features coming from [fill in based on your coefficients — e.g. PGA wins, BAFTA wins].\nThe cast award history features contributed additional signal beyond the precursor shows alone, suggesting that Academy voters are influenced not only by which films won at earlier shows but also by the accumulated prestige of a film’s cast.\nThe model struggled most in years where a late-season upset occurred — cases where a film swept the precursor shows but still lost the Oscar, or where a film gained momentum too late in the season to be captured by our features."
+    "section": "Discussion",
+    "text": "Discussion\nOur analysis shows that precursor award show results and cast award histories together provide a meaningful signal for predicting the Oscar Best Picture winner. The model correctly identified the winner in a majority of test years, with the strongest predictive features coming from [fill in based on your coefficients — e.g. PGA wins, BAFTA wins].\nThe cast award history features contributed additional signal beyond the precursor shows alone, suggesting that Academy voters are influenced not only by which films won at earlier shows but also by the accumulated prestige of a film’s cast.\nThe model struggled most in years where a late-season upset occurred — cases where a film swept the precursor shows but still lost the Oscar, or where a film gained momentum too late in the season to be captured by our features."
   },
   {
     "objectID": "site/report.html#limitations",
     "href": "site/report.html#limitations",
     "title": "Technical Report",
-    "section": "",
-    "text": "Scraping fragility: IMDB’s page structure can change over time, which may require updates to the scraping logic to maintain compatibility.\nBinary target: The model predicts a win probability per film but is ultimately evaluated against a binary outcome. In years where no film in the test set won (due to the train/test split), per-year evaluation is less meaningful.\nFeature scope: Our features are limited to precursor award shows and cast award histories. Other potentially predictive signals — box office performance, critical score, production budget, genre — were not included and represent natural extensions of this work."
+    "section": "Limitations",
+    "text": "Limitations\n\nScraping fragility: IMDB’s page structure can change over time, which may require updates to the scraping logic to maintain compatibility.\nBinary target: The model predicts a win probability per film but is ultimately evaluated against a binary outcome. In years where no film in the test set won (due to the train/test split), per-year evaluation is less meaningful.\nFeature scope: Our features are limited to precursor award shows and cast award histories. Other potentially predictive signals — box office performance, critical score, production budget, genre — were not included and represent natural extensions of this work."
   },
   {
     "objectID": "site/report.html#future-work",
     "href": "site/report.html#future-work",
     "title": "Technical Report",
-    "section": "",
-    "text": "Incorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.\nExperiment with more flexible models (random forest, gradient boosting) to capture non-linear relationships between features.\nExtend the pipeline to automatically update as new precursor award results are announced during the award season, enabling real-time predictions before the Oscar ceremony."
+    "section": "Future Work",
+    "text": "Future Work\n\nIncorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.\nExperiment with more flexible models (random forest, gradient boosting) to capture non-linear relationships between features.\nExtend the pipeline to automatically update as new precursor award results are announced during the award season, enabling real-time predictions before the Oscar ceremony."
   },
   {
     "objectID": "PARITY.html",
@@ -256,7 +256,7 @@
     "href": "site/tutorial.html",
     "title": "Tutorial",
     "section": "",
-    "text": "This tutorial is a hands-on practice lab. It is written as Markdown with copy/paste code cells, not executable notebook cells.\n\n\n\nPython 3.9+ installed\nInternet access for package installation (and optional update/sync scraping)\nA shell where you can run CLI commands\n\n\n\n\nCreate and move into a workspace directory:\nmkdir -p tutorial_workspace\ncd tutorial_workspace\npwd\nCheckpoint: - Confirm the printed path exists on disk.\n\n\n\nUse the same install command from the README:\npython3 -m pip install \\\n  --index-url https://test.pypi.org/simple/ \\\n  --extra-index-url https://pypi.org/simple/ \\\n  oscar-predictions\nPractice: - Re-run the command and confirm pip reports it as already installed.\n\n\n\noscar --help\nIf oscar is not found:\npython3 -m oscar_predictions.cli --help\nCheckpoint: - You should see commands including init-data, build-features, check-updates, model, reset, and sync.\n\n\n\nFrom your project root (replace the path if needed), initialize data into your workspace:\noscar init-data --workspace-dir ./tutorial_workspace\nCheck created files:\nls -1 ./tutorial_workspace\nPractice: - Try --overwrite and compare behavior.\noscar init-data --workspace-dir ./tutorial_workspace --overwrite\n\n\n\nGenerate derived feature tables:\noscar build-features --workspace-dir ./tutorial_workspace\nConfirm expected outputs:\nls -1 ./tutorial_workspace | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'\nPractice: - Open movies_with_cast_award_totals.csv and identify at least three model features.\n\n\n\nRun the model and write artifacts:\noscar model \\\n  --workspace-dir ./tutorial_workspace \\\n  --report-json ./tutorial_workspace/report.json \\\n  --predictions-csv ./tutorial_workspace/predictions.csv\nConfirm artifacts:\nls -1 ./tutorial_workspace | sed -n '/report.json/p;/predictions.csv/p'\nPractice: - Re-run with a specific split:\noscar model --workspace-dir ./tutorial_workspace --seed 42 --test-size 0.25\n\n\n\nThese are optional because update/sync can take longer and may require live scraping.\n\n\nPreview reset:\noscar reset --workspace-dir ./tutorial_workspace --dry-run\nRun a real reset:\noscar reset --workspace-dir ./tutorial_workspace --cutoff-year 2021\nRebuild features after reset:\noscar build-features --workspace-dir ./tutorial_workspace\n\n\n\n# oscar check-updates --workspace-dir ./tutorial_workspace\n\n\n\nUse dry run first:\noscar sync --workspace-dir ./tutorial_workspace --dry-run\nOptional bounded sync:\n# oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200\n\n\n\n\n\noscar: command not found: run python3 -m oscar_predictions.cli --help to verify install path, then reinstall in the active environment.\nInstall fails on TestPyPI: retry with the exact --index-url and --extra-index-url flags.\nPermission/path issues: use a writable workspace path and rerun init-data.\nSlow update/sync runs: start with --dry-run or cap work with --max-movies and --max-actors.\n\n\n\n\n\nRead Documentation for architecture and module details.\nSee Technical Report for methodology and findings."
+    "text": "This tutorial is a hands-on walkthrough for a reader who understands the purpose of OscarPredictions but has never used the package before. It is written as a readable article, with copy/paste code cells you can run in your own terminal. The cells are not executed by the site itself."
   },
   {
     "objectID": "site/tutorial.html#executive-summary",
@@ -317,23 +317,23 @@
   {
     "objectID": "site/index.html",
     "href": "site/index.html",
-    "title": "Oscar Predictions",
+    "title": "Oscar Best Picture Predictor",
     "section": "",
-    "text": "Can precursor award shows and cast accolades predict the Oscar Best Picture winner? This project seeks to answer that question using data gathered from the IMDB and a logistic regression model trained on nominations from 1996 to 2026.\n\n\nWe built a Python package that:\n\nScrapes IMDB for Oscar Best Picture nominees across 30 years of ceremonies\nCollects precursor award data\nAggregates cast award histories\nUses logistic regression to predict the Best Picture winner\n\n\n\n\n\nDocumentation - Function references and usage\nTutorial - Get started with the package\nTechnical Report - Methodology and key findings\nStreamlit App - Interactive predictions\nGitHub Repo"
+    "text": "Can precursor award shows and cast accolades predict the Oscar Best Picture winner? This project seeks to answer that question using data gathered from the IMDB and a logistic regression model trained on nominations from 1996 to 2026."
   },
   {
     "objectID": "site/index.html#what-we-built",
     "href": "site/index.html#what-we-built",
-    "title": "Oscar Predictions",
-    "section": "",
-    "text": "We built a Python package that:\n\nScrapes IMDB for Oscar Best Picture nominees across 30 years of ceremonies\nCollects precursor award data\nAggregates cast award histories\nUses logistic regression to predict the Best Picture winner"
+    "title": "Oscar Best Picture Predictor",
+    "section": "What We Built",
+    "text": "What We Built\nWe built a Python package that:\n\nScrapes IMDB for Oscar Best Picture nominees across 30 years of ceremonies\nCollects precursor award data\nAggregates cast award histories\nUses logistic regression to predict the Best Picture winner"
   },
   {
     "objectID": "site/index.html#quick-links",
     "href": "site/index.html#quick-links",
-    "title": "Oscar Predictions",
-    "section": "",
-    "text": "Documentation - Function references and usage\nTutorial - Get started with the package\nTechnical Report - Methodology and key findings\nStreamlit App - Interactive predictions\nGitHub Repo"
+    "title": "Oscar Best Picture Predictor",
+    "section": "Quick Links",
+    "text": "Quick Links\n\nDocumentation - Function references and usage\nTutorial - Get started with the package\nTechnical Report - Methodology and key findings\nStreamlit App - Interactive predictions\nGitHub Repo"
   },
   {
     "objectID": "index.html",
@@ -360,8 +360,8 @@
     "objectID": "site/tutorial.html#prerequisites",
     "href": "site/tutorial.html#prerequisites",
     "title": "Tutorial",
-    "section": "",
-    "text": "Python 3.9+ installed\nInternet access for package installation (and optional update/sync scraping)\nA shell where you can run CLI commands"
+    "section": "Prerequisites",
+    "text": "Prerequisites\n\nPython 3.9+ installed\nInternet access for package installation (and optional update/sync scraping)\nA shell where you can run CLI commands"
   },
   {
     "objectID": "site/tutorial.html#set-up-helpers-and-a-practice-workspace",
@@ -374,36 +374,36 @@
     "objectID": "site/tutorial.html#install-the-package-testpypi",
     "href": "site/tutorial.html#install-the-package-testpypi",
     "title": "Tutorial",
-    "section": "",
-    "text": "Use the same install command from the README:\npython3 -m pip install \\\n  --index-url https://test.pypi.org/simple/ \\\n  --extra-index-url https://pypi.org/simple/ \\\n  oscar-predictions\nPractice: - Re-run the command and confirm pip reports it as already installed."
+    "section": "2) Install the package (TestPyPI)",
+    "text": "2) Install the package (TestPyPI)\nOscarPredictions is published to TestPyPI. TestPyPI is a sandbox version of the official Python Package Index, so the install command tells pip to look there first and fall back to the real PyPI for any normal dependencies such as pandas and scikit-learn.\nUse the same install command from the README:\npython3 -m pip install \\\n  --index-url https://test.pypi.org/simple/ \\\n  --extra-index-url https://pypi.org/simple/ \\\n  oscar-predictions\nWhat this does: - Downloads and installs the oscar-predictions package, plus the scientific libraries it needs to build features and train the model.\nWhat you should see: - A “Successfully installed” line listing oscar-predictions and its dependencies.\nPractice: - Re-run the command and confirm pip reports it as already installed."
   },
   {
     "objectID": "site/tutorial.html#verify-the-cli-is-available",
     "href": "site/tutorial.html#verify-the-cli-is-available",
     "title": "Tutorial",
-    "section": "",
-    "text": "oscar --help\nIf oscar is not found:\npython3 -m oscar_predictions.cli --help\nCheckpoint: - You should see commands including init-data, build-features, check-updates, model, reset, and sync."
+    "section": "3) Verify the CLI is available",
+    "text": "3) Verify the CLI is available\nInstalling the package registers a small launcher called oscar on your system’s PATH. This is the only command you will use for the rest of the tutorial, so it is worth confirming that your shell can find it before moving on.\noscar --help\nIf oscar is not found, your environment may not have its scripts directory on PATH. You can always invoke the same tool through Python directly:\npython3 -m oscar_predictions.cli --help\nWhat this does: - Prints the top-level help text and lists the available subcommands.\nWhat you should see: - A help message listing commands including init-data, build-features, check-updates, model, reset, and sync.\nCheckpoint: - You should see commands including init-data, build-features, check-updates, model, reset, and sync."
   },
   {
     "objectID": "site/tutorial.html#initialize-bundled-base-data",
     "href": "site/tutorial.html#initialize-bundled-base-data",
     "title": "Tutorial",
-    "section": "",
-    "text": "From your project root (replace the path if needed), initialize data into your workspace:\noscar init-data --workspace-dir ./tutorial_workspace\nCheck created files:\nls -1 ./tutorial_workspace\nPractice: - Try --overwrite and compare behavior.\noscar init-data --workspace-dir ./tutorial_workspace --overwrite"
+    "section": "4) Initialize bundled base data",
+    "text": "4) Initialize bundled base data\nThe package ships with a curated historical dataset of Best Picture nominees, their cast, and prior award results. Before you can build features or train a model, that base data needs to be copied into your workspace so the rest of the pipeline has something to read.\nFrom your project root (replace the path if needed), initialize data into your workspace:\noscar init-data --workspace-dir ./tutorial_workspace\nWhat this does: - Copies the bundled CSVs (movies.csv, film_actors.csv, actor_awards.csv, no_award_actors.csv) and the major_award_shows.txt config into your workspace.\nCheck created files:\nls -1 ./tutorial_workspace\nWhat you should see: - At minimum: movies.csv, film_actors.csv, actor_awards.csv, no_award_actors.csv, and major_award_shows.txt.\nPractice: - Try --overwrite and compare behavior. Without it, init-data will not replace existing files, which is how you protect a workspace you have already customized. With it, the workspace is reset to the exact files that ship with the package.\noscar init-data --workspace-dir ./tutorial_workspace --overwrite"
   },
   {
     "objectID": "site/tutorial.html#build-post-cleaning-features",
     "href": "site/tutorial.html#build-post-cleaning-features",
     "title": "Tutorial",
-    "section": "",
-    "text": "Generate derived feature tables:\noscar build-features --workspace-dir ./tutorial_workspace\nConfirm expected outputs:\nls -1 ./tutorial_workspace | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'\nPractice: - Open movies_with_cast_award_totals.csv and identify at least three model features."
+    "section": "5) Build post-cleaning features",
+    "text": "5) Build post-cleaning features\nA machine learning model cannot read the raw scraped tables directly; it needs a single tidy table with one row per nominated film and numeric columns describing that film’s precursor awards and its cast’s prior accolades. The build-features command is what turns the raw CSVs into that model-ready table, along with two intermediate tables that make the transformation traceable.\nGenerate derived feature tables:\noscar build-features --workspace-dir ./tutorial_workspace\nWhat this does: - Aggregates awards by actor and year, rolls those totals up to each film’s cast, and then joins them to the film-level records to produce the final modeling table.\nConfirm expected outputs:\nls -1 ./tutorial_workspace | sed -n '/actor_year_award_matrix.csv/p;/film_actors_awards_sums_up_to_that_point.csv/p;/movies_with_cast_award_totals.csv/p'\nWhat you should see: - Three new files: actor_year_award_matrix.csv, film_actors_awards_sums_up_to_that_point.csv, and movies_with_cast_award_totals.csv. The last one is the table the model will train on.\nPractice: - Open movies_with_cast_award_totals.csv and identify at least three model features."
   },
   {
     "objectID": "site/tutorial.html#run-modeling",
     "href": "site/tutorial.html#run-modeling",
     "title": "Tutorial",
-    "section": "",
-    "text": "Run the model and write artifacts:\noscar model \\\n  --workspace-dir ./tutorial_workspace \\\n  --report-json ./tutorial_workspace/report.json \\\n  --predictions-csv ./tutorial_workspace/predictions.csv\nConfirm artifacts:\nls -1 ./tutorial_workspace | sed -n '/report.json/p;/predictions.csv/p'\nPractice: - Re-run with a specific split:\noscar model --workspace-dir ./tutorial_workspace --seed 42 --test-size 0.25"
+    "section": "6) Run modeling",
+    "text": "6) Run modeling\nThis is the payoff step. The model command loads the final feature table, trains a logistic regression, evaluates it on a held-out split, and reports how well it predicts the actual Best Picture winners. You can optionally ask it to save a structured report and a predictions CSV so you can inspect the results later.\nRun the model and write artifacts:\noscar model \\\n  --workspace-dir ./tutorial_workspace \\\n  --report-json ./tutorial_workspace/report.json \\\n  --predictions-csv ./tutorial_workspace/predictions.csv\nWhat this does: - Trains a logistic regression on movies_with_cast_award_totals.csv, prints evaluation metrics, writes the metrics to report.json, and writes one predicted probability per film-year to predictions.csv.\nConfirm artifacts:\nls -1 ./tutorial_workspace | sed -n '/report.json/p;/predictions.csv/p'\nWhat you should see: - Both report.json and predictions.csv listed in your workspace.\nPractice: - Re-run with a specific split to see how accuracy changes:\noscar model --workspace-dir ./tutorial_workspace --seed 42 --test-size 0.25"
   },
   {
     "objectID": "site/tutorial.html#optional-practice-reset-update-checks-and-sync",
@@ -416,28 +416,49 @@
     "objectID": "site/tutorial.html#troubleshooting",
     "href": "site/tutorial.html#troubleshooting",
     "title": "Tutorial",
-    "section": "",
-    "text": "oscar: command not found: run python3 -m oscar_predictions.cli --help to verify install path, then reinstall in the active environment.\nInstall fails on TestPyPI: retry with the exact --index-url and --extra-index-url flags.\nPermission/path issues: use a writable workspace path and rerun init-data.\nSlow update/sync runs: start with --dry-run or cap work with --max-movies and --max-actors."
+    "section": "Troubleshooting",
+    "text": "Troubleshooting\n\noscar: command not found: run python3 -m oscar_predictions.cli --help to verify install path, then reinstall in the active environment.\nInstall fails on TestPyPI: retry with the exact --index-url and --extra-index-url flags.\nPermission/path issues: use a writable workspace path and rerun init-data.\nSlow update/sync runs: start with --dry-run or cap work with --max-movies and --max-actors."
   },
   {
     "objectID": "site/tutorial.html#next-steps",
     "href": "site/tutorial.html#next-steps",
     "title": "Tutorial",
-    "section": "",
-    "text": "Read Documentation for architecture and module details.\nSee Technical Report for methodology and findings."
+    "section": "Next steps",
+    "text": "Next steps\n\nRead Documentation for architecture and module details.\nSee Technical Report for methodology and findings."
   },
   {
     "objectID": "site/tutorial.html#set-up-a-practice-workspace",
     "href": "site/tutorial.html#set-up-a-practice-workspace",
     "title": "Tutorial",
-    "section": "",
-    "text": "Create and move into a workspace directory:\nmkdir -p tutorial_workspace\ncd tutorial_workspace\npwd\nCheckpoint: - Confirm the printed path exists on disk."
+    "section": "1) Set up a practice workspace",
+    "text": "1) Set up a practice workspace\nA “workspace” in OscarPredictions is just a folder on your computer. All CSV inputs, derived feature tables, and model outputs live there together, which keeps experiments tidy and reproducible. You will create an empty folder now, and in the next steps the oscar tool will fill it with data, features, and results.\nCreate and move into a workspace directory:\nmkdir -p tutorial_workspace\ncd tutorial_workspace\npwd\nWhat this does: - Creates a new empty folder called tutorial_workspace (if it does not already exist) and switches your shell into it.\nWhat you should see: - The printed path ends in /tutorial_workspace.\nCheckpoint: - Confirm the printed path exists on disk."
   },
   {
     "objectID": "site/tutorial.html#optional-practice-reset-updates-sync",
     "href": "site/tutorial.html#optional-practice-reset-updates-sync",
     "title": "Tutorial",
-    "section": "",
-    "text": "These are optional because update/sync can take longer and may require live scraping.\n\n\nPreview reset:\noscar reset --workspace-dir ./tutorial_workspace --dry-run\nRun a real reset:\noscar reset --workspace-dir ./tutorial_workspace --cutoff-year 2021\nRebuild features after reset:\noscar build-features --workspace-dir ./tutorial_workspace\n\n\n\n# oscar check-updates --workspace-dir ./tutorial_workspace\n\n\n\nUse dry run first:\noscar sync --workspace-dir ./tutorial_workspace --dry-run\nOptional bounded sync:\n# oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200"
+    "section": "7) Optional practice: reset, updates, sync",
+    "text": "7) Optional practice: reset, updates, sync\nThe remaining commands exist because Oscar data keeps changing: new ceremonies happen each year, and you will sometimes want to rewind your workspace to test an update flow from a clean starting point. These are optional for a first read-through because some of them reach out to the internet and can take longer than the earlier steps.\n\nReset (safe local practice)\noscar reset trims your workspace’s base CSVs so only rows up to a chosen year remain, and removes the derived feature tables. It is the easiest way to simulate “what if I only had data through year X?” without touching the bundled package files. A dry run shows what would change without writing anything, which is the safest way to explore the command for the first time.\nPreview reset:\noscar reset --workspace-dir ./tutorial_workspace --dry-run\nWhat this does: - Prints the rows and files that would be modified or deleted, and then exits without changing anything.\nRun a real reset:\noscar reset --workspace-dir ./tutorial_workspace --cutoff-year 2021\nWhat this does: - Rewrites movies.csv, film_actors.csv, and actor_awards.csv to drop rows past 2021, prunes no_award_actors.csv to actors that still appear, and deletes the derived feature tables.\nRebuild features after reset:\noscar build-features --workspace-dir ./tutorial_workspace\nWhat this does: - Regenerates the feature tables so you can train a model on the earlier data state.\n\n\nCheck updates (networked scraping)\noscar check-updates looks for ceremony years that exist in public sources but not in your workspace, scrapes the new nominees, cast, and awards data, and then rebuilds the feature tables for you. It is how you bring an existing workspace current when a new Oscars happens. The cell below is commented out because running it will make live network requests; remove the # to try it for real once you are ready.\n# oscar check-updates --workspace-dir ./tutorial_workspace\n\n\nEnd-to-end sync\noscar sync is the most complete refresh path. It plans each stage (scrape, derive, optional counts), checkpoints progress as it goes, and can limit per-run work so that a single command does not balloon into a long scrape. Starting with a dry run shows you the plan before any network calls are made.\nUse dry run first:\noscar sync --workspace-dir ./tutorial_workspace --dry-run\nWhat this does: - Prints the stages oscar sync would run, in order, without executing them.\nOptional bounded sync:\n# oscar sync --workspace-dir ./tutorial_workspace --max-movies 5 --max-actors 200\nWhat this does (if you uncomment it): - Executes the sync plan but caps how many movies and actors will be scraped this run, so you can test the flow safely."
+  },
+  {
+    "objectID": "site/tutorial.html#what-youll-build",
+    "href": "site/tutorial.html#what-youll-build",
+    "title": "Tutorial",
+    "section": "What you’ll build",
+    "text": "What you’ll build\nOscarPredictions is a small Python toolkit that turns decades of Best Picture nominee data into a working prediction pipeline. By the end of this tutorial you will have:\n\nInstalled the oscar-predictions package and verified its command-line tool.\nCreated a “workspace” on your machine where data and model outputs live side by side.\nLoaded bundled historical data, built feature tables from it, and trained a model that estimates each nominee’s probability of winning.\nPracticed the optional refresh commands used to add new ceremony years as they happen.\n\nYou do not need any prior modeling or scraping experience. You only need to follow the steps in order."
+  },
+  {
+    "objectID": "site/tutorial.html#how-the-package-is-organized",
+    "href": "site/tutorial.html#how-the-package-is-organized",
+    "title": "Tutorial",
+    "section": "How the package is organized",
+    "text": "How the package is organized\nEverything is driven by a single command-line tool named oscar. You tell it which subcommand to run and which workspace folder to use. The subcommands you will meet in this tutorial are:\n\noscar init-data: Sets up a new workspace by copying the historical base data that ships with the package into a folder you choose.\noscar build-features: Transforms the base data into model-ready feature tables.\noscar model: Trains and evaluates the prediction model using those feature tables, and optionally saves a report and per-film predictions.\noscar reset: Rolls the workspace back to a specific cutoff year so you can practice updates or re-run the pipeline from an earlier state.\noscar check-updates: Looks for newly announced Oscar years online and pulls them into your workspace.\noscar sync: Runs the full end-to-end refresh (detect + scrape + rebuild features) in one step.\n\nThink of init-data and build-features as the setup stages, model as the payoff, and reset, check-updates, and sync as maintenance tools for keeping a workspace current over time."
+  },
+  {
+    "objectID": "site/tutorial.html#putting-it-all-together",
+    "href": "site/tutorial.html#putting-it-all-together",
+    "title": "Tutorial",
+    "section": "Putting it all together",
+    "text": "Putting it all together\nYou now have a working OscarPredictions workspace on your machine. You used init-data to seed it with the bundled historical dataset, build-features to turn that data into a model-ready table, and model to produce predictions and metrics. You also saw how reset lets you rewind the workspace, and how check-updates and sync bring new ceremony years into the same pipeline with a single command.\nFrom here, the practical mental model is:\n\nRun build-features whenever your base CSVs change.\nRun model whenever you want a fresh evaluation and predictions.\nReach for check-updates or sync only when you want to bring in new data from outside your machine."
   }
 ]

@@ -12,12 +12,12 @@ website:
     left:
       - text: "Home"
         href: site/index.md
-      - text: "Documentation"
-        href: site/documentation.md
       - text: "Tutorial"
         href: site/tutorial.md
       - text: "Technical Report"
         href: site/report.md
+      - text: "Documentation"
+        href: site/documentation.md
       - text: "Streamlit App"
         href: https://oscarpredictions.streamlit.app/
     right:

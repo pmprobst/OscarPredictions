@@ -1,8 +1,6 @@
 ---
-title: "Oscar Predictions"
+title: "Oscar Best Picture Predictor"
 ---
-
-# Oscar Best Picture Predictor
 
 Can precursor award shows and cast accolades predict the Oscar Best Picture winner? This project seeks to answer that question using data gathered from the IMDB and a logistic regression model trained on nominations from 1996 to 2026. 
 
