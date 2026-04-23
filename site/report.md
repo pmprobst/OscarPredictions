@@ -2,8 +2,6 @@
 title: "Technical Report"
 ---
 
-# Technical Report
-
 ## Executive Summary
 
 This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film's cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film's Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.

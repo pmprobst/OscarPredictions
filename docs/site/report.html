@@ -167,9 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#technical-report" id="toc-technical-report" class="nav-link active" data-scroll-target="#technical-report">Technical Report</a>
-  <ul class="collapse">
-  <li><a href="#executive-summary" id="toc-executive-summary" class="nav-link" data-scroll-target="#executive-summary">Executive Summary</a></li>
+  <li><a href="#executive-summary" id="toc-executive-summary" class="nav-link active" data-scroll-target="#executive-summary">Executive Summary</a></li>
   <li><a href="#project-context" id="toc-project-context" class="nav-link" data-scroll-target="#project-context">Project Context</a></li>
   <li><a href="#data-sources" id="toc-data-sources" class="nav-link" data-scroll-target="#data-sources">Data Sources</a></li>
   <li><a href="#methodology" id="toc-methodology" class="nav-link" data-scroll-target="#methodology">Methodology</a></li>
@@ -181,7 +179,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
   <li><a href="#limitations" id="toc-limitations" class="nav-link" data-scroll-target="#limitations">Limitations</a></li>
   <li><a href="#future-work" id="toc-future-work" class="nav-link" data-scroll-target="#future-work">Future Work</a></li>
-  </ul></li>
   </ul>
 </nav>
     </div>
@@ -207,8 +204,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="technical-report" class="level1">
-<h1>Technical Report</h1>
 <section id="executive-summary" class="level2">
 <h2 class="anchored" data-anchor-id="executive-summary">Executive Summary</h2>
 <p>This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film’s cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film’s Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.</p>
@@ -325,7 +320,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <!-- -->
 
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -784,81 +778,79 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Technical Report"</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu"># Technical Report</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">## Executive Summary</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Executive Summary</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film's cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film's Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>This project examines whether Oscar Best Picture winners can be predicted using precursor award show results and the accumulated award histories of a film's cast. We scraped 30 years of IMDB data, covering every Best Picture nominee from 1996 through 2026, and trained a logistic regression model on features derived from five major precursor award shows (Golden Globes, SAG, PGA, Critics Choice, and BAFTA) alongside cast-level award totals computed up to the point of each film's Oscar nomination. The model was evaluated on a held-out test set and demonstrated meaningful predictive accuracy, confirming that award season momentum is a genuine signal for Best Picture outcomes.</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## Project Context</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">## Project Context</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>The Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Movie lovers believe that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film's cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>The Oscar for Best Picture is the most prestigious award in the film industry, and predicting its winner has long been a subject of speculation among critics and industry insiders. Movie lovers believe that certain precursor award shows, particularly the Producers Guild and BAFTA, are strong leading indicators of Oscar success. Less explored is whether the accumulated prestige of a film's cast, measured through their prior award wins, adds additional predictive power beyond the precursor shows alone.</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>Our goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most.</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>Our goal was to formalize this intuition into a reproducible data pipeline and quantitative model. A successful outcome means building a Python package that scrapes, processes, and models this data end-to-end, and that produces predictions interpretable enough to evaluate which features matter most.</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Sources</span></span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Data Sources</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Oscar nominees:** IMDB event pages for the Academy Awards, cycling through ceremony years from 1996 to 2026. Each page lists the Best Picture nominees and links to their individual IMDB film pages.</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Precursor award data:** IMDB awards pages for each nominated film, recording nominations and wins at the Golden Globe Awards, Screen Actors Guild (SAG) Awards, Producers Guild of America (PGA) Awards, Critics Choice Awards, and BAFTA.</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Cast award histories:** IMDB filmography and awards pages for each cast member of each nominated film. Only awards won prior to the year of that film's Oscar nomination were counted, preventing any data leakage from future accolades.</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Oscar nominees:** IMDB event pages for the Academy Awards, cycling through ceremony years from 1996 to 2026. Each page lists the Best Picture nominees and links to their individual IMDB film pages.</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Precursor award data:** IMDB awards pages for each nominated film, recording nominations and wins at the Golden Globe Awards, Screen Actors Guild (SAG) Awards, Producers Guild of America (PGA) Awards, Critics Choice Awards, and BAFTA.</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Cast award histories:** IMDB filmography and awards pages for each cast member of each nominated film. Only awards won prior to the year of that film's Oscar nomination were counted, preventing any data leakage from future accolades.</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>All data was scraped from publicly accessible IMDB pages using Playwright. The bundled base dataset covering 1996–2023 is included with the package.</span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>All data was scraped from publicly accessible IMDB pages using Playwright. The bundled base dataset covering 1996–2023 is included with the package.</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">## Methodology</span></span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">## Methodology</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>**1. Data Acquisition**</span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>**1. Data Acquisition**</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>We built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film's IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member.</span>
 <span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>We built a multi-stage scraping pipeline using Playwright to automate browser interactions with IMDB. The pipeline first scrapes the list of Best Picture nominees for each ceremony year, then visits each film's IMDB page to collect precursor award results, then scrapes the full cast list for each film, and finally retrieves the individual award history for each cast member.</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>**2. Feature Engineering**</span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>**2. Feature Engineering**</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>From the raw scraped data we engineered three layers of features. First, we built an actor-year award matrix recording how many awards each actor had won by each calendar year. Second, we summed those per-actor totals across each film's full cast to produce film-level cast award aggregates. Third, we joined those cast totals to the film-level precursor award data to produce the final modeling dataset, with one row per nominated film per year and a binary target indicating whether that film won Best Picture.</span>
 <span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>From the raw scraped data we engineered three layers of features. First, we built an actor-year award matrix recording how many awards each actor had won by each calendar year. Second, we summed those per-actor totals across each film's full cast to produce film-level cast award aggregates. Third, we joined those cast totals to the film-level precursor award data to produce the final modeling dataset, with one row per nominated film per year and a binary target indicating whether that film won Best Picture.</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>**3. Modeling**</span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>**3. Modeling**</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>We trained a logistic regression model using scikit-learn with varying year stratified train/test splits. Logistic regression was chosen for its interpretability: the model coefficients directly indicate which features most strongly predict a win.</span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>We trained a logistic regression model using scikit-learn with varying year stratified train/test splits. Logistic regression was chosen for its interpretability: the model coefficients directly indicate which features most strongly predict a win.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results</span></span>
 <span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="fu">## Results</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>The model was evaluated on the held-out test set using accuracy by examining per-year predicted vs. actual winners to understand where the model succeeded and where it did not.</span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>The model was evaluated on the held-out test set using accuracy by examining per-year predicted vs. actual winners to understand where the model succeeded and where it did not.</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="fu">### Model Performance</span></span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="fu">### Model Performance</span></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Train Size <span class="pp">|</span> Test <span class="pp">|</span> Accuracy<span class="pp">|</span></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 25 <span class="pp">|</span> 5 <span class="pp">|</span> 100% <span class="pp">|</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 20 <span class="pp">|</span> 10 <span class="pp">|</span> 81.8% <span class="pp">|</span></span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 15 <span class="pp">|</span> 15 <span class="pp">|</span> 81.2% <span class="pp">|</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Train Size <span class="pp">|</span> Test <span class="pp">|</span> Accuracy<span class="pp">|</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 25 <span class="pp">|</span> 5 <span class="pp">|</span> 100% <span class="pp">|</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 20 <span class="pp">|</span> 10 <span class="pp">|</span> 81.8% <span class="pp">|</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 15 <span class="pp">|</span> 15 <span class="pp">|</span> 81.2% <span class="pp">|</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="fu">### Feature Importance</span></span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="fu">### Feature Importance</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>The logistic regression coefficients reveal which features most strongly predicted a Best Picture win. Positive coefficients indicate that higher values of that feature increased the predicted probability of winning.</span>
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>The logistic regression coefficients reveal which features most strongly predicted a Best Picture win. Positive coefficients indicate that higher values of that feature increased the predicted probability of winning.</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Feature <span class="pp">|</span> Coefficient <span class="pp">|</span></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> sag_nom <span class="pp">|</span> 0.793 <span class="pp">|</span></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> bafta_nom <span class="pp">|</span> 0.734 <span class="pp">|</span></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> cast_dga_wins_total <span class="pp">|</span> 0.639 <span class="pp">|</span></span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> pga_winrate <span class="pp">|</span> 0.605 <span class="pp">|</span></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> pga_win <span class="pp">|</span> 0.605 <span class="pp">|</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Feature <span class="pp">|</span> Coefficient <span class="pp">|</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> sag_nom <span class="pp">|</span> 0.793 <span class="pp">|</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> bafta_nom <span class="pp">|</span> 0.734 <span class="pp">|</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> cast_dga_wins_total <span class="pp">|</span> 0.639 <span class="pp">|</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> pga_winrate <span class="pp">|</span> 0.605 <span class="pp">|</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> pga_win <span class="pp">|</span> 0.605 <span class="pp">|</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion</span></span>
 <span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>Our analysis shows that precursor award show results and cast award histories together provide meaningful signal for predicting the Oscar Best Picture winner. The model correctly consistently identified the winner about 81% of the time, a strong result that confirms award season momentum is genuinely predictive of Best Picture outcomes.</span>
 <span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>Our analysis shows that precursor award show results and cast award histories together provide meaningful signal for predicting the Oscar Best Picture winner. The model correctly consistently identified the winner about 81% of the time, a strong result that confirms award season momentum is genuinely predictive of Best Picture outcomes.</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>The strongest positive predictors were SAG nominations, BAFTA nominations, and cast DGA wins, suggesting that films recognized by the acting and directing guilds early in the season carry a significant advantage. PGA win rate and outright PGA wins were also among the top predictors, consistent with the consensus among movie lovers that the Producers Guild is one of the most reliable leading indicators of Oscar success. Interestingly, cast-level features such as total Oscar wins, total acting wins, and total DGA wins among a film's cast, ranked among the top predictors alongside the precursor shows, confirming that cast prestige adds real predictive power beyond precursor results alone.</span>
 <span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>The strongest positive predictors were SAG nominations, BAFTA nominations, and cast DGA wins, suggesting that films recognized by the acting and directing guilds early in the season carry a significant advantage. PGA win rate and outright PGA wins were also among the top predictors, consistent with the consensus among movie lovers that the Producers Guild is one of the most reliable leading indicators of Oscar success. Interestingly, cast-level features such as total Oscar wins, total acting wins, and total DGA wins among a film's cast, ranked among the top predictors alongside the precursor shows, confirming that cast prestige adds real predictive power beyond precursor results alone.</span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a><span class="fu">## Limitations</span></span>
 <span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="fu">## Limitations</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Multicollinearity:** Several features in our dataset are highly correlated with one another — for example, a film that wins the PGA is obviously going to be nominated for PGA, and a film with a decorated cast is likely to appear at multiple precursor shows. This makes it difficult for the model to isolate the unique effect of any single feature. The negative coefficients on some features such as BAFTA wins and PGA nominations are likely a symptom of this: there is no logical reason that winning BAFTA should hurt a film's Oscar chances. Rather, the model is picking up on correlations between features rather than true causal relationships, and the coefficients should be interpreted with caution.</span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Multicollinearity:** Several features in our dataset are highly correlated with one another — for example, a film that wins the PGA is obviously going to be nominated for PGA, and a film with a decorated cast is likely to appear at multiple precursor shows. This makes it difficult for the model to isolate the unique effect of any single feature. The negative coefficients on some features such as BAFTA wins and PGA nominations are likely a symptom of this: there is no logical reason that winning BAFTA should hurt a film's Oscar chances. Rather, the model is picking up on correlations between features rather than true causal relationships, and the coefficients should be interpreted with caution.</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Class imbalance:** Out of every group of Best Picture nominees, exactly one film wins each year. This means that in any given year, roughly 80–90% of the rows in our dataset are losses and only one is a win. With such a skewed target variable, the model has very few positive examples to learn from relative to the number of negative ones, which can make it harder to distinguish a true winner from a strong runner-up. This is a fundamental constraint of the problem rather than a flaw in our approach, but it does limit how confidently the model can assign win probabilities.</span>
 <span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Class imbalance:** Out of every group of Best Picture nominees, exactly one film wins each year. This means that in any given year, roughly 80–90% of the rows in our dataset are losses and only one is a win. With such a skewed target variable, the model has very few positive examples to learn from relative to the number of negative ones, which can make it harder to distinguish a true winner from a strong runner-up. This is a fundamental constraint of the problem rather than a flaw in our approach, but it does limit how confidently the model can assign win probabilities.</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a><span class="fu">## Future Work</span></span>
 <span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="fu">## Future Work</span></span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Incorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.</span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Address multicollinearity and class imbalance to provide a clearer picture of the actual impact of precursor wins and nominations</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Incorporate additional features such as Metacritic and Rotten Tomatoes scores, box office gross, and genre classifications.</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Address multicollinearity and class imbalance to provide a clearer picture of the actual impact of precursor wins and nominations</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 
