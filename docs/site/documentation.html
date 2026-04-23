@@ -171,7 +171,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#core-modules" id="toc-core-modules" class="nav-link" data-scroll-target="#core-modules">Core Modules</a>
   <ul class="collapse">
-  <li><a href="#oscar_predictionsworkspace.py-dataworkspace" id="toc-oscar_predictionsworkspace.py-dataworkspace" class="nav-link" data-scroll-target="#oscar_predictionsworkspace.py-dataworkspace"><code>oscar_predictions/workspace.py</code> (<code>DataWorkspace</code>)</a></li>
+  <li><a href="#oscar_predictionsworkspace.py" id="toc-oscar_predictionsworkspace.py" class="nav-link" data-scroll-target="#oscar_predictionsworkspace.py"><code>oscar_predictions/workspace.py</code></a></li>
   <li><a href="#oscar_predictionsreset_workspace.py" id="toc-oscar_predictionsreset_workspace.py" class="nav-link" data-scroll-target="#oscar_predictionsreset_workspace.py"><code>oscar_predictions/reset_workspace.py</code></a></li>
   <li><a href="#oscar_predictionsscrape_movies.py" id="toc-oscar_predictionsscrape_movies.py" class="nav-link" data-scroll-target="#oscar_predictionsscrape_movies.py"><code>oscar_predictions/scrape_movies.py</code></a></li>
   <li><a href="#oscar_predictionsscrape_actors.py" id="toc-oscar_predictionsscrape_actors.py" class="nav-link" data-scroll-target="#oscar_predictionsscrape_actors.py"><code>oscar_predictions/scrape_actors.py</code></a></li>
@@ -184,7 +184,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#oscar_predictionsupdates.py" id="toc-oscar_predictionsupdates.py" class="nav-link" data-scroll-target="#oscar_predictionsupdates.py"><code>oscar_predictions/updates.py</code></a></li>
   <li><a href="#oscar_predictionssync.py" id="toc-oscar_predictionssync.py" class="nav-link" data-scroll-target="#oscar_predictionssync.py"><code>oscar_predictions/sync.py</code></a></li>
   <li><a href="#oscar_predictionsmodeling.py" id="toc-oscar_predictionsmodeling.py" class="nav-link" data-scroll-target="#oscar_predictionsmodeling.py"><code>oscar_predictions/modeling.py</code></a></li>
-  <li><a href="#movies_actors_eda.py-optional-analysis-app" id="toc-movies_actors_eda.py-optional-analysis-app" class="nav-link" data-scroll-target="#movies_actors_eda.py-optional-analysis-app"><code>movies_actors_eda.py</code> (optional analysis app)</a></li>
+  <li><a href="#movies_actors_eda.py" id="toc-movies_actors_eda.py" class="nav-link" data-scroll-target="#movies_actors_eda.py"><code>movies_actors_eda.py</code></a></li>
   </ul></li>
   <li><a href="#csv-artifact-coverage" id="toc-csv-artifact-coverage" class="nav-link" data-scroll-target="#csv-artifact-coverage">CSV Artifact Coverage</a></li>
   </ul></li>
@@ -203,8 +203,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The pipeline has a natural lifecycle: a workspace is initialized from bundled base data, IMDb is scraped to extend that data, post-cleaning features are derived from the resulting CSVs, and finally a model is trained on the feature table. The module sections below are ordered to follow that lifecycle, so reading them top to bottom traces a single run through the system. For every module, the prose explains when it runs, which files it reads, what it does to that data, and which CSV artifacts it produces or removes.</p>
 <section id="core-modules" class="level2">
 <h2 class="anchored" data-anchor-id="core-modules">Core Modules</h2>
-<section id="oscar_predictionsworkspace.py-dataworkspace" class="level3">
-<h3 class="anchored" data-anchor-id="oscar_predictionsworkspace.py-dataworkspace"><code>oscar_predictions/workspace.py</code> (<code>DataWorkspace</code>)</h3>
+<section id="oscar_predictionsworkspace.py" class="level3">
+<h3 class="anchored" data-anchor-id="oscar_predictionsworkspace.py"><code>oscar_predictions/workspace.py</code></h3>
 <p><code>DataWorkspace</code> is the foundation layer that the other stages rely on. It is used by <code>oscar init-data</code>, <code>oscar build-features</code>, <code>oscar reset</code>, <code>oscar check-updates</code>, and <code>oscar model</code> to resolve canonical workspace file paths and to stage bundled package data from <code>oscar_predictions/data/base/</code> along with the bundled <code>major_award_shows.txt</code> config from <code>oscar_predictions/data/config/</code>.</p>
 <p>When invoked, it copies the bundled base files into the active workspace, creating or overwriting <code>movies.csv</code>, <code>film_actors.csv</code>, <code>actor_awards.csv</code>, <code>no_award_actors.csv</code>, and <code>major_award_shows.txt</code>. When a refresh is requested, it also deletes the derived outputs so they can be rebuilt cleanly: <code>actor_year_award_matrix.csv</code>, <code>film_actors_awards_sums_up_to_that_point.csv</code>, <code>movies_with_cast_award_totals.csv</code>, and <code>award_show_counts.csv</code>.</p>
 </section>
@@ -267,8 +267,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><code>modeling.py</code> is the final consumer of the pipeline and is invoked through <code>oscar model</code>. It reads the joined feature table <code>movies_with_cast_award_totals.csv</code> produced by the earlier stages.</p>
 <p>It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split. <strong><code>accuracy</code> and <code>roc_auc</code> reflect only the held-out test years.</strong> The same fitted model is then applied to every row so CLI output, <code>yearly_results</code> in JSON, and optional <code>--predictions-csv</code> include all years (CSV rows include a <code>split</code> column marking <code>train</code> vs <code>test</code>). Users can request artifacts via <code>--predictions-csv &lt;path&gt;</code> and <code>--report-json &lt;path&gt;</code>.</p>
 </section>
-<section id="movies_actors_eda.py-optional-analysis-app" class="level3">
-<h3 class="anchored" data-anchor-id="movies_actors_eda.py-optional-analysis-app"><code>movies_actors_eda.py</code> (optional analysis app)</h3>
+<section id="movies_actors_eda.py" class="level3">
+<h3 class="anchored" data-anchor-id="movies_actors_eda.py"><code>movies_actors_eda.py</code></h3>
 <p><code>movies_actors_eda.py</code> is an optional Streamlit application that sits alongside the main pipeline and is run directly with <code>streamlit run movies_actors_eda.py</code>. It reads <code>movies.csv</code> and presents interactive exploratory analysis and visual summaries in the browser. It does not produce any pipeline CSV outputs of its own; its deliverable is the rendered dashboard.</p>
 </section>
 </section>
@@ -749,7 +749,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## Core Modules</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### `oscar_predictions/workspace.py` (`DataWorkspace`)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">### `oscar_predictions/workspace.py`</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="in">`DataWorkspace`</span> is the foundation layer that the other stages rely on. It is used by <span class="in">`oscar init-data`</span>, <span class="in">`oscar build-features`</span>, <span class="in">`oscar reset`</span>, <span class="in">`oscar check-updates`</span>, and <span class="in">`oscar model`</span> to resolve canonical workspace file paths and to stage bundled package data from <span class="in">`oscar_predictions/data/base/`</span> along with the bundled <span class="in">`major_award_shows.txt`</span> config from <span class="in">`oscar_predictions/data/config/`</span>.</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
@@ -825,7 +825,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split. **`accuracy` and `roc_auc` reflect only the held-out test years.** The same fitted model is then applied to every row so CLI output, <span class="in">`yearly_results`</span> in JSON, and optional <span class="in">`--predictions-csv`</span> include all years (CSV rows include a <span class="in">`split`</span> column marking <span class="in">`train`</span> vs <span class="in">`test`</span>). Users can request artifacts via <span class="in">`--predictions-csv &lt;path&gt;`</span> and <span class="in">`--report-json &lt;path&gt;`</span>.</span>
 <span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="fu">### `movies_actors_eda.py` (optional analysis app)</span></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="fu">### `movies_actors_eda.py`</span></span>
 <span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a><span class="in">`movies_actors_eda.py`</span> is an optional Streamlit application that sits alongside the main pipeline and is run directly with <span class="in">`streamlit run movies_actors_eda.py`</span>. It reads <span class="in">`movies.csv`</span> and presents interactive exploratory analysis and visual summaries in the browser. It does not produce any pipeline CSV outputs of its own; its deliverable is the rendered dashboard.</span>
 <span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a></span>

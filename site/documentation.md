@@ -6,7 +6,7 @@ The pipeline has a natural lifecycle: a workspace is initialized from bundled ba
 
 ## Core Modules
 
-### `oscar_predictions/workspace.py` (`DataWorkspace`)
+### `oscar_predictions/workspace.py`
 
 `DataWorkspace` is the foundation layer that the other stages rely on. It is used by `oscar init-data`, `oscar build-features`, `oscar reset`, `oscar check-updates`, and `oscar model` to resolve canonical workspace file paths and to stage bundled package data from `oscar_predictions/data/base/` along with the bundled `major_award_shows.txt` config from `oscar_predictions/data/config/`.
 
@@ -82,7 +82,7 @@ Its job is to plan and run the pipeline stage by stage with checkpointing: the s
 
 It cleans and encodes the model features, trains and evaluates a logistic-regression pipeline using a grouped year split. **`accuracy` and `roc_auc` reflect only the held-out test years.** The same fitted model is then applied to every row so CLI output, `yearly_results` in JSON, and optional `--predictions-csv` include all years (CSV rows include a `split` column marking `train` vs `test`). Users can request artifacts via `--predictions-csv <path>` and `--report-json <path>`.
 
-### `movies_actors_eda.py` (optional analysis app)
+### `movies_actors_eda.py`
 
 `movies_actors_eda.py` is an optional Streamlit application that sits alongside the main pipeline and is run directly with `streamlit run movies_actors_eda.py`. It reads `movies.csv` and presents interactive exploratory analysis and visual summaries in the browser. It does not produce any pipeline CSV outputs of its own; its deliverable is the rendered dashboard.
 
